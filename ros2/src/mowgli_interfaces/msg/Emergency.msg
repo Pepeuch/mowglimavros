@@ -1,0 +1,6 @@
+builtin_interfaces/Time stamp
+bool active_emergency
+bool latched_emergency
+bool lift_warning
+float32 lift_duration_sec
+string reason
