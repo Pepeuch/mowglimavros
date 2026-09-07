@@ -1,0 +1,6 @@
+# Agent working state
+.agent/*
+!.agent/policies/
+!.agent/policies/**
+!.agent/shared/
+!.agent/shared/**
