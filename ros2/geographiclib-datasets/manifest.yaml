@@ -1,0 +1,33 @@
+release_tag: geographiclib-datasets-v1
+release_repository: Pepeuch/mowglimavros
+datasets:
+  - file: egm96-5.tar.bz2
+    source: https://downloads.sourceforge.net/project/geographiclib/geoids-distrib/egm96-5.tar.bz2
+    model: WGS84 EGM96, 5-minute geoid grid
+    size_bytes: 10225152
+    sha256: c46224f8f723dc915d97179f4e1580a98d6c742fe2b82cd8fef0ecaaad13e614
+    destination: /usr/share/GeographicLib/geoids/egm96-5.pgm
+    redistribution: >-
+      GeographicLib conversion archive; source metadata identifies the model as
+      NGA EGM96. No explicit redistribution licence is bundled in this archive;
+      retain provenance and obtain project approval before publishing the mirror.
+  - file: egm96.tar.bz2
+    source: https://downloads.sourceforge.net/project/geographiclib/gravity-distrib/egm96.tar.bz2
+    model: Earth Gravity Model 1996
+    size_bytes: 2055724
+    sha256: 6fea4c6bd56ff8ac53dbdad8d5dd505c855471d0354c4abc5c5fe048bf8350c1
+    destination: /usr/share/GeographicLib/gravity/egm96.egm
+    redistribution: >-
+      GeographicLib conversion archive; source metadata identifies the model as
+      NGA EGM96. No explicit redistribution licence is bundled in this archive;
+      retain provenance and obtain project approval before publishing the mirror.
+  - file: emm2015.tar.bz2
+    source: https://downloads.sourceforge.net/project/geographiclib/magnetic-distrib/emm2015.tar.bz2
+    model: NOAA Enhanced Magnetic Model 2015
+    size_bytes: 659405
+    sha256: 8e71a9704c5f2714bb65581df68e30f0d84d0ad17286d00efb782e7232334c3f
+    destination: /usr/share/GeographicLib/magnetic/emm2015.wmm
+    redistribution: >-
+      GeographicLib conversion archive for NOAA EMM2015 (DOI 10.7289/V56971HV).
+      No explicit redistribution licence is bundled in this archive; retain
+      provenance and obtain project approval before publishing the mirror.

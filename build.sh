@@ -4,10 +4,23 @@ set -euo pipefail
 OWNER="${OWNER:-mowglifrenchtouch}"
 REPO="${REPO:-mowglimavros}"
 IMAGE_NAME="${IMAGE_NAME:-mowgli-mavros-sidecar}"
-TAG="${TAG:-latest}"
+ROS_DISTRO="${ROS_DISTRO:-kilted}"
+MAVROS_VERSION="${MAVROS_VERSION:-2.15.1}"
+MAVROS_COMMIT="${MAVROS_COMMIT:-22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e}"
+MAVLINK_VERSION="${MAVLINK_VERSION:-2026.8.8}"
+GEOGRAPHICLIB_DATASET_VERSION="${GEOGRAPHICLIB_DATASET_VERSION:-geographiclib-datasets-v1}"
+
+if [[ -v TAG ]]; then
+  TAG="${TAG}"
+elif [[ "${ROS_DISTRO}" == "kilted" ]]; then
+  TAG="latest"
+else
+  TAG="${ROS_DISTRO}"
+fi
 
 DOCKERFILE="ros2/Dockerfile"
 PLATFORMS="linux/amd64,linux/arm64"
+CACHE_SCOPE="${CACHE_SCOPE:-${IMAGE_NAME}-${ROS_DISTRO}-${MAVROS_VERSION}}"
 
 FULL_IMAGE="ghcr.io/${OWNER}/${REPO}/${IMAGE_NAME}:${TAG}"
 
@@ -44,14 +57,22 @@ build_image() {
 
   info "Building & pushing ${FULL_IMAGE}"
   info "Platforms: ${PLATFORMS}"
+  info "ROS distro: ${ROS_DISTRO}"
+  info "MAVROS: ${MAVROS_VERSION} (${MAVROS_COMMIT})"
+  info "MAVLink: ${MAVLINK_VERSION}"
 
   docker buildx build \
     --platform "${PLATFORMS}" \
     -f "${DOCKERFILE}" \
     -t "${FULL_IMAGE}" \
     --build-arg BUILDKIT_INLINE_CACHE=1 \
-    --cache-from type=gha,scope=${IMAGE_NAME} \
-    --cache-to type=gha,mode=max,scope=${IMAGE_NAME} \
+    --build-arg ROS_DISTRO="${ROS_DISTRO}" \
+    --build-arg MAVROS_VERSION="${MAVROS_VERSION}" \
+    --build-arg MAVROS_COMMIT="${MAVROS_COMMIT}" \
+    --build-arg MAVLINK_VERSION="${MAVLINK_VERSION}" \
+    --build-arg GEOGRAPHICLIB_DATASET_VERSION="${GEOGRAPHICLIB_DATASET_VERSION}" \
+    --cache-from type=gha,scope=${CACHE_SCOPE} \
+    --cache-to type=gha,mode=max,scope=${CACHE_SCOPE} \
     --push \
     .
 }

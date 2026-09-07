@@ -23,7 +23,7 @@ Use the acceptance criteria attached to the item.
 # Phase 0 — Agent state and durable baseline
 
 ## MM-000 — Persist audit state
-Status: TODO
+Status: IN PROGRESS
 
 - [ ] Create/update shared retained audit checkpoint.
 - [ ] Create/update active compatibility checkpoint.
@@ -77,18 +77,18 @@ Status: TODO
 
 Tasks:
 
-- [ ] Replace obsolete `ament_target_dependencies()`.
+- [x] Replace obsolete `ament_target_dependencies()` with imported targets.
 - [ ] Raise only required `cmake_minimum_required()` values.
 - [ ] Remove/replace distro-specific Boost assumptions.
 - [ ] Address `CMP0167` only where required by compatibility.
-- [ ] Keep the same C++ source for Kilted and Lyrical.
-- [ ] Avoid ROS-distro `#ifdef` unless proven unavoidable.
+- [x] Keep the same C++ source for Kilted and Lyrical.
+- [x] Avoid ROS-distro `#ifdef` unless proven unavoidable.
 
 Acceptance:
 
-- Kilted amd64 workspace build passes.
-- Lyrical amd64 workspace build passes.
-- No compatibility regression is introduced on Kilted.
+- Kilted amd64 workspace build passes (2026-09-07).
+- Lyrical amd64 workspace build passes (2026-09-07).
+- No compatibility regression is introduced on Kilted (same modern CMake source).
 
 ---
 
@@ -160,15 +160,16 @@ ARG ROS_DISTRO=kilted
 
 Tasks:
 
-- [ ] Remove hard-coded `kilted` image references.
-- [ ] Remove hard-coded `/opt/ros/kilted`.
-- [ ] Remove hard-coded `ros-kilted-*`.
-- [ ] Preserve Kilted as default.
-- [ ] Support Lyrical through build argument.
+- [x] Remove hard-coded `kilted` image references.
+- [x] Remove hard-coded `/opt/ros/kilted`.
+- [x] Remove hard-coded `ros-kilted-*`.
+- [x] Preserve Kilted as default.
+- [x] Support Lyrical through build argument.
 
 Acceptance:
 
 - Same Dockerfile builds for Kilted and Lyrical.
+- Kilted and Lyrical amd64 runtime images passed on 2026-09-07 with the same modern CMake source; arm64 remains pending.
 
 ---
 
@@ -185,15 +186,15 @@ MAVROS_COMMIT=22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e
 
 Tasks:
 
-- [ ] Build MAVROS from the pinned upstream source.
-- [ ] Verify tag resolves to expected commit.
-- [ ] Fail build if expected MAVROS version differs.
-- [ ] Use the same MAVROS version on Kilted and Lyrical.
-- [ ] Pin or explicitly verify MAVLink dependency.
+- [x] Build MAVROS from the pinned upstream source.
+- [x] Verify tag resolves to expected commit.
+- [x] Fail build if expected MAVROS version differs.
+- [x] Use the same MAVROS version on Kilted and Lyrical.
+- [x] Pin or explicitly verify MAVLink dependency.
 
 Acceptance:
 
-- Runtime reports MAVROS 2.15.1.
+- Runtime build verifies MAVROS 2.15.1 and its pinned commit on Kilted and Lyrical amd64.
 - Kilted and Lyrical use the same MAVROS release.
 - Serial URL at 921600 uses the corrected MAVROS implementation.
 
@@ -208,13 +209,16 @@ Tasks:
 - [x] Stop fetching installation logic from a moving upstream branch.
 - [x] Avoid installing datasets twice.
 - [x] Determine exactly which datasets/runtime files MAVROS requires.
-- [~] Install/copy them once through the multi-stage build (blocked pending release assets).
+- [x] Install/copy them once through the multi-stage build (Kilted amd64 validated against release `geographiclib-datasets-v1`).
 - [ ] Preserve amd64 + arm64 compatibility.
 
 Acceptance:
 
 - GeographicLib setup is deterministic.
+- Kilted and Lyrical amd64 image builds passed on 2026-09-07; arm64 remains pending.
 - No duplicate network-heavy installation occurs.
+- Release `geographiclib-datasets-v1`, all four assets, approved SHA256 values,
+  and cached source-only rebuild behaviour are validated.
 
 ---
 
@@ -231,6 +235,35 @@ Tasks:
 Acceptance:
 
 - Docker dependency installation succeeds on Kilted and Lyrical.
+
+Evidence: Kilted and Lyrical amd64 runtime dependency installation passed on
+2026-09-07. The Lyrical build selected `libboost-system1.83-dev` at build time
+and `libboost-system1.83.0` at runtime.
+
+---
+
+### MM-306 — Add UG-style README progress dashboard
+Status: TODO
+
+Objective:
+
+Reuse the Universal GNSS progress/status presentation model for MowgliMAVROS.
+
+Tasks:
+
+- [ ] Reproduce the same progress-bar/dashboard approach used in Universal GNSS.
+- [ ] Adapt its source-of-truth mapping to the MowgliMAVROS TODO/audit structure.
+- [ ] Keep generated README state deterministic.
+- [ ] Avoid manually maintained duplicate progress state.
+- [ ] Display the project progress prominently near the top of README.
+- [ ] Add/update validation so generated progress cannot silently become stale.
+
+Acceptance:
+
+- Progress is derived from canonical project state.
+- Re-running generation without state changes produces no diff.
+- README immediately exposes current project advancement.
+- Behaviour remains consistent with the Universal GNSS implementation.
 
 ---
 
@@ -267,9 +300,8 @@ Lyrical × arm64
 
 Tasks:
 
-- [ ] Separate caches by ROS distro.
-- [ ] Separate caches by MAVROS version.
-- [ ] Separate caches by architecture/platform.
+- [x] Separate layer-cache scopes by ROS distro, MAVROS version and architecture/platform.
+- [~] Configure ccache cache-mount persistence with Cache Dance. The key is `ccache-${runner.os}-${ROS_DISTRO}-${architecture}-${MAVROS_VERSION}-${MAVROS_COMMIT}-${Dockerfile hash}` and the mount id is `ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION}`. Static YAML/key checks pass; two real CI runs remain pending until commit/push.
 - [ ] Keep Kilted as primary/default image.
 - [ ] Publish Lyrical using an explicit distro tag.
 - [ ] Do not hide one failing matrix entry behind successful others.
@@ -277,6 +309,29 @@ Tasks:
 Acceptance:
 
 - All four matrix targets build successfully.
+
+---
+
+## MM-403 — Add reproducible development container
+Status: DONE (Kilted validation; Lyrical remains an anticipated target)
+
+Tasks:
+
+- [x] Keep the development container separate from the runtime image.
+- [x] Default to Kilted while exposing `ROS_DISTRO` for a future Lyrical build.
+- [x] Provide ROS development tooling, GitHub CLI, SSH client, Docker CLI and buildx.
+- [x] Use the host Docker socket; do not run a nested daemon.
+- [x] Persist GitHub CLI configuration in the `mowglimavros-gh-config` named volume.
+- [x] Validate Kilted Docker host access, Git, gh, ROS and colcon.
+
+Notes:
+
+- The ROS base already owns UID/GID 1000 as `ubuntu`; use that user.
+- Native `colcon` has no `--version`; validate with
+  `colcon --log-base /tmp/colcon-log version-check` when the workspace mount
+  is not writable.
+- Authenticate with `gh auth login` from the opened devcontainer before the
+  controlled GeographicLib release publication.
 
 ---
 

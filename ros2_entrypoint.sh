@@ -1,8 +1,10 @@
 #!/bin/bash
 set -e
 
-# Source ROS2
-source /opt/ros/kilted/setup.bash
+# Source ROS2 and the pinned MAVROS overlay.
+: "${ROS_DISTRO:=kilted}"
+source "/opt/ros/${ROS_DISTRO}/setup.bash"
+source /opt/mowgli/mavros/setup.bash
 if [ -f /ros2_ws/install/setup.bash ]; then
   source /ros2_ws/install/setup.bash
 fi
