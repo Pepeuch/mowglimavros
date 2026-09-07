@@ -150,7 +150,7 @@ For every case:
 
 ## MM-301 — Parameterize ROS distribution
 Related finding: `MM-AUD-005`
-Status: TODO
+Status: IN PROGRESS
 
 Target:
 
@@ -174,7 +174,7 @@ Acceptance:
 
 ## MM-302 — Pin MAVROS 2.15.1
 Related finding: `MM-AUD-002`
-Status: TODO
+Status: IN PROGRESS
 
 Target:
 
@@ -201,14 +201,14 @@ Acceptance:
 
 ## MM-303 — Make GeographicLib reproducible
 Related finding: `MM-AUD-005`
-Status: TODO
+Status: IN PROGRESS
 
 Tasks:
 
-- [ ] Stop fetching installation logic from a moving upstream branch.
-- [ ] Avoid installing datasets twice.
-- [ ] Determine exactly which datasets/runtime files MAVROS requires.
-- [ ] Install/copy them once through the multi-stage build.
+- [x] Stop fetching installation logic from a moving upstream branch.
+- [x] Avoid installing datasets twice.
+- [x] Determine exactly which datasets/runtime files MAVROS requires.
+- [~] Install/copy them once through the multi-stage build (blocked pending release assets).
 - [ ] Preserve amd64 + arm64 compatibility.
 
 Acceptance:
@@ -220,7 +220,7 @@ Acceptance:
 
 ## MM-304 — Remove Noble-specific runtime ABI assumptions
 Related finding: `MM-AUD-006`
-Status: TODO
+Status: IN PROGRESS
 
 Tasks:
 
@@ -237,7 +237,7 @@ Acceptance:
 # Phase 4 — Build tooling and CI
 
 ## MM-401 — Parameterize build.sh
-Status: TODO
+Status: IN PROGRESS
 
 Tasks:
 
@@ -254,7 +254,7 @@ Acceptance:
 ---
 
 ## MM-402 — Add Kilted/Lyrical CI matrix
-Status: TODO
+Status: IN PROGRESS
 
 Target matrix:
 
