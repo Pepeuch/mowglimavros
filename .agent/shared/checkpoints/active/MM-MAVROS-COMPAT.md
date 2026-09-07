@@ -259,3 +259,14 @@ with only a Mowgli source change remain blocked on authorization to commit and
 push the workflow. They must demonstrate the key above, restored ccache,
 ccache hits/misses/size, GeographicLib `CACHED` with no download, and MAVROS
 layer `CACHED` before arm64 may begin.
+
+## First GitHub Actions run — pre-BuildKit failure — 2026-09-07
+
+The first real CI run failed before BuildKit started, for one cause only:
+`IMAGE_NAME` interpolated `github.repository_owner` as `Pepeuch`, while GHCR
+repository names must be lowercase. The workflow now uses the fixed literal
+`ghcr.io/pepeuch/mowglimavros/mowgli-mavros-sidecar`. Node 20 and `punycode`
+warnings are non-blocking and intentionally out of scope. No multiarch build,
+GeographicLib action, MAVROS action, ccache restore/injection, or Cache Dance
+validation was exercised by this run. The next real CI run is still required
+after commit/push to validate the configured cache persistence.

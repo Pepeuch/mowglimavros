@@ -10,7 +10,7 @@ permissions:
   packages: write
 
 env:
-  IMAGE_NAME: ghcr.io/${{ github.repository_owner }}/mowglimavros/mowgli-mavros-sidecar
+  IMAGE_NAME: ghcr.io/pepeuch/mowglimavros/mowgli-mavros-sidecar
   MAVROS_VERSION: 2.15.1
   MAVROS_COMMIT: 22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e
   MAVLINK_VERSION: 2026.8.8
