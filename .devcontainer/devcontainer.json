@@ -1,0 +1,28 @@
+{
+  "name": "mowglimavros (${localEnv:ROS_DISTRO:kilted})",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "context": "..",
+    "args": {
+      "ROS_DISTRO": "${localEnv:ROS_DISTRO:kilted}"
+    }
+  },
+  "remoteUser": "ubuntu",
+  "overrideCommand": false,
+  "workspaceFolder": "/workspaces/mowglimavros",
+  "mounts": [
+    "source=/var/run/docker.sock,target=/var/run/docker.sock,type=bind",
+    "source=mowglimavros-gh-config,target=/home/ubuntu/.config/gh,type=volume"
+  ],
+  "containerEnv": {
+    "GH_CONFIG_DIR": "/home/ubuntu/.config/gh"
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-azuretools.vscode-docker",
+        "ms-iot.vscode-ros"
+      ]
+    }
+  }
+}
