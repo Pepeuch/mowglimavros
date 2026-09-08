@@ -144,6 +144,8 @@ For every case:
 
 `concat(output_chunks) == input`
 
+Evidence: the 2026-09-08 passive Pixhawk capability audit confirmed MAVROS 2.15.1 accepts at most 720 bytes per ROS RTCM message. No RTCM was injected; this remains a software prerequisite and hardware delivery acceptance remains `HARDWARE_PENDING` under MM-801.
+
 ---
 
 # Phase 3 — Reproducible MAVROS container
@@ -170,6 +172,7 @@ Acceptance:
 
 - Same Dockerfile builds for Kilted and Lyrical.
 - Kilted and Lyrical amd64 runtime images passed on 2026-09-07 with the same modern CMake source; arm64 remains pending.
+- A production image is published for each project-required Kilted/Lyrical architecture and its immutable deployment digest is recorded; an amd64 workstation image is not ARM64/RPi evidence.
 
 ---
 
@@ -309,6 +312,7 @@ Tasks:
 Acceptance:
 
 - All four matrix targets build successfully.
+- Required production image manifests and immutable deployment digests are recorded for Kilted amd64/arm64 and, while project policy requires it, Lyrical amd64/arm64.
 
 ---
 
@@ -380,39 +384,127 @@ Document the software contract that MowgliNext may depend on:
 - [ ] shutdown behaviour;
 - [ ] reconnect/degraded behaviour;
 - [ ] backend selection expectations.
+- [ ] exact interface revision and type-fingerprint gate (MM-602).
+- [ ] canonical GNSS, wheel-odometry, power, and readiness semantics (MM-603 through MM-606).
+- [ ] RTCM publication bound and byte-perfect tests (MM-201).
+- [ ] supported image architecture/digest requirements (MM-301 through MM-304 and MM-402).
 
 Acceptance:
 
 - There is one explicit contract against which `mowgli_hardware` can be compared.
 - No hardware-dependent assumption is presented as validated.
+- The contract records every intentional capability absence rather than fabricating parity.
+
+
+## MM-602 — Synchronize exact Mowgli interface contract
+Related migration finding: `MN-MAV-003`
+Status: TODO
+
+Tasks:
+
+- [ ] Consume or reproducibly generate interfaces from the exact compatible MowgliNext interface revision, and pin that revision.
+- [ ] Eliminate uncontrolled independent message copies; do not silently maintain divergent local definitions.
+- [ ] Add an exact IDL/type fingerprint compatibility test that fails on any contract difference.
+
+Acceptance:
+
+- The external image and pinned MowgliNext revision have identical required `Status` and `HighLevelStatus` IDL/type fingerprints.
+- Validation fails closed when either interface contract changes.
+
+## MM-603 — Provide canonical public GNSS adapter
+Related migration finding: `MN-MAV-004`
+Status: TODO
+
+Tasks:
+
+- [ ] Publish current MowgliNext `/gps/fix` and `/gps/status` contracts; raw MAVROS topic remaps are not receiver availability.
+- [ ] Make GPS1/GPS2 and selected-receiver selection explicit and configurable.
+- [ ] Preserve `source_id`, `source_incarnation`, and `position_observation_sequence`; increment only for a genuine new selected-receiver sample.
+- [ ] Define fix/status pairing, cached delivery, freshness/liveness, invalid-input, RTK, reconnect, and FCU-reboot invalidation semantics.
+- [ ] Do not fabricate receiver-native diagnostics unavailable from MAVROS.
+
+Acceptance tests:
+
+- [ ] receiver selection; observation identity and new-versus-cached delivery; reconnect/source-incarnation invalidation; RTK mapping; invalid and stale GNSS inputs.
+
+## MM-604 — Establish wheel-only odometry contract
+Related migration finding: `MN-MAV-005`
+Status: TODO
+
+Tasks:
+
+- [ ] Remove `/mavros/local_position/odom -> /wheel_odom` as a production assumption.
+- [ ] Identify and provide a proven wheel-only source, or document intentional absence and affected consumer contract.
+- [ ] Prevent GPS/EKF-fused local position from feeding back as wheel odometry.
+
+Acceptance: no production path labels fused MAVROS local position as wheel-only odometry.
+
+## MM-605 — Map POWER1 and POWER2 by configured MAVROS instances
+Related migration finding: `MN-MAV-006`
+Status: TODO
+
+Target installation semantics: `POWER1 = dock/charger`; `POWER2 = traction`.
+
+Tasks:
+
+- [ ] Add configurable dock and traction `BatteryState.location=idN` instance IDs; never infer meaning from message arrival order or BATT numbering.
+- [ ] Route dock state to `Power.v_charge`, charger state, `Status.is_charging`, and docking-compatible current semantics.
+- [ ] Route traction state to `Power.v_battery`, SoC, and the sole battery-failsafe source.
+- [ ] Define missing/stale instance behavior and current sign convention. Dock POWER1 disappearance while undocked must not appear as traction failure.
+- [ ] Do not change ArduPilot failsafe parameters in this software item.
+
+Acceptance tests:
+
+- [ ] interleaved `id0`/`id1`; missing dock; missing traction; stale power source; current sign; traction-only failsafe-source selection.
+
+## MM-606 — Define observation freshness and backend readiness
+Related migration finding: `MN-MAV-008`
+Status: TODO
+
+Tasks:
+
+- [ ] Separate FCU connection, transport liveness, last genuine observation, observation freshness, cached publication, and backend readiness.
+- [ ] Stop timer callbacks from assigning a new observation stamp to cached status or power data.
+- [ ] Require the FCU and all required fresh streams for readiness; a running container alone is liveness, not readiness.
+- [ ] Invalidate cached observations across reconnect and FCU reboot.
+
+Acceptance: cached publication cannot appear newly observed; readiness becomes false for stale/disconnected required inputs.
+
+## MM-607 — Add focused external-backend contract tests
+Status: TODO
+
+Tasks:
+
+- [ ] Consolidate deterministic external tests for MM-602 through MM-606 and MM-201 without relying only on topic discovery.
+- [ ] Assert exact type/interface fingerprints, semantics, ownership, and failure behavior at the external backend boundary.
+- [ ] Keep hardware-dependent delivery/actuator proof in MM-801 rather than substituting software fixtures for it.
+
+Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTCM acceptance criteria owned by MM-201 and MM-602 through MM-606 pass.
 
 ---
 
 # Phase 7 — MowgliNext integration audit
 
-## MM-701 — Audit MowgliNext against MAVROS backend contract
-Status: TODO
+## MM-701 — MowgliNext integration dependency and execution plan
+Related migration findings: `MN-MAV-001` through `MN-MAV-008`
+Status: BLOCKED
 
-Do not begin until Phase 6 provides a stable software contract.
+Audit provenance: the MowgliNext migration audit is complete and retained at `.agent/shared/checkpoints/retained/MAVROS_EXTERNAL_BACKEND_MIGRATION.md`. Operational enablement must not begin until the external prerequisites below are accepted.
 
 Tasks:
 
-- [ ] Compare `mowgli_hardware` and `mowgli_mavros_bridge`.
-- [ ] Identify every consumer of hardware-facing topics/services.
-- [ ] Inspect bringup.
-- [ ] Inspect backend selection/configuration.
-- [ ] Inspect `.env`/container integration.
-- [ ] Inspect launch conditions.
-- [ ] Detect hidden assumptions about `mowgli_hardware`.
-- [ ] Detect duplicate/partial backend activation.
-- [ ] Compare status/power/failure semantics.
-- [ ] Classify gaps as `SOFTWARE_NOW`, `HARDWARE_PENDING`, or intentional differences.
-- [ ] Produce ordered MowgliNext integration work.
+- [x] Complete the MowgliNext migration audit: consumers, bringup, selection, topology, status/power/failure, and ownership gaps are retained in the imported audit.
+- [x] Record the eventual integration plan: suppress native `mowgli_hardware` only when `backend=mavros`; use one external sidecar; remove separate historical NTRIP; select validated Pixhawk USB `if00`; and prove exclusive backend ownership.
+- [ ] Pass MM-602 interface fingerprint, MM-603 canonical GNSS, MM-604 wheel-only odometry, MM-605 power-instance mapping, MM-606 freshness/readiness, MM-201 RTCM, and MM-607 focused tests.
+- [ ] Provide a suitable validated multiarch image/digest under MM-301 through MM-304 and MM-402.
+- [ ] Only then begin no-motion MowgliNext enablement and DDS/graph validation.
 
 Preferred model:
 high-capability audit/reasoning model.
 
-Do not implement broad changes during the first MowgliNext audit.
+Blocked by: MM-201, MM-301 through MM-304, MM-402, and MM-602 through MM-607.
+
+Unblocks when: the listed software prerequisites pass. MM-801 remains a separate `HARDWARE_PENDING` operational gate.
 
 ---
 
@@ -442,6 +534,14 @@ Validate individually:
 - [ ] transport reconnect;
 - [ ] reboot/power-cycle recovery.
 
+Hardware acceptance gates retained from the migration audit:
+
+- [ ] `HW-MAV-001` — ARM64/RPi4 USB `if00` deployment, reconnect, and FCU reboot recovery (`HARDWARE_PENDING`).
+- [ ] `HW-MAV-002` — steering/throttle plus zero, HOLD, disarm, DDS, and USB-loss stop semantics (`HARDWARE_PENDING`).
+- [ ] `HW-MAV-003` — physical POWER1 dock and POWER2 traction behavior (`HARDWARE_PENDING`).
+- [ ] `HW-MAV-004` — blade command/feedback and emergency authority (`HARDWARE_PENDING`; separate blade-on authorization required).
+- [ ] `HW-MAV-005` — outdoor GNSS/RTCM and HERE4 CAN1/VESC coexistence (`HARDWARE_PENDING`).
+
 Follow `.agent/policies/HARDWARE.md`.
 
 Do not infer these results from software tests.
@@ -463,22 +563,19 @@ Do not include this in the primary compatibility patch unless it becomes relevan
 
 # Current execution order
 
-1. `MM-000`
-2. `MM-101`
-3. `MM-102`
-4. `MM-103`
-5. `MM-201`
-6. `MM-301`
-7. `MM-302`
-8. `MM-303`
-9. `MM-304`
-10. `MM-401`
-11. `MM-402`
-12. `MM-501`
-13. `MM-502`
-14. `MM-601`
-15. `MM-701`
-16. `MM-801`
-17. `MM-901`
+1. Finish and freeze source compatibility and deterministic build work: `MM-102`, `MM-103`, `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
+2. Synchronize exact Mowgli interfaces and pass the fingerprint gate: `MM-602`.
+3. Provide canonical GNSS observation identity and receiver semantics: `MM-603`.
+4. Establish the wheel-only odometry contract: `MM-604`.
+5. Implement POWER1/POWER2 instance mapping: `MM-605`.
+6. Define freshness and readiness semantics: `MM-606`.
+7. Implement and test bounded RTCM chunking: `MM-201`.
+8. Run focused external contract tests: `MM-607`.
+9. Complete Kilted/Lyrical amd64+arm64 build, publication, and immutable-digest validation as project policy requires: `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
+10. Run external runtime smoke/contract validation: `MM-501` and `MM-502`.
+11. Freeze the external backend contract: `MM-601`.
+12. Return to MowgliNext integration and no-motion DDS/graph validation: `MM-701`.
+13. Execute physical hardware gates: `MM-801` / `HW-MAV-001` through `HW-MAV-005`.
+14. Deferred cleanup only when separately prioritized: `MM-901`.
 
 Only advance to the next expensive validation layer when the previous one passes.
