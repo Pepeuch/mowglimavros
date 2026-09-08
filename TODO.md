@@ -146,6 +146,19 @@ For every case:
 
 Evidence: the 2026-09-08 passive Pixhawk capability audit confirmed MAVROS 2.15.1 accepts at most 720 bytes per ROS RTCM message. No RTCM was injected; this remains a software prerequisite and hardware delivery acceptance remains `HARDWARE_PENDING` under MM-801.
 
+Validation blocker (2026-09-08): the focused `mowgli_ntrip_client` build cannot configure in the current environment because CMake cannot find Boost headers/system (`Boost_INCLUDE_DIR`, `system`). No dependency installation or broader build is authorized; MM-201 remains TODO until the focused gtest runs.
+
+Status: DONE (focused Kilted amd64 validation, 2026-09-08)
+
+Evidence:
+- mowgli_ntrip_client builds successfully.
+- focused RTCM chunking gtest passes.
+- required boundary inputs are covered.
+- every emitted ROS RTCM chunk is <=720 bytes.
+- concatenation preserves the original input byte-for-byte.
+- local test compiled against ros-kilted-mavros-msgs 2.15.0;
+  production MAVROS remains pinned to 2.15.1 / 22ae5b7c.
+- physical RTCM delivery remains HARDWARE_PENDING under HW-MAV-005.
 ---
 
 # Phase 3 — Reproducible MAVROS container

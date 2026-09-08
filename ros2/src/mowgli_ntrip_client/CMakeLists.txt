@@ -74,4 +74,10 @@ ament_export_dependencies(
   rclcpp
 )
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_rtcm_chunking test/test_rtcm_chunking.cpp)
+  target_link_libraries(test_rtcm_chunking ${PROJECT_NAME}_core)
+endif()
+
 ament_package()

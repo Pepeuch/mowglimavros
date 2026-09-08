@@ -1,5 +1,6 @@
 #include "mowgli_ntrip_client/ntrip_client_node.hpp"
 
+#include <algorithm>
 #include <stdexcept>
 #include <utility>
 
@@ -91,17 +92,27 @@ void NtripClientNode::setup_connection()
   connection_->start();
 }
 
+std::vector<std::vector<std::uint8_t>> NtripClientNode::split_rtcm_chunks(
+  const std::vector<std::uint8_t> & data)
+{
+  constexpr std::size_t kMaxRtcmMessageBytes = 720;
+  std::vector<std::vector<std::uint8_t>> chunks;
+  for (std::size_t offset = 0; offset < data.size(); offset += kMaxRtcmMessageBytes) {
+    const auto size = std::min(kMaxRtcmMessageBytes, data.size() - offset);
+    chunks.emplace_back(data.begin() + offset, data.begin() + offset + size);
+  }
+  return chunks;
+}
+
 void NtripClientNode::publish_rtcm(const std::vector<std::uint8_t> & data)
 {
-  if (data.empty()) {
-    return;
+  for (const auto & chunk : split_rtcm_chunks(data)) {
+    mavros_msgs::msg::RTCM msg;
+    msg.header.stamp = this->now();
+    msg.header.frame_id = frame_id_;
+    msg.data = chunk;
+    rtcm_publisher_->publish(msg);
   }
-
-  mavros_msgs::msg::RTCM msg;
-  msg.header.stamp = this->now();
-  msg.header.frame_id = frame_id_;
-  msg.data = data;
-  rtcm_publisher_->publish(msg);
 }
 
 void NtripClientNode::handle_connection_state(bool connected, const std::string & state)

@@ -18,6 +18,9 @@ public:
   explicit NtripClientNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
   ~NtripClientNode() override;
 
+  static std::vector<std::vector<std::uint8_t>> split_rtcm_chunks(
+    const std::vector<std::uint8_t> & data);
+
 private:
   void declare_parameters();
   ConnectionOptions load_connection_options() const;
