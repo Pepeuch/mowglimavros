@@ -420,13 +420,15 @@ Acceptance:
 
 ## MM-602 — Synchronize exact Mowgli interface contract
 Related migration finding: `MN-MAV-003`
-Status: TODO
+Status: DONE
 
 Tasks:
 
-- [ ] Consume or reproducibly generate interfaces from the exact compatible MowgliNext interface revision, and pin that revision.
-- [ ] Eliminate uncontrolled independent message copies; do not silently maintain divergent local definitions.
-- [ ] Add an exact IDL/type fingerprint compatibility test that fails on any contract difference.
+- [x] Consume the required interface subset from pinned MowgliNext revision `3b0974809809ace589a567b6c32e5bed6e599489` using `tools/mowgli_interface_contract.py sync`.
+- [x] Replace the uncontrolled local definitions with the pinned generated subset and lock its source/content in `ros2/src/mowgli_interfaces/interface-contract.lock.json`.
+- [x] Add a deterministic SHA-256 canonical-content fingerprint gate, executed before the Docker workspace build, plus focused hardware-free tests.
+
+Evidence: `python3 tools/mowgli_interface_contract.py check`, `python3 tools/test_mowgli_interface_contract.py`, and `git diff --check` passed on 2026-09-08. The exact covered direct bridge contract is `Emergency`, `HighLevelStatus`, `Power`, `Status`, `EmergencyStop`, and `MowerControl`; it includes the required `Status.msg` and `HighLevelStatus.msg`.
 
 Acceptance:
 

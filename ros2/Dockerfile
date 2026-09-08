@@ -122,12 +122,14 @@ ARG BUILD_TYPE=Release
 ARG TARGETARCH
 
 COPY ros2/src/ /ros2_ws/src/
+COPY tools/mowgli_interface_contract.py /ros2_ws/tools/mowgli_interface_contract.py
 WORKDIR /ros2_ws
 
 RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},target=/ccache \
     /bin/bash -lc "\
     source /opt/ros/${ROS_DISTRO}/setup.bash && \
     source /opt/mowgli/mavros/setup.bash && \
+    python3 tools/mowgli_interface_contract.py check && \
     export CCACHE_DIR=/ccache && \
     export CCACHE_MAXSIZE=512M && \
     export CC='ccache gcc' && \
