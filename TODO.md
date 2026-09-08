@@ -388,6 +388,15 @@ Document the software contract that MowgliNext may depend on:
 - [ ] canonical GNSS, wheel-odometry, power, and readiness semantics (MM-603 through MM-606).
 - [ ] RTCM publication bound and byte-perfect tests (MM-201).
 - [ ] supported image architecture/digest requirements (MM-301 through MM-304 and MM-402).
+- [ ] Explicitly classify backend capability parity/absence for:
+      `/wheel_ticks`, `/imu/mag_raw`,
+      `reboot_board`, `set_firmware_debug`,
+      and dig-safety inputs/behaviour.
+- [ ] Define truthful MAVROS-backend semantics for
+      `Status.firmware_compatible` / preflight compatibility.
+      Do not publish `true` merely to bypass the native STM32 guard.
+      If the field is intrinsically native-backend-specific,
+      record the required MowgliNext backend-aware handling.
 
 Acceptance:
 
@@ -478,6 +487,11 @@ Tasks:
 - [ ] Consolidate deterministic external tests for MM-602 through MM-606 and MM-201 without relying only on topic discovery.
 - [ ] Assert exact type/interface fingerprints, semantics, ownership, and failure behavior at the external backend boundary.
 - [ ] Keep hardware-dependent delivery/actuator proof in MM-801 rather than substituting software fixtures for it.
+- [ ] Validate the public `/imu/data` contract:
+      frame, axis convention, timestamp provenance,
+      covariance/calibration semantics and required QoS.
+- [ ] Prove that relayed MAVROS IMU data is compatible with
+      current MowgliNext consumers before declaring contract parity.
 
 Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTCM acceptance criteria owned by MM-201 and MM-602 through MM-606 pass.
 
@@ -563,7 +577,8 @@ Do not include this in the primary compatibility patch unless it becomes relevan
 
 # Current execution order
 
-1. Finish and freeze source compatibility and deterministic build work: `MM-102`, `MM-103`, `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
+1. Finish source-compatibility and build-tooling implementation
+   required to support subsequent work...: `MM-102`, `MM-103`, `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
 2. Synchronize exact Mowgli interfaces and pass the fingerprint gate: `MM-602`.
 3. Provide canonical GNSS observation identity and receiver semantics: `MM-603`.
 4. Establish the wheel-only odometry contract: `MM-604`.
@@ -571,7 +586,8 @@ Do not include this in the primary compatibility patch unless it becomes relevan
 6. Define freshness and readiness semantics: `MM-606`.
 7. Implement and test bounded RTCM chunking: `MM-201`.
 8. Run focused external contract tests: `MM-607`.
-9. Complete Kilted/Lyrical amd64+arm64 build, publication, and immutable-digest validation as project policy requires: `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
+9. Re-run the completed build pipeline against the finalized
+   external contract and close multiarch publication acceptance: `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
 10. Run external runtime smoke/contract validation: `MM-501` and `MM-502`.
 11. Freeze the external backend contract: `MM-601`.
 12. Return to MowgliNext integration and no-motion DDS/graph validation: `MM-701`.
