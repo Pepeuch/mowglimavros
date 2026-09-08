@@ -129,7 +129,7 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
     /bin/bash -lc "\
     source /opt/ros/${ROS_DISTRO}/setup.bash && \
     source /opt/mowgli/mavros/setup.bash && \
-    python3 tools/mowgli_interface_contract.py check && \
+    python3 tools/mowgli_interface_contract.py check --interface-root src/mowgli_interfaces && \
     export CCACHE_DIR=/ccache && \
     export CCACHE_MAXSIZE=512M && \
     export CC='ccache gcc' && \
