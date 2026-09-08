@@ -4,7 +4,7 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
 from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.launch_description_sources import AnyLaunchDescriptionSource, PythonLaunchDescriptionSource
 from launch.substitutions import EnvironmentVariable, LaunchConfiguration, PythonExpression
 from launch_ros.actions import Node
 import yaml
@@ -56,7 +56,7 @@ def generate_launch_description():
         [
             DeclareLaunchArgument("use_ntrip", default_value=use_ntrip_default),
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(os.path.join(mavros_launch_file, "apm.launch.py")),
+                AnyLaunchDescriptionSource(os.path.join(mavros_launch_file, "apm.launch")),
                 condition=IfCondition(
                     PythonExpression(
                         ["'", mavros_autopilot, "' == 'ardupilot' or '", mavros_autopilot, "' == 'apm'"]
@@ -70,7 +70,7 @@ def generate_launch_description():
                 }.items(),
             ),
             IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(os.path.join(mavros_launch_file, "px4.launch.py")),
+                AnyLaunchDescriptionSource(os.path.join(mavros_launch_file, "px4.launch")),
                 condition=IfCondition(PythonExpression(["'", mavros_autopilot, "' == 'px4'"])),
                 launch_arguments={
                     "fcu_url": mavros_fcu_url,
