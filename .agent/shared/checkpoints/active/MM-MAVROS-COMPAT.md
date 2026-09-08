@@ -270,3 +270,15 @@ warnings are non-blocking and intentionally out of scope. No multiarch build,
 GeographicLib action, MAVROS action, ccache restore/injection, or Cache Dance
 validation was exercised by this run. The next real CI run is still required
 after commit/push to validate the configured cache persistence.
+
+## Pixhawk capability audit update — 2026-09-08
+
+MM-101 is validated on Kilted amd64: MAVROS 2.15.1 XML `apm.launch` and
+`px4.launch` both resolve through `AnyLaunchDescriptionSource`; isolated APM
+and PX4 smoke tests introduced no duplicate namespace. The live APM test
+connected to ArduRover 4.6.3 on Pixhawk5X via primary USB if00.
+
+MM-501 is complete for the Kilted amd64 workstation image. This is not ARM64
+or RPi4 deployment validation. Full capability evidence is retained in
+`.agent/shared/checkpoints/retained/MM-PIXHAWK-CAPABILITY-AUDIT-20260908.md`.
+MM-201 RTCM chunking remains the next correctness implementation.

@@ -23,13 +23,13 @@ Use the acceptance criteria attached to the item.
 # Phase 0 — Agent state and durable baseline
 
 ## MM-000 — Persist audit state
-Status: IN PROGRESS
+Status: DONE (updated after workstation capability audit, 2026-09-08)
 
-- [ ] Create/update shared retained audit checkpoint.
-- [ ] Create/update active compatibility checkpoint.
-- [ ] Create/update blocked Pixhawk validation checkpoint.
-- [ ] Update shared checkpoint index.
-- [ ] Verify `git diff --check`.
+- [x] Create/update shared retained audit checkpoint.
+- [x] Create/update active compatibility checkpoint.
+- [x] Create/update blocked Pixhawk validation checkpoint.
+- [x] Update shared checkpoint index.
+- [x] Verify `git diff --check`.
 
 Expected checkpoints:
 
@@ -49,7 +49,7 @@ Acceptance:
 
 ## MM-101 — Fix MAVROS launch integration
 Related finding: `MM-AUD-001`
-Status: TODO
+Status: DONE (validated on Kilted amd64 workstation, 2026-09-08)
 
 Current problem:
 
@@ -58,11 +58,11 @@ Current problem:
 
 Tasks:
 
-- [ ] Correct MAVROS launch inclusion.
-- [ ] Verify expected namespace behaviour.
-- [ ] Verify APM launch path.
-- [ ] Verify PX4 launch path if retained/supported.
-- [ ] Add focused static/launch validation where practical.
+- [x] Correct MAVROS launch inclusion.
+- [x] Verify expected namespace behaviour.
+- [x] Verify APM launch path.
+- [x] Verify PX4 launch path if retained/supported.
+- [x] Add focused isolated launch validation.
 
 Acceptance:
 
@@ -338,17 +338,17 @@ Notes:
 # Phase 5 — Runtime smoke validation
 
 ## MM-501 — Kilted runtime smoke test
-Status: TODO
+Status: DONE on amd64 workstation (ARM64/RPi4 deployment validation remains pending)
 
 Verify:
 
-- [ ] image starts;
-- [ ] MAVROS 2.15.1 is active;
-- [ ] backend launch succeeds;
-- [ ] expected node(s) exist;
-- [ ] expected topics exist;
-- [ ] expected services exist;
-- [ ] no accidental second hardware backend exists.
+- [x] image starts;
+- [x] MAVROS 2.15.1 is active;
+- [x] backend launch succeeds;
+- [x] expected node(s) exist;
+- [x] expected topics exist;
+- [x] expected services exist;
+- [x] no accidental second hardware backend exists in the isolated smoke test.
 
 No physical actuator operation is required.
 

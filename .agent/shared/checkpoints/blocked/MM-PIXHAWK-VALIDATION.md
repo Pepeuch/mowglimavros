@@ -42,3 +42,16 @@ Prefer read-only / no-motion bench validation first.
 This checkpoint does not block deterministic SOFTWARE_NOW fixes.
 
 Do not infer hardware correctness from successful compilation or ROS graph tests.
+
+## Passive capability audit update — 2026-09-08
+
+A workstation amd64 passive audit validated MAVROS/APM connection and natural
+USB reconnect, but did not exercise actuators or safety behaviour. The RPi4 USB
+path separately showed unstable Pixhawk enumeration/boot looping and still
+blocks final ARM64 deployment validation.
+
+GPS2 (operator-identified F9P) was detected without an indoor fix. GPS1 was
+stale-configured for a DroneCAN HERE4 at node 124; after reconnect and power
+cycle the powered HERE4 was still not detected. VESC 6 Pro devices historically
+shared CAN1. CAN wiring, termination, coexistence and node selection remain a
+dedicated HARDWARE_PENDING test. No parameter was changed.
