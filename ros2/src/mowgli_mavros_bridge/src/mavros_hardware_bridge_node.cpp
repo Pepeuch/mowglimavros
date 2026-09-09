@@ -21,7 +21,10 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   manual_control_linear_scale_ = declare_parameter<double>("manual_control_linear_scale", 1000.0);
   manual_control_yaw_scale_ = declare_parameter<double>("manual_control_yaw_scale", 1000.0);
   blade_control_enabled_ = declare_parameter<bool>("blade_control_enabled", false);
-  charging_feedback_enabled_ = declare_parameter<bool>("charging_feedback_enabled", false);
+  const auto dock_battery_instance = declare_parameter<int>("dock_battery_instance", -1);
+  const auto traction_battery_instance = declare_parameter<int>("traction_battery_instance", -1);
+  battery_observation_timeout_s_ = declare_parameter<double>("battery_observation_timeout_s", 5.0);
+  power_mapping_ = PowerMapping(dock_battery_instance, traction_battery_instance, battery_observation_timeout_s_);
   emergency_mode_ = declare_parameter<std::string>("emergency_mode", "HOLD");
   emergency_disarm_ = declare_parameter<bool>("emergency_disarm", true);
   rain_detected_ = declare_parameter<bool>("rain_detected_default", false);
@@ -46,11 +49,11 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
         get_logger(),
         "blade_control_enabled=false: mower_control remains provisional and will report failure.");
   }
-  if (!charging_feedback_enabled_)
+  if (!power_mapping_.valid())
   {
     RCLCPP_WARN(
         get_logger(),
-        "charging_feedback_enabled=false: charging-related status/power fields will remain conservative.");
+        "Power mapping disabled: configure distinct dock_battery_instance and traction_battery_instance (0..255).");
   }
 
   RCLCPP_INFO(get_logger(), "MAVROS hardware bridge started.");
@@ -94,10 +97,10 @@ void MavrosHardwareBridgeNode::create_subscriptions()
       sensor_qos,
       std::bind(&MavrosHardwareBridgeNode::on_mavros_imu, this, std::placeholders::_1));
 
-  sub_mavros_battery_ = create_subscription<sensor_msgs::msg::BatteryState>(
-      "/mavros/battery",
+  sub_battery_status_ = create_subscription<mavros_battery_observer::msg::BatteryStatus>(
+      "/mavros/battery_observer/status",
       sensor_qos,
-      std::bind(&MavrosHardwareBridgeNode::on_mavros_battery, this, std::placeholders::_1));
+      std::bind(&MavrosHardwareBridgeNode::on_battery_status, this, std::placeholders::_1));
 
 }
 
@@ -133,7 +136,6 @@ void MavrosHardwareBridgeNode::create_timers()
                                     {
                                       publish_status();
                                       publish_emergency();
-                                      publish_power();
                                     });
 }
 
@@ -168,6 +170,12 @@ void MavrosHardwareBridgeNode::on_high_level_status(
 void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
+  if (mavros_state_.connected && !msg->connected) {
+    power_mapping_.reset();
+    is_charging_ = false;
+    charger_enabled_ = false;
+    charger_status_ = "unknown";
+  }
   mavros_state_ = *msg;
 }
 
@@ -180,32 +188,47 @@ void MavrosHardwareBridgeNode::on_mavros_imu(const sensor_msgs::msg::Imu::Shared
   pub_imu_->publish(*msg);
 }
 
-void MavrosHardwareBridgeNode::on_mavros_battery(
-    const sensor_msgs::msg::BatteryState::SharedPtr msg)
+void MavrosHardwareBridgeNode::on_battery_status(
+    const mavros_battery_observer::msg::BatteryStatus::SharedPtr msg)
 {
+  const auto stamp_ns = rclcpp::Time(msg->header.stamp).nanoseconds();
+  const BatteryInput input{static_cast<int>(msg->id),
+                           msg->voltage_available ? std::optional<double>(msg->voltage) : std::nullopt,
+                           msg->current_available ? std::optional<double>(msg->current) : std::nullopt,
+                           msg->percentage_available ? std::optional<double>(msg->percentage) : std::nullopt,
+                           msg->charge_state, stamp_ns};
+  PowerProjection projection{};
+  bool traction_observation = false;
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    last_battery_ = *msg;
-    battery_voltage_ = msg->voltage;
-
-    if (charging_feedback_enabled_)
-    {
-      const auto status = msg->power_supply_status;
-      is_charging_ = status == sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_CHARGING ||
-                     status == sensor_msgs::msg::BatteryState::POWER_SUPPLY_STATUS_FULL;
-      charger_enabled_ = is_charging_;
-      charge_current_ = (is_charging_ && std::isfinite(msg->current)) ? std::abs(msg->current) : 0.0;
-      charger_status_ = is_charging_ ? "charging" : "not_charging";
-    }
-    else
-    {
-      is_charging_ = false;
-      charger_enabled_ = false;
-      charge_current_ = 0.0;
-      charger_status_ = "unknown";
-    }
+    if (!power_mapping_.valid()) return;
+    traction_observation = input.instance == get_parameter("traction_battery_instance").as_int();
+    power_mapping_.observe(input);
+    projection = power_mapping_.project(stamp_ns);
+    is_charging_ = power_mapping_.charging();
+    charger_enabled_ = projection.charger_enabled;
+    charger_status_ = is_charging_ ? "charging" : "unknown";
   }
-  pub_battery_state_->publish(*msg);
+  if (traction_observation) {
+    sensor_msgs::msg::BatteryState battery;
+    battery.header = msg->header;
+    battery.location = "id" + std::to_string(msg->id);
+    battery.voltage = projection.v_battery;
+    // ArduPilot BATTERY_STATUS current is positive discharge; canonical
+    // Mowgli current is positive into, negative out of the mower battery.
+    battery.current = input.current ? -*input.current : NAN;
+    battery.percentage = input.percentage.value_or(NAN);
+    battery.present = projection.traction_fresh;
+    pub_battery_state_->publish(battery);
+  }
+  mowgli_interfaces::msg::Power power;
+  power.stamp = msg->header.stamp;
+  power.v_charge = projection.v_charge;
+  power.v_battery = projection.v_battery;
+  power.charge_current = projection.charge_current;
+  power.charger_enabled = projection.charger_enabled;
+  power.charger_status = charger_status_;
+  pub_power_->publish(power);
 }
 
 void MavrosHardwareBridgeNode::on_mower_control(
@@ -345,19 +368,8 @@ void MavrosHardwareBridgeNode::publish_emergency()
 
 void MavrosHardwareBridgeNode::publish_power()
 {
-  mowgli_interfaces::msg::Power msg;
-
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    msg.stamp = now();
-    msg.v_charge = static_cast<float>(charge_voltage_);
-    msg.v_battery = static_cast<float>(battery_voltage_);
-    msg.charge_current = static_cast<float>(charge_current_);
-    msg.charger_enabled = charger_enabled_;
-    msg.charger_status = charger_status_;
-  }
-
-  pub_power_->publish(msg);
+  // Power is published only by genuine BATTERY_STATUS observations.  A timer
+  // must not make cached battery state appear fresh.
 }
 
 bool MavrosHardwareBridgeNode::send_arm_command(bool arm)

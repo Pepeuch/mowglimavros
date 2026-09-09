@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mavros_battery_observer</name>
+  <version>0.1.0</version>
+  <description>Generic MAVROS BATTERY_STATUS observer preserving availability and charge state.</description>
+  <maintainer email="pepeuch@gmail.com">You</maintainer>
+  <license>GPL-3.0</license>
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>geometry_msgs</depend>
+  <build_depend>rosidl_default_generators</build_depend>
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <member_of_group>rosidl_interface_packages</member_of_group>
+  <depend>mavlink</depend>
+  <depend>libmavconn</depend>
+  <depend>mavros</depend>
+  <depend>mavros_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_ros</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <export><build_type>ament_cmake</build_type><mavros plugin="${prefix}/mavros_plugins.xml" /></export>
+</package>

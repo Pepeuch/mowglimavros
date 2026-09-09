@@ -10,8 +10,11 @@ hardware_bridge:
     # Blade output path via Pixhawk is not validated yet.
     blade_control_enabled: false
 
-    # Charge feedback through Pixhawk remains provisional.
-    charging_feedback_enabled: false
+    # MAVLink BATTERY_STATUS instance IDs, not POWER connector or arrival order.
+    # Leave invalid until the physical POWER1/POWER2 monitor mapping is verified.
+    dock_battery_instance: -1
+    traction_battery_instance: -1
+    battery_observation_timeout_s: 5.0
 
     # Emergency requests are sent asynchronously to MAVROS.
     emergency_mode: "HOLD"

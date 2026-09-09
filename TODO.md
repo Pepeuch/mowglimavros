@@ -94,7 +94,7 @@ Acceptance:
 
 ## MM-103 — Update ROS callback signatures
 Related audit observation: rclcpp deprecation compatibility
-Status: TODO
+Status: DONE (software; HARDWARE_PENDING)
 
 Tasks:
 
@@ -482,21 +482,29 @@ distance validation.
 
 ## MM-605 — Map POWER1 and POWER2 by configured MAVROS instances
 Related migration finding: `MN-MAV-006`
-Status: TODO
+Status: DONE (software; HARDWARE_PENDING)
 
 Target installation semantics: `POWER1 = dock/charger`; `POWER2 = traction`.
 
 Tasks:
 
-- [ ] Add configurable dock and traction `BatteryState.location=idN` instance IDs; never infer meaning from message arrival order or BATT numbering.
-- [ ] Route dock state to `Power.v_charge`, charger state, `Status.is_charging`, and docking-compatible current semantics.
-- [ ] Route traction state to `Power.v_battery`, SoC, and the sole battery-failsafe source.
-- [ ] Define missing/stale instance behavior and current sign convention. Dock POWER1 disappearance while undocked must not appear as traction failure.
-- [ ] Do not change ArduPilot failsafe parameters in this software item.
+- [x] Add configurable dock and traction MAVLink instance IDs; never infer meaning from message arrival order or BATT numbering.
+- [x] Route dock state to `Power.v_charge`, explicit MAVLink charging state, `Status.is_charging`, and docking-compatible current semantics.
+- [x] Route traction state to `Power.v_battery`, SoC, and the sole `/battery_state` producer.
+- [x] Define missing/stale instance behavior and current sign convention. Dock POWER1 disappearance while undocked must not appear as traction failure.
+- [x] Do not change ArduPilot failsafe parameters in this software item.
 
 Acceptance tests:
 
-- [ ] interleaved `id0`/`id1`; missing dock; missing traction; stale power source; current sign; traction-only failsafe-source selection.
+- [x] interleaved configured instances; missing dock; missing traction; stale power source; current sign; traction-only `/battery_state` selection.
+
+Software evidence: external `battery_observer` consumes MAVLink `BATTERY_STATUS`
+without the stock `sensor_msgs/BatteryState` sentinel/charge-state loss; focused
+mapping tests and Kilted sidecar build passed on 2026-09-09. The canonical
+producer is `/hardware_bridge/power`; it is published only from genuine
+`BATTERY_STATUS` observations. `HARDWARE_PENDING`: actual POWER1/POWER2 IDs,
+monitor direction/calibration, charge-state behavior, freshness cadence,
+disconnect/reconnect, and physical charge/discharge validation.
 
 ## MM-606 — Define observation freshness and backend readiness
 Related migration finding: `MN-MAV-008`

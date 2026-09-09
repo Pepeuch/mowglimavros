@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<library path="mavros_battery_observer_plugins">
+  <class name="battery_observer" type="mavros::plugin::PluginFactoryTemplate&lt;mavros_battery_observer::BatteryObserverPlugin&gt;" base_class_type="mavros::plugin::PluginFactory">
+    <description>Lossless generic MAVLink BATTERY_STATUS observation.</description>
+  </class>
+</library>

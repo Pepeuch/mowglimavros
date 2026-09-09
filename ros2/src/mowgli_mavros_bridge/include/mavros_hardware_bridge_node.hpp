@@ -12,12 +12,14 @@
 #include <mavros_msgs/msg/state.hpp>
 #include <mavros_msgs/srv/command_bool.hpp>
 #include <mavros_msgs/srv/set_mode.hpp>
+#include <mavros_battery_observer/msg/battery_status.hpp>
 #include <mowgli_interfaces/msg/emergency.hpp>
 #include <mowgli_interfaces/msg/high_level_status.hpp>
 #include <mowgli_interfaces/msg/power.hpp>
 #include <mowgli_interfaces/msg/status.hpp>
 #include <mowgli_interfaces/srv/emergency_stop.hpp>
 #include <mowgli_interfaces/srv/mower_control.hpp>
+#include "mowgli_mavros_bridge/power_mapping.hpp"
 
 namespace mowgli_mavros_bridge
 {
@@ -39,7 +41,7 @@ private:
 
   void on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg);
   void on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg);
-  void on_mavros_battery(const sensor_msgs::msg::BatteryState::SharedPtr msg);
+  void on_battery_status(const mavros_battery_observer::msg::BatteryStatus::SharedPtr msg);
 
   void on_mower_control(
       const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
@@ -64,7 +66,7 @@ private:
   double manual_control_yaw_scale_{1000.0};
   bool manual_control_enabled_{false};
   bool blade_control_enabled_{false};
-  bool charging_feedback_enabled_{false};
+  double battery_observation_timeout_s_{5.0};
   bool emergency_disarm_{true};
   std::string emergency_mode_{"HOLD"};
   bool rain_detected_{false};
@@ -85,9 +87,7 @@ private:
   bool charger_enabled_{false};
   std::string charger_status_{"unknown"};
 
-  double battery_voltage_{0.0};
-  double charge_voltage_{0.0};
-  double charge_current_{0.0};
+  PowerMapping power_mapping_{0, 1, 5.0};
 
   uint8_t mower_esc_status_{0};
   float mower_esc_temperature_{0.0F};
@@ -97,7 +97,7 @@ private:
 
   mavros_msgs::msg::State mavros_state_{};
   sensor_msgs::msg::Imu last_imu_{};
-  sensor_msgs::msg::BatteryState last_battery_{};
+  sensor_msgs::msg::BatteryState traction_battery_{};
   mowgli_interfaces::msg::HighLevelStatus last_high_level_status_{};
 
   rclcpp::Publisher<mowgli_interfaces::msg::Status>::SharedPtr pub_status_;
@@ -111,7 +111,7 @@ private:
   rclcpp::Subscription<mowgli_interfaces::msg::HighLevelStatus>::SharedPtr sub_hl_status_;
   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
-  rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr sub_mavros_battery_;
+  rclcpp::Subscription<mavros_battery_observer::msg::BatteryStatus>::SharedPtr sub_battery_status_;
 
   rclcpp::Service<mowgli_interfaces::srv::MowerControl>::SharedPtr srv_mower_control_;
   rclcpp::Service<mowgli_interfaces::srv::EmergencyStop>::SharedPtr srv_emergency_stop_;

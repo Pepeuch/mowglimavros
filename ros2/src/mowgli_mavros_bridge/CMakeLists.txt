@@ -16,19 +16,24 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(mowgli_interfaces REQUIRED)
 find_package(mavros_msgs REQUIRED)
 find_package(mavros REQUIRED)
+find_package(mavlink REQUIRED)
+find_package(mavros_battery_observer REQUIRED)
 
 add_executable(mavros_hardware_bridge_node
   src/mavros_hardware_bridge_node.cpp
+  src/power_mapping.cpp
 )
 
 target_include_directories(mavros_hardware_bridge_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
+  ${mavlink_INCLUDE_DIRS}
 )
 
 target_link_libraries(mavros_hardware_bridge_node PUBLIC
   ${geometry_msgs_TARGETS}
   ${mavros_msgs_TARGETS}
+  ${mavros_battery_observer_TARGETS}
   ${mowgli_interfaces_TARGETS}
   ${sensor_msgs_TARGETS}
   ${std_msgs_TARGETS}
@@ -38,6 +43,12 @@ target_link_libraries(mavros_hardware_bridge_node PUBLIC
   tf2::tf2
   tf2_geometry_msgs::tf2_geometry_msgs
 )
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_power_mapping test/test_power_mapping.cpp src/power_mapping.cpp)
+  target_include_directories(test_power_mapping PRIVATE include ${mavlink_INCLUDE_DIRS})
+endif()
 
 install(
   DIRECTORY include/
