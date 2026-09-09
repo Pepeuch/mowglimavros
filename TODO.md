@@ -73,7 +73,7 @@ Acceptance:
 
 ## MM-102 — Make CMake compatible with Lyrical
 Related findings: `MM-AUD-003`, `MM-AUD-006`
-Status: TODO
+Status: DONE (software); HARDWARE_PENDING (FCU/VESC configuration and validation)
 
 Tasks:
 
@@ -458,11 +458,27 @@ Status: TODO
 
 Tasks:
 
-- [ ] Remove `/mavros/local_position/odom -> /wheel_odom` as a production assumption.
-- [ ] Identify and provide a proven wheel-only source, or document intentional absence and affected consumer contract.
-- [ ] Prevent GPS/EKF-fused local position from feeding back as wheel odometry.
+- [x] Remove `/mavros/local_position/odom -> /wheel_odom` as a production assumption.
+- [x] Identify the signed `RPM` (#226) path and per-ESC `ESC_TELEMETRY_* .count[]` observation sequence. The latter distinguishes genuine zero-speed VESC telemetry from the stale zeroes synthesized by `AP_RPM_ESC_Telem`.
+- [x] Provide the canonical signed wheel-odometry producer as generic external MAVROS plugin `esc_wheel_odometry`. It consumes MAVLink RPM plus selected `ESC_TELEMETRY_* .count[]` slots directly, rejects output until both counters advance and a subsequent RPM message arrives, and publishes `/wheel_odom` without using local position.
+- [x] Prevent GPS/EKF-fused local position from feeding back as wheel odometry.
 
 Acceptance: no production path labels fused MAVROS local position as wheel-only odometry.
+
+Architecture: use signed RPM #226 for wheel values and selected
+`ESC_TELEMETRY_* .count[]` fields solely as per-ESC genuine-observation
+sequences. The stock MAVROS 2.15.1 wheel-odometry plugin remains unsuitable;
+the external plugin must not use its unsigned ESC telemetry RPM field.
+
+Software evidence: 20 focused pairing/kinematics tests, Kilted sidecar build,
+pluginlib discovery, safe-disabled and synthetic-config no-FCU startup, and
+canonical plugin remap passed on 2026-09-09. `git diff --check` passed.
+
+`HARDWARE_PENDING`: actual VESC `uavcan_esc_index` values,
+`CAN_D1_ESC_OFFSET`, `ESC_TELEM_MAV_OFS=0`, RPM1/RPM2 masks, installation
+signs, gear-ratio calibration, wheel radii, track width, telemetry cadence,
+one-VESC loss/reboot, FCU reconnect/reboot, forward/reverse sign, and measured
+distance validation.
 
 ## MM-605 — Map POWER1 and POWER2 by configured MAVROS instances
 Related migration finding: `MN-MAV-006`

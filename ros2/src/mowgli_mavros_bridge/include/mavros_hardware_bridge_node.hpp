@@ -4,7 +4,6 @@
 #include <string>
 
 #include <geometry_msgs/msg/twist_stamped.hpp>
-#include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/battery_state.hpp>
 #include <sensor_msgs/msg/imu.hpp>
@@ -41,7 +40,6 @@ private:
   void on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg);
   void on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg);
   void on_mavros_battery(const sensor_msgs::msg::BatteryState::SharedPtr msg);
-  void on_mavros_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   void on_mower_control(
       const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
@@ -99,7 +97,6 @@ private:
 
   mavros_msgs::msg::State mavros_state_{};
   sensor_msgs::msg::Imu last_imu_{};
-  nav_msgs::msg::Odometry last_odom_{};
   sensor_msgs::msg::BatteryState last_battery_{};
   mowgli_interfaces::msg::HighLevelStatus last_high_level_status_{};
 
@@ -107,7 +104,6 @@ private:
   rclcpp::Publisher<mowgli_interfaces::msg::Emergency>::SharedPtr pub_emergency_;
   rclcpp::Publisher<mowgli_interfaces::msg::Power>::SharedPtr pub_power_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
-  rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr pub_wheel_odom_;
   rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr pub_battery_state_;
   rclcpp::Publisher<mavros_msgs::msg::ManualControl>::SharedPtr pub_manual_control_;
 
@@ -116,7 +112,6 @@ private:
   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
   rclcpp::Subscription<sensor_msgs::msg::BatteryState>::SharedPtr sub_mavros_battery_;
-  rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_mavros_odom_;
 
   rclcpp::Service<mowgli_interfaces::srv::MowerControl>::SharedPtr srv_mower_control_;
   rclcpp::Service<mowgli_interfaces::srv::EmergencyStop>::SharedPtr srv_emergency_stop_;

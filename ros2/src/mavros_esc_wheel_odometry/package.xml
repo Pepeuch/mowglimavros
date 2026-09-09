@@ -1,0 +1,31 @@
+<?xml version="1.0"?>
+<package format="3">
+  <name>mavros_esc_wheel_odometry</name>
+  <version>0.1.0</version>
+  <description>Generic MAVROS plugin for signed RPM wheel odometry gated by ESC telemetry counters.</description>
+  <maintainer email="pepeuch@gmail.com">You</maintainer>
+  <license>GPL-3.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <test_depend>ament_cmake_gtest</test_depend>
+  <depend>diagnostic_msgs</depend>
+  <depend>diagnostic_updater</depend>
+  <depend>geometry_msgs</depend>
+  <depend>mavlink</depend>
+  <depend>libmavconn</depend>
+  <depend>mavros</depend>
+  <depend>mavros_msgs</depend>
+  <depend>nav_msgs</depend>
+  <depend>pluginlib</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>std_msgs</depend>
+  <depend>tf2_eigen</depend>
+  <depend>tf2_geometry_msgs</depend>
+  <depend>tf2_ros</depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+    <mavros plugin="${prefix}/mavros_plugins.xml" />
+  </export>
+</package>

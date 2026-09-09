@@ -1,0 +1,21 @@
+/**/esc_wheel_odometry:
+  ros__parameters:
+    # These must match ArduPilot ESC slots with ESC_TELEM_MAV_OFS=0. Leave
+    # invalid until the physical VESC/AP configuration is verified.
+    left_esc_slot: -1
+    right_esc_slot: -1
+    # Assign RPM #226 fields after configuring RPM1/RPM2 masks in ArduPilot.
+    left_rpm_instance: -1
+    right_rpm_instance: -1
+    # Must be set to 0 only after confirming FCU ESC_TELEM_MAV_OFS=0.
+    expected_esc_telem_mav_offset: -1
+
+    # RPM #226 is already signed wheel RPM after RPMx_SCALING. These are
+    # physical wheel radii and track width, not gear-ratio compensation.
+    left_wheel_radius_m: 0.0
+    right_wheel_radius_m: 0.0
+    track_width_m: 0.0
+
+    frame_id: odom
+    child_frame_id: base_link
+    velocity_stddev_mps: 0.1

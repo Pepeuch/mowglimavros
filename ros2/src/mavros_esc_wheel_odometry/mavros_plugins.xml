@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+<library path="mavros_esc_wheel_odometry_plugins">
+  <class name="esc_wheel_odometry"
+         type="mavros::plugin::PluginFactoryTemplate&lt;mavros_esc_wheel_odometry::EscWheelOdometryPlugin&gt;"
+         base_class_type="mavros::plugin::PluginFactory">
+    <description>Signed RPM #226 wheel odometry gated by per-ESC telemetry counters.</description>
+  </class>
+</library>

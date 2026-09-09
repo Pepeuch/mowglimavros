@@ -62,7 +62,6 @@ void MavrosHardwareBridgeNode::create_publishers()
   pub_emergency_ = create_publisher<mowgli_interfaces::msg::Emergency>("~/emergency", 10);
   pub_power_ = create_publisher<mowgli_interfaces::msg::Power>("~/power", 10);
   pub_imu_ = create_publisher<sensor_msgs::msg::Imu>("~/imu/data_raw", 10);
-  pub_wheel_odom_ = create_publisher<nav_msgs::msg::Odometry>("~/wheel_odom", 10);
   pub_battery_state_ =
       create_publisher<sensor_msgs::msg::BatteryState>("/battery_state", rclcpp::SensorDataQoS());
 
@@ -100,10 +99,6 @@ void MavrosHardwareBridgeNode::create_subscriptions()
       sensor_qos,
       std::bind(&MavrosHardwareBridgeNode::on_mavros_battery, this, std::placeholders::_1));
 
-  sub_mavros_odom_ = create_subscription<nav_msgs::msg::Odometry>(
-      "/mavros/local_position/odom",
-      sensor_qos,
-      std::bind(&MavrosHardwareBridgeNode::on_mavros_odom, this, std::placeholders::_1));
 }
 
 void MavrosHardwareBridgeNode::create_services()
@@ -211,15 +206,6 @@ void MavrosHardwareBridgeNode::on_mavros_battery(
     }
   }
   pub_battery_state_->publish(*msg);
-}
-
-void MavrosHardwareBridgeNode::on_mavros_odom(const nav_msgs::msg::Odometry::SharedPtr msg)
-{
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    last_odom_ = *msg;
-  }
-  pub_wheel_odom_->publish(*msg);
 }
 
 void MavrosHardwareBridgeNode::on_mower_control(
