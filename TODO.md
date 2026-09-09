@@ -437,19 +437,20 @@ Acceptance:
 
 ## MM-603 — Provide canonical public GNSS adapter
 Related migration finding: `MN-MAV-004`
-Status: TODO
+Status: DONE (software); HARDWARE_PENDING (live FCU/GPS validation)
 
 Tasks:
 
-- [ ] Publish current MowgliNext `/gps/fix` and `/gps/status` contracts; raw MAVROS topic remaps are not receiver availability.
-- [ ] Make GPS1/GPS2 and selected-receiver selection explicit and configurable.
-- [ ] Preserve `source_id`, `source_incarnation`, and `position_observation_sequence`; increment only for a genuine new selected-receiver sample.
-- [ ] Define fix/status pairing, cached delivery, freshness/liveness, invalid-input, RTK, reconnect, and FCU-reboot invalidation semantics.
-- [ ] Do not fabricate receiver-native diagnostics unavailable from MAVROS.
+- [x] Publish canonical `/gps/fix` and `/gps/status` directly from the pinned Universal GNSS MAVROS plugin; `/mavros/global_position/raw/fix` is not selected GNSS truth.
+- [x] Build and load the external GPS1/GPS2 Universal GNSS transport; `GNSS_MAVROS_SOURCE` selects `gps1` or `gps2` by remap only.
+- [x] Preserve Universal GNSS `source_id`, `source_incarnation`, and `position_observation_sequence` unchanged; the sidecar contains no GNSS observation state machine.
+- [x] Use the exact pinned Universal GNSS transport contract for fix/status pairing, RTK enrichment, cached delivery, connection/reboot invalidation, and source incarnation.
+- [x] Do not fabricate receiver-native diagnostics unavailable from MAVROS.
 
 Acceptance tests:
 
-- [ ] receiver selection; observation identity and new-versus-cached delivery; reconnect/source-incarnation invalidation; RTK mapping; invalid and stale GNSS inputs.
+- [x] Software proof: exact source pin, Kilted build, pluginlib discovery/loading, GPS1/GPS2 source surfaces, canonical remap, no bridge-side GNSS producer, and fail-closed interface fingerprint.
+- [ ] `HARDWARE_PENDING`: validate live MAVLink GPS1/GPS2 traffic, receiver selection, RTK, stale/invalid behavior, FCU reconnect/reboot invalidation, and canonical DDS delivery on the target robot.
 
 ## MM-604 — Establish wheel-only odometry contract
 Related migration finding: `MN-MAV-005`

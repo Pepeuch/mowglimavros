@@ -8,7 +8,7 @@ class ContractTest(unittest.TestCase):
  def test_pinned_set_and_fingerprint(self): self.assertEqual([],validate(INTERFACES,self.manifest)); self.assertEqual(self.manifest["fingerprint"],fingerprint(INTERFACES,self.manifest["interfaces"]))
  def test_changed_definition_fails_closed(self):
   with tempfile.TemporaryDirectory() as temporary:
-   copied=Path(temporary)/"interfaces"; shutil.copytree(INTERFACES,copied); status=copied/"msg/Status.msg"; status.write_text(status.read_text()+"\n# modified\n"); self.assertTrue(validate(copied,self.manifest))
+   copied=Path(temporary)/"interfaces"; shutil.copytree(INTERFACES,copied); status=copied/"msg/GnssStatus.msg"; status.write_text(status.read_text()+"\n# modified\n"); self.assertTrue(validate(copied,self.manifest))
  def test_copy_is_deterministic(self):
   with tempfile.TemporaryDirectory() as temporary:
    first,second=Path(temporary)/"first",Path(temporary)/"second"

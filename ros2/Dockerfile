@@ -2,6 +2,8 @@
 ARG ROS_DISTRO=kilted
 ARG MAVROS_VERSION=2.15.1
 ARG MAVROS_COMMIT=22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e
+ARG UNIVERSAL_GNSS_REPOSITORY=https://github.com/Pepeuch/universal-gnss.git
+ARG UNIVERSAL_GNSS_COMMIT=34afbf01e770dd0b4c3863f3822a122dc25e7b7b
 ARG MAVLINK_VERSION=2026.8.8
 ARG GEOGRAPHICLIB_DATASET_VERSION=geographiclib-datasets-v1
 
@@ -115,7 +117,35 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
     printf '%s\\n' '${MAVROS_VERSION}' > /opt/mowgli/mavros/.mowgli-mavros-version \
     "
 
-FROM mavros-build AS workspace-build
+FROM mavros-build AS universal-gnss-build
+
+ARG ROS_DISTRO
+ARG MAVROS_VERSION
+ARG UNIVERSAL_GNSS_REPOSITORY
+ARG UNIVERSAL_GNSS_COMMIT
+
+RUN set -eux; \
+    git clone --filter=blob:none --no-checkout "${UNIVERSAL_GNSS_REPOSITORY}" /universal_gnss_ws/src/universal_gnss; \
+    git -C /universal_gnss_ws/src/universal_gnss fetch --depth 1 origin "${UNIVERSAL_GNSS_COMMIT}"; \
+    test "$(git -C /universal_gnss_ws/src/universal_gnss rev-parse FETCH_HEAD)" = "${UNIVERSAL_GNSS_COMMIT}"; \
+    git -C /universal_gnss_ws/src/universal_gnss checkout --detach "${UNIVERSAL_GNSS_COMMIT}"; \
+    test -f /universal_gnss_ws/src/universal_gnss/gnss_mavros/universal_gnss_mavros_plugins.xml; \
+    grep --fixed-strings --quiet "${MAVROS_VERSION}" /universal_gnss_ws/src/universal_gnss/gnss_mavros/README.md
+
+WORKDIR /universal_gnss_ws
+
+RUN /bin/bash -lc "\
+    source /opt/ros/${ROS_DISTRO}/setup.bash && \
+    source /opt/mowgli/mavros/setup.bash && \
+    colcon build --base-paths src/universal_gnss/gnss_ros2 src/universal_gnss/gnss_mavros \
+      --packages-up-to universal_gnss_mavros \
+      --install-base /opt/mowgli/universal_gnss \
+      --cmake-args -DUNIVERSAL_GNSS_BUILD_MAVROS_PLUGIN=ON -DBUILD_TESTING=OFF && \
+    test -f /opt/mowgli/universal_gnss/universal_gnss_mavros/share/universal_gnss_mavros/universal_gnss_mavros_plugins.xml && \
+    printf '%s\n' '${UNIVERSAL_GNSS_COMMIT}' > /opt/mowgli/universal_gnss/.mowgli-universal-gnss-commit \
+    "
+
+FROM universal-gnss-build AS workspace-build
 
 ARG ROS_DISTRO
 ARG BUILD_TYPE=Release
@@ -129,6 +159,7 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
     /bin/bash -lc "\
     source /opt/ros/${ROS_DISTRO}/setup.bash && \
     source /opt/mowgli/mavros/setup.bash && \
+    source /opt/mowgli/universal_gnss/setup.bash && \
     python3 tools/mowgli_interface_contract.py check --interface-root src/mowgli_interfaces && \
     export CCACHE_DIR=/ccache && \
     export CCACHE_MAXSIZE=512M && \
@@ -146,6 +177,7 @@ FROM ros:${ROS_DISTRO}-ros-base AS runtime
 ARG DEBIAN_FRONTEND=noninteractive
 ARG ROS_DISTRO
 ARG MAVROS_VERSION
+ARG UNIVERSAL_GNSS_COMMIT
 
 RUN set -eux; \
     # The NTRIP client links Boost.System; current Kilted and Lyrical builds
@@ -173,11 +205,14 @@ RUN set -eux; \
 
 COPY --from=geographiclib-data /usr/share/GeographicLib /usr/share/GeographicLib
 COPY --from=mavros-build /opt/mowgli/mavros /opt/mowgli/mavros
+COPY --from=universal-gnss-build /opt/mowgli/universal_gnss /opt/mowgli/universal_gnss
 COPY --from=workspace-build /ros2_ws/install/ /ros2_ws/install/
 COPY ros2_entrypoint.sh /ros2_entrypoint.sh
 
 RUN chmod +x /ros2_entrypoint.sh \
  && test "$(cat /opt/mowgli/mavros/.mowgli-mavros-version)" = "${MAVROS_VERSION}" \
+ && test "$(cat /opt/mowgli/universal_gnss/.mowgli-universal-gnss-commit)" = "${UNIVERSAL_GNSS_COMMIT}" \
+ && test -f /opt/mowgli/universal_gnss/universal_gnss_mavros/share/universal_gnss_mavros/universal_gnss_mavros_plugins.xml \
  && test -s /usr/share/GeographicLib/geoids/egm96-5.pgm \
  && test -s /usr/share/GeographicLib/gravity/egm96.egm \
  && test -s /usr/share/GeographicLib/magnetic/emm2015.wmm

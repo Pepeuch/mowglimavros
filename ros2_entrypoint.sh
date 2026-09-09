@@ -5,6 +5,7 @@ set -e
 : "${ROS_DISTRO:=kilted}"
 source "/opt/ros/${ROS_DISTRO}/setup.bash"
 source /opt/mowgli/mavros/setup.bash
+source /opt/mowgli/universal_gnss/setup.bash
 if [ -f /ros2_ws/install/setup.bash ]; then
   source /ros2_ws/install/setup.bash
 fi
@@ -21,7 +22,9 @@ export RMW_IMPLEMENTATION
 : "${MAVROS_TGT_SYSTEM:=1}"
 : "${MAVROS_TGT_COMPONENT:=1}"
 : "${MAVROS_AUTOPILOT:=ardupilot}"
+: "${GNSS_MAVROS_SOURCE:=gps1}"
 
 MAVROS_FCU_URL="serial://${MAVROS_PORT}:${MAVROS_BAUD}"
 export MAVROS_FCU_URL
+export GNSS_MAVROS_SOURCE
 exec ros2 launch mowgli_mavros_bridge mavros_backend.launch.py

@@ -2,12 +2,55 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
 from launch.conditions import IfCondition
-from launch.launch_description_sources import AnyLaunchDescriptionSource, PythonLaunchDescriptionSource
-from launch.substitutions import EnvironmentVariable, LaunchConfiguration, PythonExpression
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.substitutions import EnvironmentVariable, LaunchConfiguration
 from launch_ros.actions import Node
 import yaml
+
+
+def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, tgt_system, tgt_component, gnss_source):
+    source = gnss_source.perform(context)
+    if source not in ("gps1", "gps2"):
+        raise RuntimeError("GNSS_MAVROS_SOURCE must be gps1 or gps2")
+    autopilot_value = autopilot.perform(context).lower()
+    if autopilot_value in ("ardupilot", "apm"):
+        plugin_list = "apm_pluginlists.yaml"
+        config = "apm_config.yaml"
+    elif autopilot_value == "px4":
+        plugin_list = "px4_pluginlists.yaml"
+        config = "px4_config.yaml"
+    else:
+        raise RuntimeError("MAVROS_AUTOPILOT must be ardupilot, apm, or px4")
+    plugin_xml = os.path.join(
+        get_package_share_directory("universal_gnss_mavros"),
+        "universal_gnss_mavros_plugins.xml",
+    )
+    if not os.path.isfile(plugin_xml):
+        raise RuntimeError("Universal GNSS MAVROS pluginlib export is unavailable")
+    source_root = f"/mavros/universal_gnss/{source}"
+    return [
+        Node(
+            package="mavros",
+            executable="mavros_node",
+            output="screen",
+            parameters=[
+                os.path.join(mavros_share, "launch", plugin_list),
+                os.path.join(mavros_share, "launch", config),
+                {
+                    "fcu_url": fcu_url.perform(context),
+                    "gcs_url": gcs_url.perform(context),
+                    "tgt_system": int(tgt_system.perform(context)),
+                    "tgt_component": int(tgt_component.perform(context)),
+                },
+            ],
+            remappings=[
+                (f"{source_root}/fix", "/gps/fix"),
+                (f"{source_root}/status", "/gps/status"),
+            ],
+        )
+    ]
 
 
 def generate_launch_description():
@@ -22,7 +65,6 @@ def generate_launch_description():
             robot_config = yaml.safe_load(config_file) or {}
         robot_params = robot_config.get("mowgli", {}).get("ros__parameters", {})
 
-    mavros_launch_file = os.path.join(mavros_share, "launch")
     bridge_params = os.path.join(bridge_share, "config", "hardware_bridge_mavros.yaml")
     ntrip_launch = os.path.join(ntrip_share, "launch", "mowgli_ntrip_client.launch.py")
 
@@ -40,6 +82,7 @@ def generate_launch_description():
     mavros_gcs_url = EnvironmentVariable("MAVROS_GCS_URL", default_value="")
     mavros_tgt_system = EnvironmentVariable("MAVROS_TGT_SYSTEM", default_value="1")
     mavros_tgt_component = EnvironmentVariable("MAVROS_TGT_COMPONENT", default_value="1")
+    gnss_mavros_source = EnvironmentVariable("GNSS_MAVROS_SOURCE", default_value="gps1")
     use_ntrip_default = os.environ.get(
         "NTRIP_ENABLED", str(robot_params.get("ntrip_enabled", False)).lower()
     )
@@ -55,29 +98,17 @@ def generate_launch_description():
     return LaunchDescription(
         [
             DeclareLaunchArgument("use_ntrip", default_value=use_ntrip_default),
-            IncludeLaunchDescription(
-                AnyLaunchDescriptionSource(os.path.join(mavros_launch_file, "apm.launch")),
-                condition=IfCondition(
-                    PythonExpression(
-                        ["'", mavros_autopilot, "' == 'ardupilot' or '", mavros_autopilot, "' == 'apm'"]
-                    )
-                ),
-                launch_arguments={
-                    "fcu_url": mavros_fcu_url,
-                    "gcs_url": mavros_gcs_url,
-                    "tgt_system": mavros_tgt_system,
-                    "tgt_component": mavros_tgt_component,
-                }.items(),
-            ),
-            IncludeLaunchDescription(
-                AnyLaunchDescriptionSource(os.path.join(mavros_launch_file, "px4.launch")),
-                condition=IfCondition(PythonExpression(["'", mavros_autopilot, "' == 'px4'"])),
-                launch_arguments={
-                    "fcu_url": mavros_fcu_url,
-                    "gcs_url": mavros_gcs_url,
-                    "tgt_system": mavros_tgt_system,
-                    "tgt_component": mavros_tgt_component,
-                }.items(),
+            OpaqueFunction(
+                function=_mavros_node,
+                args=[
+                    mavros_share,
+                    mavros_autopilot,
+                    mavros_fcu_url,
+                    mavros_gcs_url,
+                    mavros_tgt_system,
+                    mavros_tgt_component,
+                    gnss_mavros_source,
+                ],
             ),
             Node(
                 package="mowgli_mavros_bridge",

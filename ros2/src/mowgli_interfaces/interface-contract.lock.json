@@ -3,14 +3,22 @@
   "source_repository": "https://github.com/mowglinext/mowglinext.git",
   "source_revision": "3b0974809809ace589a567b6c32e5bed6e599489",
   "source_path": "ros2/src/mowgli_interfaces",
+  "external_interface_sources": {
+    "GnssStatus.msg": {
+      "repository": "https://github.com/Pepeuch/universal-gnss.git",
+      "revision": "34afbf01e770dd0b4c3863f3822a122dc25e7b7b",
+      "source_path": "gnss_ros2/msg/GnssStatus.msg"
+    }
+  },
   "fingerprint_algorithm": "sha256(relative UTF-8 path, NUL, raw file bytes, NUL; paths sorted lexically)",
   "interfaces": {
     "msg/Emergency.msg": "cc057927352df4cae8b850eb7264bbb7b487a1198760106f9d09d8e674493b50",
+    "msg/GnssStatus.msg": "3793e0986cf2433955b588352d590f66916a53b5d53e01323a11bdd48b7c6a45",
     "msg/HighLevelStatus.msg": "0edb16633afe5bdaba17be430ea7383475015cbbbc86c519930565be4e77c413",
     "msg/Power.msg": "dd24ecf5ae095f290c48e5fee1129606463e5f07233bf47033fad4eeb84ed423",
     "msg/Status.msg": "c363e56ffb0e2ebfe06e5e99a8826b4cc4f81ad208af258557ca877f219ea663",
     "srv/EmergencyStop.srv": "42a65c6856c2e0d1e90303cd32f5b622948762cedc98884a45ba680f218866b7",
     "srv/MowerControl.srv": "1ec1a54cc0ac253cab1206bd823c88dc9b4c825a8a643fb9006e3ded283c773b"
   },
-  "fingerprint": "ca3f42df9d72672b24a0f096fb842276b0d7c79e3c60dd9375e87a65ea908739"
+  "fingerprint": "0cca072083339163fa9bb84dedb5db946f92f0d3ceef52fe6870d78b7f31ed61"
 }

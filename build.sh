@@ -7,6 +7,8 @@ IMAGE_NAME="${IMAGE_NAME:-mowgli-mavros-sidecar}"
 ROS_DISTRO="${ROS_DISTRO:-kilted}"
 MAVROS_VERSION="${MAVROS_VERSION:-2.15.1}"
 MAVROS_COMMIT="${MAVROS_COMMIT:-22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e}"
+UNIVERSAL_GNSS_REPOSITORY="${UNIVERSAL_GNSS_REPOSITORY:-https://github.com/Pepeuch/universal-gnss.git}"
+UNIVERSAL_GNSS_COMMIT="${UNIVERSAL_GNSS_COMMIT:-34afbf01e770dd0b4c3863f3822a122dc25e7b7b}"
 MAVLINK_VERSION="${MAVLINK_VERSION:-2026.8.8}"
 GEOGRAPHICLIB_DATASET_VERSION="${GEOGRAPHICLIB_DATASET_VERSION:-geographiclib-datasets-v1}"
 
@@ -59,6 +61,7 @@ build_image() {
   info "Platforms: ${PLATFORMS}"
   info "ROS distro: ${ROS_DISTRO}"
   info "MAVROS: ${MAVROS_VERSION} (${MAVROS_COMMIT})"
+  info "Universal GNSS: ${UNIVERSAL_GNSS_COMMIT}"
   info "MAVLink: ${MAVLINK_VERSION}"
 
   docker buildx build \
@@ -69,6 +72,8 @@ build_image() {
     --build-arg ROS_DISTRO="${ROS_DISTRO}" \
     --build-arg MAVROS_VERSION="${MAVROS_VERSION}" \
     --build-arg MAVROS_COMMIT="${MAVROS_COMMIT}" \
+    --build-arg UNIVERSAL_GNSS_REPOSITORY="${UNIVERSAL_GNSS_REPOSITORY}" \
+    --build-arg UNIVERSAL_GNSS_COMMIT="${UNIVERSAL_GNSS_COMMIT}" \
     --build-arg MAVLINK_VERSION="${MAVLINK_VERSION}" \
     --build-arg GEOGRAPHICLIB_DATASET_VERSION="${GEOGRAPHICLIB_DATASET_VERSION}" \
     --cache-from type=gha,scope=${CACHE_SCOPE} \

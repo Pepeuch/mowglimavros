@@ -14,6 +14,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 set(msg_files
   "msg/Emergency.msg"
+  "msg/GnssStatus.msg"
   "msg/HighLevelStatus.msg"
   "msg/Power.msg"
   "msg/Status.msg"
