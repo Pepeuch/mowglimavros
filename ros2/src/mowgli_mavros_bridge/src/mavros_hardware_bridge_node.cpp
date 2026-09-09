@@ -25,6 +25,7 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   const auto traction_battery_instance = declare_parameter<int>("traction_battery_instance", -1);
   battery_observation_timeout_s_ = declare_parameter<double>("battery_observation_timeout_s", 5.0);
   power_mapping_ = PowerMapping(dock_battery_instance, traction_battery_instance, battery_observation_timeout_s_);
+  readiness_ = ReadinessState(declare_parameter<double>("readiness_observation_timeout_s", 5.0));
   emergency_mode_ = declare_parameter<std::string>("emergency_mode", "HOLD");
   emergency_disarm_ = declare_parameter<bool>("emergency_disarm", true);
   rain_detected_ = declare_parameter<bool>("rain_detected_default", false);
@@ -70,6 +71,7 @@ void MavrosHardwareBridgeNode::create_publishers()
 
   pub_manual_control_ =
       create_publisher<mavros_msgs::msg::ManualControl>("/mavros/manual_control/send", 10);
+  pub_readiness_ = create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", 10);
 }
 
 void MavrosHardwareBridgeNode::create_subscriptions()
@@ -98,9 +100,14 @@ void MavrosHardwareBridgeNode::create_subscriptions()
       std::bind(&MavrosHardwareBridgeNode::on_mavros_imu, this, std::placeholders::_1));
 
   sub_battery_status_ = create_subscription<mavros_battery_observer::msg::BatteryStatus>(
-      "/mavros/battery_observer/status",
-      sensor_qos,
+      "/mavros/battery_observer/status", sensor_qos,
       std::bind(&MavrosHardwareBridgeNode::on_battery_status, this, std::placeholders::_1));
+  sub_gnss_status_ = create_subscription<mowgli_interfaces::msg::GnssStatus>(
+      "/gps/status", sensor_qos,
+      std::bind(&MavrosHardwareBridgeNode::on_gnss_status, this, std::placeholders::_1));
+  sub_wheel_odom_ = create_subscription<nav_msgs::msg::Odometry>(
+      "/wheel_odom", sensor_qos,
+      std::bind(&MavrosHardwareBridgeNode::on_wheel_odom, this, std::placeholders::_1));
 
 }
 
@@ -136,6 +143,7 @@ void MavrosHardwareBridgeNode::create_timers()
                                     {
                                       publish_status();
                                       publish_emergency();
+                                      publish_readiness();
                                     });
 }
 
@@ -176,6 +184,7 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
     charger_enabled_ = false;
     charger_status_ = "unknown";
   }
+  readiness_.connection(msg->connected);
   mavros_state_ = *msg;
 }
 
@@ -204,6 +213,7 @@ void MavrosHardwareBridgeNode::on_battery_status(
     if (!power_mapping_.valid()) return;
     traction_observation = input.instance == get_parameter("traction_battery_instance").as_int();
     power_mapping_.observe(input);
+    if (traction_observation) readiness_.traction(stamp_ns, input.voltage.has_value());
     projection = power_mapping_.project(stamp_ns);
     is_charging_ = power_mapping_.charging();
     charger_enabled_ = projection.charger_enabled;
@@ -229,6 +239,19 @@ void MavrosHardwareBridgeNode::on_battery_status(
   power.charger_enabled = projection.charger_enabled;
   power.charger_status = charger_status_;
   pub_power_->publish(power);
+}
+
+void MavrosHardwareBridgeNode::on_gnss_status(const mowgli_interfaces::msg::GnssStatus::SharedPtr msg)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  readiness_.gnss(rclcpp::Time(msg->stamp).nanoseconds(), msg->position_observation_sequence,
+                  msg->source_incarnation, msg->fix_valid);
+}
+
+void MavrosHardwareBridgeNode::on_wheel_odom(const nav_msgs::msg::Odometry::SharedPtr msg)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  readiness_.wheel(rclcpp::Time(msg->header.stamp).nanoseconds());
 }
 
 void MavrosHardwareBridgeNode::on_mower_control(
@@ -328,7 +351,11 @@ void MavrosHardwareBridgeNode::publish_status()
 
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    msg.stamp = now();
+    const auto status_stamp_ns = readiness_.status_stamp_ns();
+    if (status_stamp_ns > 0) {
+      msg.stamp.sec = static_cast<int32_t>(status_stamp_ns / 1000000000LL);
+      msg.stamp.nanosec = static_cast<uint32_t>(status_stamp_ns % 1000000000LL);
+    }
     msg.raspberry_pi_power = raspberry_pi_power_;
     msg.is_charging = is_charging_;
     msg.esc_power = esc_power_;
@@ -370,6 +397,43 @@ void MavrosHardwareBridgeNode::publish_power()
 {
   // Power is published only by genuine BATTERY_STATUS observations.  A timer
   // must not make cached battery state appear fresh.
+}
+
+void MavrosHardwareBridgeNode::publish_readiness()
+{
+  diagnostic_msgs::msg::DiagnosticArray output;
+  output.header.stamp = now();
+  const auto now_ns = rclcpp::Time(output.header.stamp).nanoseconds();
+  Readiness readiness{};
+  bool dock_fresh = false;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    readiness = readiness_.project(now_ns);
+    dock_fresh = power_mapping_.valid() && power_mapping_.project(now_ns).dock_fresh;
+  }
+  const auto add_component = [&output](const char * name, bool ok, const char * message) {
+    diagnostic_msgs::msg::DiagnosticStatus status;
+    status.name = name;
+    status.level = ok ? diagnostic_msgs::msg::DiagnosticStatus::OK : diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    status.message = message;
+    output.status.push_back(std::move(status));
+  };
+  add_component("mowgli_mavros_bridge/fcu_connection", readiness.connected,
+                readiness.connected ? "connected" : "disconnected");
+  add_component("mowgli_mavros_bridge/gnss_source", readiness.gnss_fresh && readiness.gnss_valid,
+                readiness.gnss_fresh && readiness.gnss_valid ? "fresh_valid_fix" : "missing_stale_or_invalid");
+  add_component("mowgli_mavros_bridge/wheel_odometry_source", readiness.wheel_fresh,
+                readiness.wheel_fresh ? "fresh" : "missing_or_stale");
+  add_component("mowgli_mavros_bridge/traction_power", readiness.traction_fresh && readiness.traction_valid,
+                readiness.traction_fresh && readiness.traction_valid ? "fresh_valid" : "missing_stale_or_invalid");
+  diagnostic_msgs::msg::DiagnosticStatus dock_status;
+  dock_status.name = "mowgli_mavros_bridge/dock_power";
+  dock_status.level = dock_fresh ? diagnostic_msgs::msg::DiagnosticStatus::OK : diagnostic_msgs::msg::DiagnosticStatus::STALE;
+  dock_status.message = dock_fresh ? "fresh" : "absent_or_stale_non_blocking";
+  output.status.push_back(std::move(dock_status));
+  add_component("mowgli_mavros_bridge/backend_readiness", readiness.ready,
+                readiness.ready ? "ready" : "not_ready");
+  pub_readiness_->publish(output);
 }
 
 bool MavrosHardwareBridgeNode::send_arm_command(bool arm)

@@ -56,6 +56,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
       "ros-${ROS_DISTRO}-angles" \
       "ros-${ROS_DISTRO}-diagnostic-updater" \
+      "ros-${ROS_DISTRO}-diagnostic-msgs" \
       "ros-${ROS_DISTRO}-eigen-stl-containers" \
       "ros-${ROS_DISTRO}-geographic-msgs" \
       "ros-${ROS_DISTRO}-mavlink" \
@@ -187,6 +188,7 @@ RUN set -eux; \
     apt-get install -y --no-install-recommends \
     "ros-${ROS_DISTRO}-angles" \
     "ros-${ROS_DISTRO}-diagnostic-updater" \
+    "ros-${ROS_DISTRO}-diagnostic-msgs" \
     "ros-${ROS_DISTRO}-eigen-stl-containers" \
     "ros-${ROS_DISTRO}-geographic-msgs" \
     "ros-${ROS_DISTRO}-message-filters" \

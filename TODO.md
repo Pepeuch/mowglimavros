@@ -508,16 +508,27 @@ disconnect/reconnect, and physical charge/discharge validation.
 
 ## MM-606 — Define observation freshness and backend readiness
 Related migration finding: `MN-MAV-008`
-Status: TODO
+Status: DONE (software; HARDWARE_PENDING)
 
 Tasks:
 
-- [ ] Separate FCU connection, transport liveness, last genuine observation, observation freshness, cached publication, and backend readiness.
-- [ ] Stop timer callbacks from assigning a new observation stamp to cached status or power data.
-- [ ] Require the FCU and all required fresh streams for readiness; a running container alone is liveness, not readiness.
-- [ ] Invalidate cached observations across reconnect and FCU reboot.
+- [x] Separate FCU connection, transport liveness, last genuine observation, observation freshness, cached publication, and backend readiness.
+- [x] Stop timer callbacks from assigning a new observation stamp to cached status or power data.
+- [x] Require the FCU and all required fresh streams for readiness; a running container alone is liveness, not readiness.
+- [x] Invalidate cached observations across reconnect and FCU reboot.
 
 Acceptance: cached publication cannot appear newly observed; readiness becomes false for stale/disconnected required inputs.
+
+Software evidence: an internal current-FCU-generation readiness state requires
+MAVROS connection, a new valid Universal GNSS observation sequence, fresh
+canonical wheel odometry, and a fresh valid configured traction observation.
+Dock power is surfaced only as non-blocking `/diagnostics` information.
+Focused readiness/power tests, pinned Kilted sidecar build, MM-602 interface
+contract check, and no-FCU diagnostics smoke passed on 2026-09-09.
+
+`HARDWARE_PENDING`: live MAVROS reconnect/reboot timing; Universal GNSS,
+VESC-wheel, and battery observation cadence/loss behavior on the target FCU;
+and target DDS diagnostics delivery.
 
 ## MM-607 — Add focused external-backend contract tests
 Status: TODO

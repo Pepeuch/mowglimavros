@@ -16,6 +16,10 @@ hardware_bridge:
     traction_battery_instance: -1
     battery_observation_timeout_s: 5.0
 
+    # Mandatory source freshness for internal backend readiness diagnostics.
+    # Dock power is informational and never blocks backend readiness.
+    readiness_observation_timeout_s: 5.0
+
     # Emergency requests are sent asynchronously to MAVROS.
     emergency_mode: "HOLD"
     emergency_disarm: true

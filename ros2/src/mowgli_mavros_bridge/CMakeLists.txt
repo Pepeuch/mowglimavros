@@ -8,6 +8,8 @@ endif()
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
@@ -22,6 +24,7 @@ find_package(mavros_battery_observer REQUIRED)
 add_executable(mavros_hardware_bridge_node
   src/mavros_hardware_bridge_node.cpp
   src/power_mapping.cpp
+  src/readiness_state.cpp
 )
 
 target_include_directories(mavros_hardware_bridge_node PUBLIC
@@ -32,6 +35,8 @@ target_include_directories(mavros_hardware_bridge_node PUBLIC
 
 target_link_libraries(mavros_hardware_bridge_node PUBLIC
   ${geometry_msgs_TARGETS}
+  ${nav_msgs_TARGETS}
+  ${diagnostic_msgs_TARGETS}
   ${mavros_msgs_TARGETS}
   ${mavros_battery_observer_TARGETS}
   ${mowgli_interfaces_TARGETS}
@@ -47,7 +52,9 @@ target_link_libraries(mavros_hardware_bridge_node PUBLIC
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   ament_add_gtest(test_power_mapping test/test_power_mapping.cpp src/power_mapping.cpp)
+  ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
   target_include_directories(test_power_mapping PRIVATE include ${mavlink_INCLUDE_DIRS})
+  target_include_directories(test_readiness_state PRIVATE include)
 endif()
 
 install(
