@@ -165,7 +165,7 @@ Evidence:
 
 ## MM-301 — Parameterize ROS distribution
 Related finding: `MM-AUD-005`
-Status: IN PROGRESS
+Status: DONE
 
 Target:
 
@@ -184,8 +184,8 @@ Tasks:
 Acceptance:
 
 - Same Dockerfile builds for Kilted and Lyrical.
-- Kilted and Lyrical amd64 runtime images passed on 2026-09-07 with the same modern CMake source; arm64 remains pending.
-- A production image is published for each project-required Kilted/Lyrical architecture and its immutable deployment digest is recorded; an amd64 workstation image is not ARM64/RPi evidence.
+- [x] Kilted and Lyrical amd64/arm64 images were built and pushed by GitHub Actions run 34483209217 for commit `0fcf7444e020e22cd0be11ddab008f277be03f2a`.
+- [x] Production Kilted manifest (also `latest`) is `ghcr.io/pepeuch/mowglimavros/mowgli-mavros-sidecar@sha256:04e4eb17b0f5ce38f882f68346b1694774fa87e1945b38b57c94f90da34dd560`; Lyrical is `ghcr.io/pepeuch/mowglimavros/mowgli-mavros-sidecar@sha256:9fa1ab1652d10c50433198f19ced13d7f70e1549ae3a98dcc1184b06fbfe2cb6`. Both are multi-architecture (amd64 and arm64).
 
 ---
 
@@ -303,7 +303,7 @@ Acceptance:
 ---
 
 ## MM-402 — Add Kilted/Lyrical CI matrix
-Status: IN PROGRESS
+Status: DONE
 
 Target matrix:
 
@@ -317,15 +317,15 @@ Lyrical × arm64
 Tasks:
 
 - [x] Separate layer-cache scopes by ROS distro, MAVROS version and architecture/platform.
-- [~] Configure ccache cache-mount persistence with Cache Dance. The key is `ccache-${runner.os}-${ROS_DISTRO}-${architecture}-${MAVROS_VERSION}-${MAVROS_COMMIT}-${Dockerfile hash}` and the mount id is `ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION}`. Static YAML/key checks pass; two real CI runs remain pending until commit/push.
-- [ ] Keep Kilted as primary/default image.
-- [ ] Publish Lyrical using an explicit distro tag.
-- [ ] Do not hide one failing matrix entry behind successful others.
+- [x] Configure ccache cache-mount persistence with Cache Dance. The key is `ccache-${runner.os}-${ROS_DISTRO}-${architecture}-${MAVROS_VERSION}-${MAVROS_COMMIT}-${Dockerfile hash}` and the mount id is `ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION}`; all four real matrix jobs restored and injected their isolated cache mounts in run 34483209217.
+- [x] Keep Kilted as primary/default image.
+- [x] Publish Lyrical using an explicit distro tag.
+- [x] Do not hide one failing matrix entry behind successful others (the real `fail-fast: false` matrix passed all four independent jobs).
 
 Acceptance:
 
-- All four matrix targets build successfully.
-- Required production image manifests and immutable deployment digests are recorded for Kilted amd64/arm64 and, while project policy requires it, Lyrical amd64/arm64.
+- [x] All four matrix targets build successfully in GitHub Actions run 34483209217 for `0fcf7444e020e22cd0be11ddab008f277be03f2a`.
+- [x] Required production manifests and immutable deployment digests are recorded: Kilted `sha256:04e4eb17b0f5ce38f882f68346b1694774fa87e1945b38b57c94f90da34dd560`, Lyrical `sha256:9fa1ab1652d10c50433198f19ced13d7f70e1549ae3a98dcc1184b06fbfe2cb6`; each contains amd64 and arm64.
 
 ---
 

@@ -7,17 +7,17 @@ Sidecar ROS 2 repository for the optional MAVROS backend used by MowgliNext.
 
 ![Generated MowgliMAVROS progress](docs/status/mowglimavros_progress.svg)
 
-**Verified completion: 11 / 25 (44.00%)**. An item counts as fully complete only when its TODO status is `DONE` and it has no `HARDWARE_PENDING` qualifier.
+**Verified completion: 13 / 25 (52.00%)**. An item counts as fully complete only when its TODO status is `DONE` and it has no `HARDWARE_PENDING` qualifier.
 
-Status: **DONE 17** · **IN PROGRESS 2** · **TODO 3** · **BLOCKED 2** · **DEFERRED 1**. Hardware-pending items: **6** (software completion is not presented as physical validation).
+Status: **DONE 19** · **IN PROGRESS 0** · **TODO 3** · **BLOCKED 2** · **DEFERRED 1**. Hardware-pending items: **6** (software completion is not presented as physical validation).
 
 ### Phase Progress
 
 - **0 — Agent state and durable baseline:** 1 / 1 verified (100.00%); DONE 1
 - **1 — Source compatibility Kilted + Lyrical:** 1 / 3 verified (33.33%); DONE 3
 - **2 — NTRIP / RTCM correctness:** 0 / 1 verified (0.00%); TODO 1
-- **3 — Reproducible MAVROS container:** 4 / 5 verified (80.00%); IN PROGRESS 1, DONE 4
-- **4 — Build tooling and CI:** 2 / 3 verified (66.67%); IN PROGRESS 1, DONE 2
+- **3 — Reproducible MAVROS container:** 5 / 5 verified (100.00%); DONE 5
+- **4 — Build tooling and CI:** 3 / 3 verified (100.00%); DONE 3
 - **5 — Runtime smoke validation:** 2 / 2 verified (100.00%); DONE 2
 - **6 — Backend contract before MowgliNext integration:** 1 / 7 verified (14.29%); TODO 2, DONE 5
 - **7 — MowgliNext integration audit:** 0 / 1 verified (0.00%); BLOCKED 1

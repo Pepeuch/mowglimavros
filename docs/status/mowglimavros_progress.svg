@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 118" role="img" aria-labelledby="title desc">
 <title id="title">MowgliMAVROS development status</title>
-<desc id="desc">11 of 25 work items are fully complete; software DONE items with hardware pending remain open.</desc>
+<desc id="desc">13 of 25 work items are fully complete; software DONE items with hardware pending remain open.</desc>
 <rect width="720" height="118" rx="12" fill="#f8fafc"/>
 <text x="28" y="36" font-family="sans-serif" font-size="22" font-weight="700" fill="#0f172a">MowgliMAVROS Development Status</text>
 <text x="28" y="61" font-family="sans-serif" font-size="14" fill="#334155">Verified completion</text>
-<text x="692" y="61" text-anchor="end" font-family="sans-serif" font-size="14" font-weight="700" fill="#0f172a">11 / 25 · 44.00%</text>
+<text x="692" y="61" text-anchor="end" font-family="sans-serif" font-size="14" font-weight="700" fill="#0f172a">13 / 25 · 52.00%</text>
 <rect x="28" y="74" width="664" height="16" rx="8" fill="#dbe4ef"/>
-<rect x="28" y="74" width="292.16" height="16" rx="8" fill="#1f8a70"/>
+<rect x="28" y="74" width="345.28" height="16" rx="8" fill="#1f8a70"/>
 </svg>
