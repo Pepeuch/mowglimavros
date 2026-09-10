@@ -23,11 +23,11 @@ find_package(tf2_eigen REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME} "msg/BatteryStatus.msg" DEPENDENCIES std_msgs)
+rosidl_get_typesupport_target(battery_status_typesupport ${PROJECT_NAME} "rosidl_typesupport_cpp")
 
 add_library(${PROJECT_NAME}_plugins SHARED src/battery_observer_plugin.cpp)
 target_include_directories(${PROJECT_NAME}_plugins PRIVATE ${mavlink_INCLUDE_DIRS} ${mavros_INCLUDE_DIRS} ${libmavconn_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_plugins ${diagnostic_msgs_TARGETS} diagnostic_updater::diagnostic_updater ${geometry_msgs_TARGETS} ${libmavconn_LIBRARIES} ${mavros_LIBRARIES} ${mavros_msgs_TARGETS} pluginlib::pluginlib rclcpp::rclcpp ${sensor_msgs_TARGETS} tf2_eigen::tf2_eigen tf2_geometry_msgs::tf2_geometry_msgs tf2_ros::tf2_ros)
-rosidl_target_interfaces(${PROJECT_NAME}_plugins ${PROJECT_NAME} "rosidl_typesupport_cpp")
+target_link_libraries(${PROJECT_NAME}_plugins ${diagnostic_msgs_TARGETS} diagnostic_updater::diagnostic_updater ${geometry_msgs_TARGETS} ${libmavconn_LIBRARIES} ${mavros_LIBRARIES} ${mavros_msgs_TARGETS} pluginlib::pluginlib rclcpp::rclcpp ${sensor_msgs_TARGETS} tf2_eigen::tf2_eigen tf2_geometry_msgs::tf2_geometry_msgs tf2_ros::tf2_ros ${battery_status_typesupport})
 pluginlib_export_plugin_description_file(mavros mavros_plugins.xml)
 
 install(TARGETS ${PROJECT_NAME}_plugins LIBRARY DESTINATION lib)

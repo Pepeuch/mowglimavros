@@ -50,9 +50,8 @@ ARG MAVLINK_VERSION
 ARG TARGETARCH
 
 RUN set -eux; \
-    boost_system_package=libboost-system-dev; \
-    if [ "${ROS_DISTRO}" = lyrical ]; then boost_system_package=libboost-system1.83-dev; fi; \
     apt-get update; \
+    boost_headers_package=libboost-dev; \
     apt-get install -y --no-install-recommends \
       "ros-${ROS_DISTRO}-angles" \
       "ros-${ROS_DISTRO}-diagnostic-updater" \
@@ -84,7 +83,7 @@ RUN set -eux; \
       python3-click \
       python3-colcon-common-extensions \
       python3-empy \
-      "${boost_system_package}"; \
+      "${boost_headers_package}"; \
     installed_mavlink_version="$(dpkg-query --show --showformat='${Version}' "ros-${ROS_DISTRO}-mavlink")"; \
     case "${installed_mavlink_version}" in "${MAVLINK_VERSION}"-*) ;; *) \
       echo "Expected MAVLink ${MAVLINK_VERSION}, got ${installed_mavlink_version}" >&2; exit 1 ;; esac; \
@@ -153,7 +152,8 @@ ARG BUILD_TYPE=Release
 ARG TARGETARCH
 
 COPY ros2/src/ /ros2_ws/src/
-COPY tools/mowgli_interface_contract.py /ros2_ws/tools/mowgli_interface_contract.py
+COPY tools/ /ros2_ws/tools/
+COPY ros2/Dockerfile /ros2_ws/Dockerfile
 WORKDIR /ros2_ws
 
 RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},target=/ccache \
@@ -162,6 +162,7 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
     source /opt/mowgli/mavros/setup.bash && \
     source /opt/mowgli/universal_gnss/setup.bash && \
     python3 tools/mowgli_interface_contract.py check --interface-root src/mowgli_interfaces && \
+    python3 tools/test_external_backend_contract.py && \
     export CCACHE_DIR=/ccache && \
     export CCACHE_MAXSIZE=512M && \
     export CC='ccache gcc' && \
@@ -181,9 +182,6 @@ ARG MAVROS_VERSION
 ARG UNIVERSAL_GNSS_COMMIT
 
 RUN set -eux; \
-    # The NTRIP client links Boost.System; current Kilted and Lyrical builds
-    # both use the 1.83 ABI selected in the build stage.
-    boost_system_runtime_package=libboost-system1.83.0; \
     apt-get update; \
     apt-get install -y --no-install-recommends \
     "ros-${ROS_DISTRO}-angles" \
@@ -201,7 +199,6 @@ RUN set -eux; \
     "ros-${ROS_DISTRO}-urdf" \
     "ros-${ROS_DISTRO}-visualization-msgs" \
     "ros-${ROS_DISTRO}-yaml-cpp-vendor" \
-    "${boost_system_runtime_package}" \
     geographiclib-tools \
  && rm -rf /var/lib/apt/lists/*
 

@@ -11,13 +11,32 @@ permissions:
 
 env:
   IMAGE_NAME: ghcr.io/pepeuch/mowglimavros/mowgli-mavros-sidecar
-  MAVROS_VERSION: 2.15.1
-  MAVROS_COMMIT: 22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e
-  MAVLINK_VERSION: 2026.8.8
-  GEOGRAPHICLIB_DATASET_VERSION: geographiclib-datasets-v1
 
 jobs:
+  pins:
+    runs-on: ubuntu-latest
+    outputs:
+      mavros_version: ${{ steps.pins.outputs.mavros_version }}
+      mavros_commit: ${{ steps.pins.outputs.mavros_commit }}
+      universal_gnss_repository: ${{ steps.pins.outputs.universal_gnss_repository }}
+      universal_gnss_commit: ${{ steps.pins.outputs.universal_gnss_commit }}
+      mavlink_version: ${{ steps.pins.outputs.mavlink_version }}
+      geographiclib_dataset_version: ${{ steps.pins.outputs.geographiclib_dataset_version }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: pins
+        shell: bash
+        run: |
+          set -euo pipefail
+          for name in MAVROS_VERSION MAVROS_COMMIT UNIVERSAL_GNSS_REPOSITORY UNIVERSAL_GNSS_COMMIT MAVLINK_VERSION GEOGRAPHICLIB_DATASET_VERSION; do
+            value="$(sed -n "s/^ARG ${name}=//p" ros2/Dockerfile | head -n 1)"
+            test -n "${value}"
+            output="$(echo "${name}" | tr "[:upper:]" "[:lower:]")"
+            echo "${output}=${value}" >> "$GITHUB_OUTPUT"
+          done
+
   build:
+    needs: pins
     name: ${{ matrix.ros_distro }} / ${{ matrix.architecture }}
     runs-on: ubuntu-latest
     strategy:
@@ -53,7 +72,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ${{ runner.temp }}/mowgli-mavros-ccache
-          key: ccache-${{ runner.os }}-${{ matrix.ros_distro }}-${{ matrix.architecture }}-${{ env.MAVROS_VERSION }}-${{ env.MAVROS_COMMIT }}-${{ hashFiles('ros2/Dockerfile') }}
+          key: ccache-${{ runner.os }}-${{ matrix.ros_distro }}-${{ matrix.architecture }}-${{ needs.pins.outputs.mavros_version }}-${{ needs.pins.outputs.mavros_commit }}-${{ hashFiles('ros2/Dockerfile') }}
 
       - name: Inject ccache mount into BuildKit
         uses: reproducible-containers/buildkit-cache-dance@v3
@@ -64,7 +83,7 @@ jobs:
             {
               "ccache": {
                 "target": "/ccache",
-                "id": "ccache-${{ matrix.ros_distro }}-${{ matrix.architecture }}-${{ env.MAVROS_VERSION }}"
+                "id": "ccache-${{ matrix.ros_distro }}-${{ matrix.architecture }}-${{ needs.pins.outputs.mavros_version }}"
               }
             }
           skip-extraction: ${{ steps.ccache.outputs.cache-hit }}
@@ -86,15 +105,18 @@ jobs:
           tags: ${{ env.IMAGE_NAME }}:build-${{ matrix.ros_distro }}-${{ matrix.architecture }}
           build-args: |
             ROS_DISTRO=${{ matrix.ros_distro }}
-            MAVROS_VERSION=${{ env.MAVROS_VERSION }}
-            MAVROS_COMMIT=${{ env.MAVROS_COMMIT }}
-            MAVLINK_VERSION=${{ env.MAVLINK_VERSION }}
-            GEOGRAPHICLIB_DATASET_VERSION=${{ env.GEOGRAPHICLIB_DATASET_VERSION }}
-          cache-from: type=gha,scope=mowgli-mavros-${{ matrix.ros_distro }}-${{ env.MAVROS_VERSION }}-${{ matrix.architecture }}
-          cache-to: type=gha,mode=max,scope=mowgli-mavros-${{ matrix.ros_distro }}-${{ env.MAVROS_VERSION }}-${{ matrix.architecture }}
+            MAVROS_VERSION=${{ needs.pins.outputs.mavros_version }}
+            MAVROS_COMMIT=${{ needs.pins.outputs.mavros_commit }}
+            UNIVERSAL_GNSS_REPOSITORY=${{ needs.pins.outputs.universal_gnss_repository }}
+            UNIVERSAL_GNSS_COMMIT=${{ needs.pins.outputs.universal_gnss_commit }}
+            MAVLINK_VERSION=${{ needs.pins.outputs.mavlink_version }}
+            GEOGRAPHICLIB_DATASET_VERSION=${{ needs.pins.outputs.geographiclib_dataset_version }}
+          cache-from: type=gha,scope=mowgli-mavros-${{ matrix.ros_distro }}-${{ needs.pins.outputs.mavros_version }}-${{ needs.pins.outputs.mavros_commit }}-${{ needs.pins.outputs.universal_gnss_commit }}-${{ needs.pins.outputs.mavlink_version }}-${{ matrix.architecture }}
+          cache-to: type=gha,mode=max,scope=mowgli-mavros-${{ matrix.ros_distro }}-${{ needs.pins.outputs.mavros_version }}-${{ needs.pins.outputs.mavros_commit }}-${{ needs.pins.outputs.universal_gnss_commit }}-${{ needs.pins.outputs.mavlink_version }}-${{ matrix.architecture }}
 
   publish-manifest:
-    needs: build
+    needs: [pins, build]
+
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false

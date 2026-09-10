@@ -191,7 +191,7 @@ Acceptance:
 
 ## MM-302 — Pin MAVROS 2.15.1
 Related finding: `MM-AUD-002`
-Status: IN PROGRESS
+Status: DONE
 
 Target:
 
@@ -218,7 +218,7 @@ Acceptance:
 
 ## MM-303 — Make GeographicLib reproducible
 Related finding: `MM-AUD-005`
-Status: IN PROGRESS
+Status: DONE
 
 Tasks:
 
@@ -226,12 +226,12 @@ Tasks:
 - [x] Avoid installing datasets twice.
 - [x] Determine exactly which datasets/runtime files MAVROS requires.
 - [x] Install/copy them once through the multi-stage build (Kilted amd64 validated against release `geographiclib-datasets-v1`).
-- [ ] Preserve amd64 + arm64 compatibility.
+- [x] Preserve amd64 + arm64 compatibility.
 
 Acceptance:
 
 - GeographicLib setup is deterministic.
-- Kilted and Lyrical amd64 image builds passed on 2026-09-07; arm64 remains pending.
+- Final-tree Kilted/Lyrical amd64 and native ARM64 image builds passed on 2026-09-10.
 - No duplicate network-heavy installation occurs.
 - Release `geographiclib-datasets-v1`, all four assets, approved SHA256 values,
   and cached source-only rebuild behaviour are validated.
@@ -240,26 +240,24 @@ Acceptance:
 
 ## MM-304 — Remove Noble-specific runtime ABI assumptions
 Related finding: `MM-AUD-006`
-Status: IN PROGRESS
+Status: DONE
 
 Tasks:
 
-- [ ] Remove hard-coded `libboost-system1.83.0` if unnecessary.
-- [ ] Use distro-portable dependency resolution.
-- [ ] Verify both ROS distributions.
+- [x] Remove hard-coded `libboost-system1.83.0` if unnecessary.
+- [x] Use distro-portable dependency resolution.
+- [x] Verify both ROS distributions.
 
 Acceptance:
 
 - Docker dependency installation succeeds on Kilted and Lyrical.
 
-Evidence: Kilted and Lyrical amd64 runtime dependency installation passed on
-2026-09-07. The Lyrical build selected `libboost-system1.83-dev` at build time
-and `libboost-system1.83.0` at runtime.
+Evidence: Final-tree Kilted amd64 and Lyrical amd64 full Docker builds pass with generic `libboost-dev`, header-only `Boost::headers`, and modern explicit rosidl C++ typesupport linkage. Native ARM64 Kilted and Lyrical builds also pass; sourced runtime NTRIP linker closures contain neither missing libraries nor `libboost_system`.
 
 ---
 
 ### MM-306 — Add UG-style README progress dashboard
-Status: TODO
+Status: DONE
 
 Objective:
 
@@ -267,12 +265,12 @@ Reuse the Universal GNSS progress/status presentation model for MowgliMAVROS.
 
 Tasks:
 
-- [ ] Reproduce the same progress-bar/dashboard approach used in Universal GNSS.
-- [ ] Adapt its source-of-truth mapping to the MowgliMAVROS TODO/audit structure.
-- [ ] Keep generated README state deterministic.
-- [ ] Avoid manually maintained duplicate progress state.
-- [ ] Display the project progress prominently near the top of README.
-- [ ] Add/update validation so generated progress cannot silently become stale.
+- [x] Reproduce the same progress-bar/dashboard approach used in Universal GNSS.
+- [x] Adapt its source-of-truth mapping to the MowgliMAVROS TODO/audit structure.
+- [x] Keep generated README state deterministic.
+- [x] Avoid manually maintained duplicate progress state.
+- [x] Display the project progress prominently near the top of README.
+- [x] Add/update validation so generated progress cannot silently become stale.
 
 Acceptance:
 
@@ -281,20 +279,22 @@ Acceptance:
 - README immediately exposes current project advancement.
 - Behaviour remains consistent with the Universal GNSS implementation.
 
+Evidence: `tools/update_readme_progress.py` derives a bounded README dashboard and SVG directly from current `TODO.md` status fields. It fails closed on missing, duplicate, unknown, or malformed immediate item statuses; `--check` rejects stale generated output. `HARDWARE_PENDING` remains orthogonal to software `DONE`, so it does not count as verified complete.
+
 ---
 
 # Phase 4 — Build tooling and CI
 
 ## MM-401 — Parameterize build.sh
-Status: IN PROGRESS
+Status: DONE
 
 Tasks:
 
-- [ ] Accept `ROS_DISTRO`.
-- [ ] Accept MAVROS version/pin where appropriate.
-- [ ] Keep Kilted as default.
-- [ ] Preserve multiarch support.
-- [ ] Keep invocation simple for local development.
+- [x] Accept `ROS_DISTRO`.
+- [x] Accept MAVROS version/pin where appropriate.
+- [x] Keep Kilted as default.
+- [x] Preserve multiarch support.
+- [x] Keep invocation simple for local development.
 
 Acceptance:
 
@@ -372,7 +372,8 @@ No physical actuator operation is required.
 ---
 
 ## MM-502 — Lyrical runtime smoke test
-Status: TODO
+Status: DONE (Lyrical amd64 no-FCU workstation smoke, 2026-09-09; ARM64 and hardware remain pending)
+Evidence: Current-tree image `mowgli-mavros-sidecar:lyrical-amd64-mm502` (`sha256:c37c31d0c92c5edcbd4f4e6a01b3dcfca9c18b3cabdb55e6379737c6711a45d7`, amd64) passed an isolated no-network/no-FCU launch. MAVROS, Universal GNSS, ESC wheel, and battery plugins loaded; physical wheel mapping remained safely disabled; diagnostics reported FCU disconnected and backend not ready without Emergency synthesis. Canonical static/event-driven contracts remain locked by MM-607; `/imu/data` and `/battery_state` each had one bridge producer. This is not ARM64, RPi, FCU, VESC, GNSS, or battery hardware validation.
 
 Same acceptance criteria as MM-501.
 
@@ -531,18 +532,38 @@ VESC-wheel, and battery observation cadence/loss behavior on the target FCU;
 and target DDS diagnostics delivery.
 
 ## MM-607 — Add focused external-backend contract tests
-Status: TODO
+Status: DONE (software scope; physical IMU calibration and FCU timing remain HARDWARE_PENDING)
 
 Tasks:
 
-- [ ] Consolidate deterministic external tests for MM-602 through MM-606 and MM-201 without relying only on topic discovery.
-- [ ] Assert exact type/interface fingerprints, semantics, ownership, and failure behavior at the external backend boundary.
-- [ ] Keep hardware-dependent delivery/actuator proof in MM-801 rather than substituting software fixtures for it.
-- [ ] Validate the public `/imu/data` contract:
-      frame, axis convention, timestamp provenance,
-      covariance/calibration semantics and required QoS.
-- [ ] Prove that relayed MAVROS IMU data is compatible with
+- [x] Consolidate deterministic external tests for MM-602 through MM-606 and MM-201 without relying only on topic discovery.
+- [x] Assert exact type/interface fingerprints, semantics, ownership, and failure behavior at the external backend boundary.
+- [x] Keep hardware-dependent delivery/actuator proof in MM-801 rather than substituting software fixtures for it.
+- [x] Validate the public `/imu/data` contract against exact MowgliNext
+      `3b0974809809ace589a567b6c32e5bed6e599489` consumers and exact MAVROS
+      2.15.1 `22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e` semantics.
+- [x] Prove that relayed MAVROS IMU data is compatible with all relevant
       current MowgliNext consumers before declaring contract parity.
+
+Software evidence: `tools/test_external_backend_contract.py` locks the exact
+external pins, MM-602 lock linkage, canonical remaps/types/frames, plugin
+exports, fail-closed defaults, ownership, readiness boundaries, direct IMU
+relay/remap, and forbidden legacy paths. It runs in the Kilted workspace
+Docker stage. No-FCU launch confirms the external plugins instantiate; focused
+C++ regression tests cover wheel, power, readiness, and RTCM.
+
+IMU evidence: MAVROS publishes `/mavros/imu/data` as BEST_EFFORT/volatile/
+KEEP_LAST(5), with synchronized FCU timestamps and aircraft-FRD to base-link
+FLU/ENU conversion; the bridge relays the message unchanged and republishes
+reliable/volatile/KEEP_LAST(10) `/imu/data`. Exact MowgliNext consumers use
+the header timestamp and `angular_velocity.z`, or linear acceleration in the
+base frame; they do not require an identity orientation or a particular
+covariance. Their BEST_EFFORT subscriptions are compatible with the reliable
+relay. Runtime inspection of the no-FCU sidecar confirms both QoS endpoints.
+
+HARDWARE_PENDING: verify installed IMU orientation/mount, accelerometer
+calibration/gravity direction, FCU time synchronization, and live FCU cadence
+under Rover operation. These are not inferred from the software contract.
 
 Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTCM acceptance criteria owned by MM-201 and MM-602 through MM-606 pass.
 

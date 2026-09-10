@@ -1,0 +1,39 @@
+{
+  "format": 1,
+  "pins": {
+    "mavros": {
+      "version": "2.15.1",
+      "commit": "22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e"
+    },
+    "universal_gnss": {
+      "repository": "https://github.com/Pepeuch/universal-gnss.git",
+      "commit": "34afbf01e770dd0b4c3863f3822a122dc25e7b7b"
+    }
+  },
+  "topics": {
+    "/gps/fix": "sensor_msgs/msg/NavSatFix",
+    "/gps/status": "mowgli_interfaces/msg/GnssStatus",
+    "/wheel_odom": "nav_msgs/msg/Odometry",
+    "/hardware_bridge/power": "mowgli_interfaces/msg/Power",
+    "/battery_state": "sensor_msgs/msg/BatteryState",
+    "/diagnostics": "diagnostic_msgs/msg/DiagnosticArray",
+    "/imu/data": "sensor_msgs/msg/Imu"
+  },
+  "plugins": {
+    "universal_gnss_mavros": "universal_gnss_mavros_plugins.xml",
+    "esc_wheel_odometry": "mavros_plugins.xml",
+    "battery_observer": "mavros_plugins.xml"
+  },
+  "frames": {
+    "wheel_odom": "odom",
+    "wheel_child": "base_link",
+    "imu": "base_link"
+  },
+  "imu": {
+    "input_topic": "/mavros/imu/data",
+    "input_qos": "best_effort/volatile/keep_last:5",
+    "output_qos": "reliable/volatile/keep_last:10",
+    "payload": "unchanged sensor_msgs/msg/Imu relay"
+  }
+}
+

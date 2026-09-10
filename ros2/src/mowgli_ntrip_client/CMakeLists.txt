@@ -13,7 +13,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-find_package(Boost REQUIRED COMPONENTS system)
+find_package(Boost REQUIRED)
 find_package(mavros_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 
@@ -29,7 +29,7 @@ target_include_directories(${PROJECT_NAME}_core PUBLIC
 
 target_link_libraries(${PROJECT_NAME}_core
   PUBLIC
-    Boost::system
+    Boost::headers
     ${mavros_msgs_TARGETS}
     rclcpp::rclcpp
 )
