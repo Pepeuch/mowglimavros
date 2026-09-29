@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <limits>
 #include <optional>
 
 namespace mowgli_mavros_bridge
@@ -12,6 +13,7 @@ struct SerialGpsRaw
   int32_t lat_e7;
   int32_t lon_e7;
   int32_t altitude_mm;
+  int32_t altitude_ellipsoid_mm;
   uint16_t hdop_centi;
   uint16_t satellites_visible;
   uint32_t horizontal_accuracy_mm;
@@ -42,7 +44,12 @@ inline std::optional<SerialGpsFix> project_serial_gps(const SerialGpsRaw& raw)
   {
     return std::nullopt;
   }
-  SerialGpsFix fix{lat, lon, static_cast<double>(raw.altitude_mm) / 1000.0,
+  // NavSatFix altitude is WGS84 ellipsoid height; GPS_RAW_INT.alt is MSL.
+  // A zero MAVLink v2 extension cannot establish ellipsoid height here.
+  const double ellipsoid_altitude = raw.altitude_ellipsoid_mm != 0 ?
+      static_cast<double>(raw.altitude_ellipsoid_mm) / 1000.0 :
+      std::numeric_limits<double>::quiet_NaN();
+  SerialGpsFix fix{lat, lon, ellipsoid_altitude,
                    std::nullopt, std::nullopt, std::nullopt,
                    raw.satellites_visible};
   if (raw.hdop_centi != UINT16_MAX && raw.hdop_centi != 0)

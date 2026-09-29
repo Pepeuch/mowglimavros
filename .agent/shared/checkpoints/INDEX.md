@@ -4,7 +4,7 @@ Navigation only. Not the project backlog.
 
 ## Active
 
-- `MM-MOWGLINEXT-INTEGRATION-20260929` — active serial GPS1, POWER/VESC/GUI and ROS 2 Lyrical integration; live redeploy pending.
+- `MM-MOWGLINEXT-INTEGRATION-20260929` — live Lyrical ARM64/GUI integration evidence with temporary NEO-M9N GPS1; hardware gates pending.
 - `MM-MAVROS-COMPAT` — Kilted/Lyrical + MAVROS 2.15.1 software compatibility.
 
 ## Blocked

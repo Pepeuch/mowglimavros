@@ -24,6 +24,7 @@ jobs:
       geographiclib_dataset_version: ${{ steps.pins.outputs.geographiclib_dataset_version }}
     steps:
       - uses: actions/checkout@v4
+
       - id: pins
         shell: bash
         run: |
@@ -101,6 +102,7 @@ jobs:
           context: .
           file: ros2/Dockerfile
           platforms: ${{ matrix.platform }}
+          pull: true
           push: true
           tags: ${{ env.IMAGE_NAME }}:build-${{ matrix.ros_distro }}-${{ matrix.architecture }}
           build-args: |
@@ -116,7 +118,6 @@ jobs:
 
   publish-manifest:
     needs: [pins, build]
-
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -144,8 +145,8 @@ jobs:
         with:
           images: ${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ matrix.ros_distro }}
-            type=raw,value=latest,enable=${{ matrix.primary }}
+            type=raw,value=${{ matrix.ros_distro }},enable=${{ github.ref == 'refs/heads/main' }}
+            type=raw,value=latest,enable=${{ matrix.primary && github.ref == 'refs/heads/main' }}
             type=ref,event=branch,suffix=-${{ matrix.ros_distro }}
             type=sha,prefix=sha-,suffix=-${{ matrix.ros_distro }}
 
@@ -153,7 +154,9 @@ jobs:
         env:
           TAGS: ${{ steps.meta.outputs.tags }}
         run: |
+          set -euo pipefail
           while IFS= read -r tag; do
+            [ -n "$tag" ] || continue
             docker buildx imagetools create \
               --tag "$tag" \
               "${IMAGE_NAME}:build-${{ matrix.ros_distro }}-amd64" \

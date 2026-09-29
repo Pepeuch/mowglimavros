@@ -75,14 +75,14 @@ void MavrosHardwareBridgeNode::create_publishers()
   pub_status_ = create_publisher<mowgli_interfaces::msg::Status>("~/status", 10);
   if (gps1_canonical_enabled_)
   {
-    pub_gps_fix_ = create_publisher<sensor_msgs::msg::NavSatFix>("/gps/fix", rclcpp::SensorDataQoS());
+    pub_gps_fix_ = create_publisher<sensor_msgs::msg::NavSatFix>("/gps/fix", 10);
     pub_gps_status_ = create_publisher<mowgli_interfaces::msg::GnssStatus>("/gps/status", 10);
   }
   pub_emergency_ = create_publisher<mowgli_interfaces::msg::Emergency>("~/emergency", 10);
   pub_power_ = create_publisher<mowgli_interfaces::msg::Power>("~/power", 10);
   pub_imu_ = create_publisher<sensor_msgs::msg::Imu>("~/imu/data_raw", 10);
   pub_battery_state_ =
-      create_publisher<sensor_msgs::msg::BatteryState>("/battery_state", rclcpp::SensorDataQoS());
+      create_publisher<sensor_msgs::msg::BatteryState>("/battery_state", 10);
 
   pub_manual_control_ =
       create_publisher<mavros_msgs::msg::ManualControl>("/mavros/manual_control/send", 10);
@@ -281,8 +281,8 @@ void MavrosHardwareBridgeNode::on_serial_gps_raw(
   }
   const auto receipt = now();
   const auto projected = project_serial_gps(
-      SerialGpsRaw{msg->fix_type, msg->lat, msg->lon, msg->alt, msg->eph,
-                   msg->satellites_visible, msg->h_acc, msg->v_acc});
+      SerialGpsRaw{msg->fix_type, msg->lat, msg->lon, msg->alt, msg->alt_ellipsoid,
+                   msg->eph, msg->satellites_visible, msg->h_acc, msg->v_acc});
   mowgli_interfaces::msg::GnssStatus status;
   {
     std::lock_guard<std::mutex> lock(mutex_);

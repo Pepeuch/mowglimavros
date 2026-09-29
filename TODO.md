@@ -575,7 +575,7 @@ Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTC
 
 ## MM-701 — MowgliNext integration dependency and execution plan
 Related migration findings: `MN-MAV-001` through `MN-MAV-008`
-Status: BLOCKED
+Status: ACTIVE (bounded no-motion Lyrical integration deployed; production acceptance blocked)
 
 Audit provenance: the MowgliNext migration audit is complete and retained at `.agent/shared/checkpoints/retained/MAVROS_EXTERNAL_BACKEND_MIGRATION.md`. Operational enablement must not begin until the external prerequisites below are accepted.
 
@@ -585,14 +585,16 @@ Tasks:
 - [x] Record the eventual integration plan: suppress native `mowgli_hardware` only when `backend=mavros`; use one external sidecar; remove separate historical NTRIP; select validated Pixhawk USB `if00`; and prove exclusive backend ownership.
 - [ ] Pass MM-602 interface fingerprint, MM-603 canonical GNSS, MM-604 wheel-only odometry, MM-605 power-instance mapping, MM-606 freshness/readiness, MM-201 RTCM, and MM-607 focused tests.
 - [ ] Provide a suitable validated multiarch image/digest under MM-301 through MM-304 and MM-402.
-- [ ] Only then begin no-motion MowgliNext enablement and DDS/graph validation.
+- [x] Authorized bounded no-motion MowgliNext Lyrical graph/GUI validation with temporary NEO-M9N GPS1, exclusive canonical topic ownership and neutral-only wire capture (2026-09-29).
+- [ ] Replace temporary `GNSS_STACK=disabled` cutover with nominal `GNSS_STACK=universal` plus a Universal GNSS `mavros` backend, preserving exclusive `/gps/fix` and `/gps/status` ownership.
+- [ ] Validate the production multiarch image/digest, final RTCM path and physical safety/actuation gates before operational enablement.
 
 Preferred model:
 high-capability audit/reasoning model.
 
-Blocked by: MM-201, MM-301 through MM-304, MM-402, and MM-602 through MM-607.
+Current evidence: `.agent/shared/checkpoints/active/MM-MOWGLINEXT-INTEGRATION-20260929.md`. Full Kilted amd64 and Lyrical ARM64 images, hashes/QoS, NEO-M9N fix, POWER/VESC/IMU, GUI diagnostics and zero MANUAL_CONTROL passed live. No ARM or movement. This does not close MM-201, calibrated wheel odometry, production publication, HERE4 or MM-801.
 
-Unblocks when: the listed software prerequisites pass. MM-801 remains a separate `HARDWARE_PENDING` operational gate.
+Blocked for operational enablement by: nominal Universal GNSS MAVROS transport/RTCM, wheel calibration, power-current/SoC validation, hardware E-stop and MM-801 guarded physical tests.
 
 ---
 
@@ -621,6 +623,8 @@ Validate individually:
 - [ ] failsafe behaviour;
 - [ ] transport reconnect;
 - [ ] reboot/power-cycle recovery.
+
+2026-09-29 no-motion Lyrical follow-up: POWER1 id0 reports +0.09 to +1.48 A off dock with `not_charging`; canonical charge current is therefore negative. POWER2 id1 reports ~28.8 V and ~0.47 A discharge while SoC fell to ~3%. Preserve the physical POWER1/POWER2 mapping; verify sensor zero/direction, dock backfeed and SoC calibration with independent measurements before any active test. Three ESC counters progress at zero RPM; slot3 remains empty. GPS1 NEO-M9N is a temporary standard-GNSS source, not RTK. See the active integration checkpoint for exact image and topic evidence.
 
 Hardware acceptance gates retained from the migration audit:
 

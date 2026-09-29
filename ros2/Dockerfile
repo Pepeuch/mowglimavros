@@ -1,11 +1,19 @@
 # syntax=docker/dockerfile:1.7
+
 ARG ROS_DISTRO=kilted
+
 ARG MAVROS_VERSION=2.15.1
+
 ARG MAVROS_COMMIT=22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e
+
 ARG UNIVERSAL_GNSS_REPOSITORY=https://github.com/Pepeuch/universal-gnss.git
+
 ARG UNIVERSAL_GNSS_COMMIT=34afbf01e770dd0b4c3863f3822a122dc25e7b7b
+
 ARG MAVLINK_VERSION=2026.9.9
+
 ARG GEOGRAPHICLIB_DATASET_VERSION=geographiclib-datasets-v1
+
 
 FROM ros:${ROS_DISTRO}-ros-base AS geographiclib-data
 
@@ -40,6 +48,7 @@ RUN set -eux; \
     test -s /usr/share/GeographicLib/gravity/egm96.egm; \
     test -s /usr/share/GeographicLib/magnetic/emm2015.wmm
 
+
 FROM ros:${ROS_DISTRO}-ros-base AS mavros-build
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -51,13 +60,19 @@ ARG TARGETARCH
 
 RUN set -eux; \
     apt-get update; \
+    apt-get dist-upgrade -y; \
     boost_headers_package=libboost-dev; \
     apt-get install -y --no-install-recommends \
       "ros-${ROS_DISTRO}-angles" \
+      "ros-${ROS_DISTRO}-builtin-interfaces" \
       "ros-${ROS_DISTRO}-diagnostic-updater" \
       "ros-${ROS_DISTRO}-diagnostic-msgs" \
       "ros-${ROS_DISTRO}-eigen-stl-containers" \
       "ros-${ROS_DISTRO}-geographic-msgs" \
+      "ros-${ROS_DISTRO}-geometry-msgs" \
+      "ros-${ROS_DISTRO}-service-msgs" \
+      "ros-${ROS_DISTRO}-std-msgs" \
+      "ros-${ROS_DISTRO}-unique-identifier-msgs" \
       "ros-${ROS_DISTRO}-mavlink" \
       "ros-${ROS_DISTRO}-message-filters" \
       "ros-${ROS_DISTRO}-pluginlib" \
@@ -114,8 +129,9 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
       --install-base /opt/mowgli/mavros \
       --cmake-args -DBUILD_TESTING=OFF && \
     echo 'ccache MAVROS after:' && ccache --show-stats && du -sh \"\${CCACHE_DIR}\" && \
-    printf '%s\\n' '${MAVROS_VERSION}' > /opt/mowgli/mavros/.mowgli-mavros-version \
+    printf '%s\n' '${MAVROS_VERSION}' > /opt/mowgli/mavros/.mowgli-mavros-version \
     "
+
 
 FROM mavros-build AS universal-gnss-build
 
@@ -145,15 +161,18 @@ RUN /bin/bash -lc "\
     printf '%s\n' '${UNIVERSAL_GNSS_COMMIT}' > /opt/mowgli/universal_gnss/.mowgli-universal-gnss-commit \
     "
 
+
 FROM universal-gnss-build AS workspace-build
 
 ARG ROS_DISTRO
+ARG MAVROS_VERSION
 ARG BUILD_TYPE=Release
 ARG TARGETARCH
 
 COPY ros2/src/ /ros2_ws/src/
 COPY tools/ /ros2_ws/tools/
 COPY ros2/Dockerfile /ros2_ws/Dockerfile
+
 WORKDIR /ros2_ws
 
 RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},target=/ccache \
@@ -174,6 +193,7 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
     echo 'ccache workspace after:' && ccache --show-stats && du -sh \"\${CCACHE_DIR}\" \
     "
 
+
 FROM ros:${ROS_DISTRO}-ros-base AS runtime
 
 ARG DEBIAN_FRONTEND=noninteractive
@@ -183,23 +203,29 @@ ARG UNIVERSAL_GNSS_COMMIT
 
 RUN set -eux; \
     apt-get update; \
+    apt-get dist-upgrade -y; \
     apt-get install -y --no-install-recommends \
-    "ros-${ROS_DISTRO}-angles" \
-    "ros-${ROS_DISTRO}-diagnostic-updater" \
-    "ros-${ROS_DISTRO}-diagnostic-msgs" \
-    "ros-${ROS_DISTRO}-eigen-stl-containers" \
-    "ros-${ROS_DISTRO}-geographic-msgs" \
-    "ros-${ROS_DISTRO}-message-filters" \
-    "ros-${ROS_DISTRO}-pluginlib" \
-    "ros-${ROS_DISTRO}-rmw-cyclonedds-cpp" \
-    "ros-${ROS_DISTRO}-rosidl-default-runtime" \
-    "ros-${ROS_DISTRO}-tf2-eigen" \
-    "ros-${ROS_DISTRO}-tf2-ros" \
-    "ros-${ROS_DISTRO}-trajectory-msgs" \
-    "ros-${ROS_DISTRO}-urdf" \
-    "ros-${ROS_DISTRO}-visualization-msgs" \
-    "ros-${ROS_DISTRO}-yaml-cpp-vendor" \
-    geographiclib-tools \
+      "ros-${ROS_DISTRO}-angles" \
+      "ros-${ROS_DISTRO}-builtin-interfaces" \
+      "ros-${ROS_DISTRO}-diagnostic-updater" \
+      "ros-${ROS_DISTRO}-diagnostic-msgs" \
+      "ros-${ROS_DISTRO}-eigen-stl-containers" \
+      "ros-${ROS_DISTRO}-geographic-msgs" \
+      "ros-${ROS_DISTRO}-geometry-msgs" \
+      "ros-${ROS_DISTRO}-service-msgs" \
+      "ros-${ROS_DISTRO}-std-msgs" \
+      "ros-${ROS_DISTRO}-unique-identifier-msgs" \
+      "ros-${ROS_DISTRO}-message-filters" \
+      "ros-${ROS_DISTRO}-pluginlib" \
+      "ros-${ROS_DISTRO}-rmw-cyclonedds-cpp" \
+      "ros-${ROS_DISTRO}-rosidl-default-runtime" \
+      "ros-${ROS_DISTRO}-tf2-eigen" \
+      "ros-${ROS_DISTRO}-tf2-ros" \
+      "ros-${ROS_DISTRO}-trajectory-msgs" \
+      "ros-${ROS_DISTRO}-urdf" \
+      "ros-${ROS_DISTRO}-visualization-msgs" \
+      "ros-${ROS_DISTRO}-yaml-cpp-vendor" \
+      geographiclib-tools \
  && rm -rf /var/lib/apt/lists/*
 
 COPY --from=geographiclib-data /usr/share/GeographicLib /usr/share/GeographicLib
