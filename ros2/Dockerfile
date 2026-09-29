@@ -4,7 +4,7 @@ ARG MAVROS_VERSION=2.15.1
 ARG MAVROS_COMMIT=22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e
 ARG UNIVERSAL_GNSS_REPOSITORY=https://github.com/Pepeuch/universal-gnss.git
 ARG UNIVERSAL_GNSS_COMMIT=34afbf01e770dd0b4c3863f3822a122dc25e7b7b
-ARG MAVLINK_VERSION=2026.8.8
+ARG MAVLINK_VERSION=2026.9.9
 ARG GEOGRAPHICLIB_DATASET_VERSION=geographiclib-datasets-v1
 
 FROM ros:${ROS_DISTRO}-ros-base AS geographiclib-data
@@ -216,6 +216,7 @@ RUN chmod +x /ros2_entrypoint.sh \
  && test -s /usr/share/GeographicLib/gravity/egm96.egm \
  && test -s /usr/share/GeographicLib/magnetic/emm2015.wmm
 
+ENV ROS_DISTRO=${ROS_DISTRO}
 ENV RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
 
 ENTRYPOINT ["/ros2_entrypoint.sh"]

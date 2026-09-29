@@ -24,8 +24,9 @@ class ExternalBackendContractTest(unittest.TestCase):
             "--interface-root", str(SRC / "mowgli_interfaces")], cwd=ROOT, capture_output=True, text=True)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
         interfaces = json.loads((SRC / "mowgli_interfaces/interface-contract.lock.json").read_text())
-        self.assertEqual(interfaces["external_interface_sources"]["GnssStatus.msg"]["revision"],
-                         LOCK["pins"]["universal_gnss"]["commit"])
+        self.assertEqual(interfaces["source_repository"], "https://github.com/mowglinext/mowglinext.git")
+        self.assertEqual(interfaces["source_path"], "ros2/src/mowgli_interfaces")
+        self.assertNotIn("external_interface_sources", interfaces)
 
     def test_pins_match_the_contract_lock(self):
         docker = read("ros2/Dockerfile")
@@ -36,6 +37,7 @@ class ExternalBackendContractTest(unittest.TestCase):
         self.assertEqual(args["UNIVERSAL_GNSS_COMMIT"], LOCK["pins"]["universal_gnss"]["commit"])
         self.assertIn('rev-list -n 1 "${MAVROS_VERSION}")" = "${MAVROS_COMMIT}"', docker)
         self.assertIn('rev-parse FETCH_HEAD)" = "${UNIVERSAL_GNSS_COMMIT}"', docker)
+        self.assertIn("ENV ROS_DISTRO=${ROS_DISTRO}", docker)
 
     def test_canonical_launch_topics_types_and_frames(self):
         launch = read("ros2/src/mowgli_mavros_bridge/launch/mavros_backend.launch.py")
@@ -72,14 +74,16 @@ class ExternalBackendContractTest(unittest.TestCase):
                         "left_wheel_radius_m: 0.0", "right_wheel_radius_m: 0.0", "track_width_m: 0.0"):
             self.assertIn(setting, wheel)
         power = read("ros2/src/mowgli_mavros_bridge/config/hardware_bridge_mavros.yaml")
-        self.assertIn("dock_battery_instance: -1", power)
-        self.assertIn("traction_battery_instance: -1", power)
+        self.assertIn("dock_battery_instance: 0", power)
+        self.assertIn("traction_battery_instance: 1", power)
+        self.assertIn("manual_control_enabled: false", power)
+        self.assertIn("blade_control_enabled: false", power)
 
     def test_single_owner_and_readiness_boundaries(self):
         bridge = read("ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp")
         self.assertEqual(bridge.count('create_publisher<sensor_msgs::msg::BatteryState>("/battery_state"'), 1)
         self.assertEqual(bridge.count('create_publisher<mowgli_interfaces::msg::Power>("~/power"'), 1)
-        self.assertNotIn("firmware_compatible", bridge)
+        self.assertIn('add_value(fcu_status, "firmware_compatible", "unknown")', bridge)
         for call in ("readiness_.connection(msg->connected)", "readiness_.gnss(", "readiness_.wheel(", "readiness_.traction("):
             self.assertIn(call, bridge)
         readiness = read("ros2/src/mowgli_mavros_bridge/src/readiness_state.cpp")

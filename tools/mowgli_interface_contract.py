@@ -4,8 +4,7 @@ from pathlib import Path
 
 def load(path):
     manifest=json.loads(path.read_text())
-    expected_external={"GnssStatus.msg":{"repository":"https://github.com/Pepeuch/universal-gnss.git","revision":"34afbf01e770dd0b4c3863f3822a122dc25e7b7b","source_path":"gnss_ros2/msg/GnssStatus.msg"}}
-    if manifest.get("format") != 1 or list(manifest.get("interfaces",{})) != sorted(manifest.get("interfaces",{})) or manifest.get("external_interface_sources") != expected_external or "msg/GnssStatus.msg" not in manifest.get("interfaces",{}): raise ValueError("invalid interface contract lock")
+    if manifest.get("format") != 1 or list(manifest.get("interfaces",{})) != sorted(manifest.get("interfaces",{})) or "external_interface_sources" in manifest or "msg/GnssStatus.msg" not in manifest.get("interfaces",{}): raise ValueError("invalid interface contract lock")
     return manifest
 
 def fingerprint(root, paths):

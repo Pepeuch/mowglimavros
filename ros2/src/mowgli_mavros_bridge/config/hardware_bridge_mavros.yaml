@@ -4,21 +4,25 @@ hardware_bridge:
 
     # Provisional until Pixhawk wiring and validation are complete.
     manual_control_enabled: false
+    neutral_manual_control_enabled: false
     manual_control_linear_scale: 1000.0
     manual_control_yaw_scale: 1000.0
 
     # Blade output path via Pixhawk is not validated yet.
     blade_control_enabled: false
 
-    # MAVLink BATTERY_STATUS instance IDs, not POWER connector or arrival order.
-    # Leave invalid until the physical POWER1/POWER2 monitor mapping is verified.
-    dock_battery_instance: -1
-    traction_battery_instance: -1
+    # Physically validated: POWER1 is dock charging; POWER2 is traction.
+    # MAVLink BATTERY_STATUS IDs are 0 and 1, independent of arrival order.
+    dock_battery_instance: 0
+    traction_battery_instance: 1
     battery_observation_timeout_s: 5.0
 
     # Mandatory source freshness for internal backend readiness diagnostics.
     # Dock power is informational and never blocks backend readiness.
     readiness_observation_timeout_s: 5.0
+    esc_observation_timeout_s: 3.0
+    gnss_required: true
+    wheel_odometry_required: false
 
     # Emergency requests are sent asynchronously to MAVROS.
     emergency_mode: "HOLD"

@@ -12,6 +12,9 @@
 
 #include <mavros_msgs/msg/manual_control.hpp>
 #include <mavros_msgs/msg/state.hpp>
+#include <mavros_msgs/msg/esc_telemetry.hpp>
+#include <mavros_msgs/msg/gpsraw.hpp>
+#include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <mavros_msgs/srv/command_bool.hpp>
 #include <mavros_msgs/srv/set_mode.hpp>
 #include <mavros_battery_observer/msg/battery_status.hpp>
@@ -23,6 +26,7 @@
 #include <mowgli_interfaces/srv/emergency_stop.hpp>
 #include <mowgli_interfaces/srv/mower_control.hpp>
 #include "mowgli_mavros_bridge/power_mapping.hpp"
+#include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
 #include "mowgli_mavros_bridge/readiness_state.hpp"
 
 namespace mowgli_mavros_bridge
@@ -46,6 +50,9 @@ private:
   void on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg);
   void on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg);
   void on_battery_status(const mavros_battery_observer::msg::BatteryStatus::SharedPtr msg);
+  void on_serial_gps_raw(const mavros_msgs::msg::GPSRAW::SharedPtr msg);
+  void publish_gps_stale();
+  void on_esc_telemetry(const mavros_msgs::msg::ESCTelemetry::SharedPtr msg);
   void on_gnss_status(const mowgli_interfaces::msg::GnssStatus::SharedPtr msg);
   void on_wheel_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
 
@@ -72,8 +79,15 @@ private:
   double manual_control_linear_scale_{1000.0};
   double manual_control_yaw_scale_{1000.0};
   bool manual_control_enabled_{false};
+  bool neutral_manual_control_enabled_{false};
   bool blade_control_enabled_{false};
   double battery_observation_timeout_s_{5.0};
+  double esc_observation_timeout_s_{3.0};
+  bool gnss_required_{true};
+  bool wheel_odometry_required_{false};
+  bool gps1_canonical_enabled_{false};
+  uint64_t gps_observation_sequence_{0};
+  int64_t gps_last_receipt_ns_{0};
   bool emergency_disarm_{true};
   std::string emergency_mode_{"HOLD"};
   bool rain_detected_{false};
@@ -96,6 +110,7 @@ private:
 
   PowerMapping power_mapping_{0, 1, 5.0};
   ReadinessState readiness_{5.0};
+  EscTelemetryTracker esc_tracker_{3.0};
 
   uint8_t mower_esc_status_{0};
   float mower_esc_temperature_{0.0F};
@@ -109,6 +124,8 @@ private:
   mowgli_interfaces::msg::HighLevelStatus last_high_level_status_{};
 
   rclcpp::Publisher<mowgli_interfaces::msg::Status>::SharedPtr pub_status_;
+  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr pub_gps_fix_;
+  rclcpp::Publisher<mowgli_interfaces::msg::GnssStatus>::SharedPtr pub_gps_status_;
   rclcpp::Publisher<mowgli_interfaces::msg::Emergency>::SharedPtr pub_emergency_;
   rclcpp::Publisher<mowgli_interfaces::msg::Power>::SharedPtr pub_power_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
@@ -121,6 +138,8 @@ private:
   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
   rclcpp::Subscription<mavros_battery_observer::msg::BatteryStatus>::SharedPtr sub_battery_status_;
+  rclcpp::Subscription<mavros_msgs::msg::ESCTelemetry>::SharedPtr sub_esc_telemetry_;
+  rclcpp::Subscription<mavros_msgs::msg::GPSRAW>::SharedPtr sub_serial_gps_raw_;
   rclcpp::Subscription<mowgli_interfaces::msg::GnssStatus>::SharedPtr sub_gnss_status_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_wheel_odom_;
 
@@ -131,6 +150,7 @@ private:
   rclcpp::Client<mavros_msgs::srv::SetMode>::SharedPtr cli_set_mode_;
 
   rclcpp::TimerBase::SharedPtr timer_status_;
+  rclcpp::TimerBase::SharedPtr timer_diagnostics_;
 };
 
 }  // namespace mowgli_mavros_bridge

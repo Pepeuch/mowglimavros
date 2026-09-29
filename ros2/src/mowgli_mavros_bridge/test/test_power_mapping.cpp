@@ -19,7 +19,10 @@ TEST(PowerMapping, RepeatedValuesAreFreshObservations) { PowerMapping m(7,3,1); 
 TEST(PowerMapping, CachedValuesDoNotBecomeFresh) { PowerMapping m(7,3,1); m.observe(obs(3,1)); EXPECT_FALSE(m.project(2000000000).traction_fresh); }
 TEST(PowerMapping, UnavailableFieldsStayUnknown) { PowerMapping m(7,3,1); m.observe(obs(3,1,std::nullopt,std::nullopt,std::nullopt)); auto p=m.project(1); EXPECT_TRUE(std::isnan(p.v_battery)); m.observe(obs(7,1,std::nullopt,std::nullopt)); p=m.project(1); EXPECT_TRUE(std::isnan(p.charge_current)); }
 TEST(PowerMapping, SignIsRoleIndependentAndNormalized) { PowerMapping m(7,3,1); m.observe(obs(7,1,30,-3)); m.observe(obs(3,1,25,5)); auto p=m.project(1); EXPECT_DOUBLE_EQ(p.charge_current,3); EXPECT_GT(p.charge_current,0); EXPECT_GT(*obs(3,1,25,5).current,0); }
-TEST(PowerMapping, ExplicitChargingOnly) { PowerMapping m(7,3,1); m.observe(obs(7,1,30,2,0.5,6)); EXPECT_TRUE(m.project(1).charger_enabled); EXPECT_TRUE(m.charging()); m.observe(obs(7,2,30,0)); EXPECT_FALSE(m.project(2).charger_enabled); }
+TEST(PowerMapping, AlgebraicNetCurrentUsesNegativeTraction) { PowerMapping m(7,3,1); m.observe(obs(7,1,30,-1.5)); m.observe(obs(3,1,25,0.4)); auto p=m.project(1); EXPECT_DOUBLE_EQ(p.charge_current,1.5); EXPECT_DOUBLE_EQ(p.traction_current,-0.4); EXPECT_DOUBLE_EQ(p.battery_net_current,1.1); }
+TEST(PowerMapping, NetCurrentUnknownWithoutDock) { PowerMapping m(7,3,1); m.observe(obs(3,1,25,0.4)); auto p=m.project(1); EXPECT_DOUBLE_EQ(p.traction_current,-0.4); EXPECT_TRUE(std::isnan(p.battery_net_current)); }
+TEST(PowerMapping, DockStaleMakesNetUnknown) { PowerMapping m(7,3,1); m.observe(obs(7,1,30,-1.5)); m.observe(obs(3,2*1000000000LL,25,0.4)); auto p=m.project(2*1000000000LL); EXPECT_TRUE(std::isnan(p.charge_current)); EXPECT_TRUE(std::isnan(p.battery_net_current)); }
+TEST(PowerMapping, ExplicitChargingOnly) { PowerMapping m(7,3,1); m.observe(obs(7,1,30,2,0.5,6)); EXPECT_TRUE(m.project(1).charger_enabled); EXPECT_TRUE(m.project(1).charger_enabled); m.observe(obs(7,2,30,0)); EXPECT_FALSE(m.project(2).charger_enabled); }
 TEST(PowerMapping, ResetDropsPreReconnectData) { PowerMapping m(7,3,1); m.observe(obs(3,1)); m.reset(); EXPECT_FALSE(m.project(1).traction_fresh); }
 TEST(PowerMapping, RejectsInvalidOrEqualMapping) { EXPECT_FALSE(PowerMapping(-1,3,1).valid()); EXPECT_FALSE(PowerMapping(3,3,1).valid()); }
 }  // namespace

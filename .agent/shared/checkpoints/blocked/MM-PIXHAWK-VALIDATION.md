@@ -41,6 +41,13 @@ Prefer read-only / no-motion bench validation first.
 
 This checkpoint does not block deterministic SOFTWARE_NOW fixes.
 
+The 2026-09-28 Rock 5B/Pixhawk passive snapshot and active-test gates are in
+`MM-PIXHAWK-PASSIVE-AUDIT-20260928.md`. It found a possible DroneCAN
+command/telemetry index mismatch, unusable RPM despite ESC masks, Battery 1
+unhealthy at the initial snapshot, invalid GNSS, and backend readiness false.
+A later passive POWER1 recheck in the same checkpoint shows id0 valid and FCU
+battery/pre-arm health restored. No actuation occurred.
+
 Do not infer hardware correctness from successful compilation or ROS graph tests.
 
 ## Passive capability audit update — 2026-09-08

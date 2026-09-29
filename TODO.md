@@ -475,8 +475,10 @@ Software evidence: 20 focused pairing/kinematics tests, Kilted sidecar build,
 pluginlib discovery, safe-disabled and synthetic-config no-FCU startup, and
 canonical plugin remap passed on 2026-09-09. `git diff --check` passed.
 
-`HARDWARE_PENDING`: actual VESC `uavcan_esc_index` values,
-`CAN_D1_ESC_OFFSET`, `ESC_TELEM_MAV_OFS=0`, RPM1/RPM2 masks, installation
+`HARDWARE_PENDING`: VESC command-index configuration and routing (CAN1
+`Status.esc_index` 0/1/2 was passively reconfirmed on 2026-09-28;
+no disarmed `RawCommand` was observed), `CAN_D1_ESC_OFFSET`,
+`ESC_TELEM_MAV_OFS=0`, RPM1/RPM2 masks, installation
 signs, gear-ratio calibration, wheel radii, track width, telemetry cadence,
 one-VESC loss/reboot, FCU reconnect/reboot, forward/reverse sign, and measured
 distance validation.
@@ -631,6 +633,122 @@ Hardware acceptance gates retained from the migration audit:
 Follow `.agent/policies/HARDWARE.md`.
 
 Do not infer these results from software tests.
+
+Passive Rock 5B/Pixhawk snapshot (2026-09-28):
+`.agent/shared/checkpoints/blocked/MM-PIXHAWK-PASSIVE-AUDIT-20260928.md`.
+The 1,014 freshly read FCU parameters and runtime show a possible right-wheel
+DroneCAN command/telemetry index mismatch, `RPM=-1/-1` despite masks `1/2`
+with `RPMx_TYPE=7`, Battery 1 unhealthy, no valid GPS, and backend
+`not_ready`. These are pre-active-test gates; this passive audit closes no
+MM-801 hardware acceptance checkbox.
+
+2026-09-28 POWER1 follow-up: after the operator restored its controller,
+`BATTERY_STATUS id0` again had valid 24.78–24.81 V and 1.51–1.52 A readings;
+MAVROS Battery and FCU battery/pre-arm diagnostics were OK. This supersedes
+the earlier POWER1-unavailable observation, but current direction, charging
+semantics, bridge instance configuration and all active hardware gates remain
+pending. See the follow-up in the same checkpoint.
+
+2026-09-28 CAN1 follow-up: an authorized, temporary 22 s MAVLink forwarding
+capture reconfirmed VESC CAN nodes 1/2/3 with Status indexes 0/1/2, zero RPM
+and current, and no disarmed RawCommand. Forwarding was explicitly disabled
+and a later 7 s check saw no CAN_FRAME. The historical right-wheel
+Status-index-1 association was superseded by a later isolated manual-wheel
+capture (current right wheel = index 0); command routing still needs proof.
+See the follow-up in the same checkpoint.
+
+2026-09-28 MANUAL_CONTROL preflight on the operator-secured stand: no new
+motor command was sent. FCU `SYSID_MYGCS=255` versus MAVROS `system_id=1`
+causes exact Rover 4.6.3 manual-control source rejection; Rover reads `y`
+steering and `z` throttle while the current disabled bridge writes `x` and
+`r`. Reconcile identity and correct bridge axes before the bounded active
+manual-control test, without altering either while armed. Earlier disarmed
+direct-CAN index-1 trials at 5%/20% produced zero ESC RPM/current and no
+observed motion, but physical CAN delivery is unproven. See
+`.agent/shared/checkpoints/blocked/MM-MANUAL-CONTROL-ROUTING-20260928.md`.
+
+2026-09-28 correction: the operator confirmed DISARMED/MANUAL and authorized
+sidecar rebuild/restart. The ARM64 sidecar now emits MAVROS source sysid 255
+(observed outgoing heartbeat) with FCU target 1; Pixhawk `SYSID_MYGCS` remains
+255. The bridge maps Rover steering/throttle to `y/z`; its focused test and
+all 25 bridge GTests pass. `manual_control_enabled=false` remains in effect,
+and no motor command was sent. Physical neutral/stop, CAN RawCommand and motor
+routing are still `HARDWARE_PENDING`; request fresh authorization before the
+first bounded MANUAL motor test. See the same checkpoint's deployed follow-up.
+
+2026-09-28 first authorized 5% MANUAL attempt aborted before positive throttle:
+60 neutral MANUAL_CONTROL messages were observed on wire as 255:191 to target 1.
+The capture script rejected short MAVLink 2 CAN_FRAME payloads; its guard
+stopped the run, sent neutral for 2 s, and disabled forwarding. The decoder
+was corrected and a separate passive 5 s capture verified 741 ESC Status
+packets from nodes 1/2/3. A 7 s postcheck saw zero CAN forwarding frames.
+No propulsion was sent; physical routing remains untested and requires a fresh GO.
+
+2026-09-28 bounded MANUAL follow-up: separate operator GOs allowed 5% then 20%
+ArduRover throttle (`MANUAL_CONTROL.z=50/200`, `y=0`) for 10 s each, with
+observed source 255/target 1, explicit 2 s neutral and acknowledged CAN
+forwarding disable. The operator saw **no motor move** in either trial. At 20%,
+all three ESC Status sources and MAVROS telemetry stayed 0 RPM/0 A. No
+RawCommand appeared in the forwarded CAN receive stream, which does not prove
+absence of CAN TX. The 5% node-1 RPM arose amid operator manual wheel turns;
+its corrected maximum was 630 RPM, not the initial erroneous ±130k decode.
+An independent 7 s check after each trial found zero CAN_FRAME/CANFD_FRAME,
+FCU still armed/MANUAL. A later passive 20 s capture, with operator-confirmed
+**right wheel only** manual rotation, gave ROS ESC slot 0: 26/60 samples
+nonzero up to 1,038 RPM, while slots 1/2 stayed 0. Thus **current right-wheel
+telemetry is ESC1 / CAN node 1 / esc_index 0**, contradicting the older ESC2 /
+index 1 association. Treat the old mapping as superseded for current hardware;
+reason for the change is unknown. A separate operator-confirmed left-wheel-only hand-rotation at comparable
+speed had 60 samples per slot over 20 s, all 0 RPM/0 A, so its ESC identity
+remains unresolved.
+Physical command routing and Rover output response remain open. Do not increase throttle again merely to probe this.
+See `.agent/shared/checkpoints/blocked/MM-MANUAL-CONTROL-ROUTING-20260928.md`.
+
+
+2026-09-28 Rover 4.7.1 wheel-only follow-up: the operator authorized one
+new bounded trial on a stand, with separate POWER1 dock/charger and POWER2
+traction capture. Live parameters are now SERVO1/2/3 functions 74/73/35;
+the older 4.6.3 servo order above is historical. The FCU refused the single
+arming request (MAVLink result 4), explicitly reporting "Arm: Compass 2 not
+found" and "Arm: DroneCAN: Node 124 unhealthy!". The guard sent 43 neutral
+MANUAL_CONTROL messages over 2.21 s; **zero positive propulsion messages**
+were sent. Final state: connected, MANUAL, disarmed. Wheel response, direction,
+traction draw under load, and mower isolation under command remain untested.
+Diagnose the FCU pre-arm conditions before a separately authorized retry;
+do not bypass checks. See the new blocked wheel-trial checkpoint.
+
+2026-09-28 HERE4 CAN2 passive follow-up: node 124 responded consistently at
+1 Hz on Pixhawk CAN2, with six complete GetNodeInfo responses, so CAN
+communication is functioning at the FCU's 1 Mbit/s setting. The node stayed
+in `MODE_MAINTENANCE` with software version `2.0`, status code `13`, and no
+GNSS/compass broadcasts. ArduPilot's DroneCAN bootloader reports version 2.0
+and uses code 13 for a failed application CRC check, making an application
+boot/firmware-image problem the leading diagnosis; the exact CubePilot build
+and failure history remain unconfirmed. The capture found no 30 s node reboot.
+Receive forwarding was explicitly stopped. No parameter or persistent hardware
+configuration was changed. HERE4 recovery and sensor output must be proven
+before HW-MAV-005 or another ARM attempt. See `MM-HERE4-CAN2-20260928`.
+
+2026-09-29 wheel-only preflight: live Rover 4.7.1/FCU parameters, MANUAL/disarmed
+state, RC neutral and both POWER instances were captured before any active
+command. All three ESC telemetry slots were absent for 10 s; a separate 12 s
+raw FCU MAVLink capture contained zero `ESC_TELEMETRY_1_TO_4` despite normal
+heartbeats, battery and servo messages. The trial was held before ARM because
+the mower ESC could not be monitored. The operator confirmed all three VESCs
+are powered; inspect the CAN1 physical path and VESC diagnostics, then repeat
+the complete preflight before the one authorized wheel trial.
+See `MM-WHEEL-TRIAL-PREFLIGHT-20260929`.
+
+2026-09-29 CAN1 reconnection and single wheel-trial retry: three ESC telemetry
+slots and advancing counts returned; POWER1 was unavailable off dock as
+reported by the operator, while POWER2 remained valid. The single ARM request
+was refused with exact FCU text `Arm: Battery 1 unhealthy` (MAVLink result 4).
+The guard sent 44 neutral MANUAL_CONTROL messages over 2.243 s; no positive
+throttle was sent, and the FCU remained MANUAL/disarmed. `BATT_FS_LOW_ACT=0`
+already disables the low-battery action, but the configured POWER1 monitor
+still fails the separate arming-health check. Choose an off-dock POWER1
+monitoring strategy that preserves POWER2 protection before a separately
+authorized parameter change and wheel-trial retry. See the same checkpoint.
 
 ---
 

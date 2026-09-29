@@ -9,6 +9,9 @@ source /opt/mowgli/universal_gnss/setup.bash
 if [ -f /ros2_ws/install/setup.bash ]; then
   source /ros2_ws/install/setup.bash
 fi
+if [ -f /integration_ws/install/setup.bash ]; then
+  source /integration_ws/install/setup.bash
+fi
 
 : "${ROS_DOMAIN_ID:=0}"
 : "${RMW_IMPLEMENTATION:=rmw_cyclonedds_cpp}"
@@ -19,6 +22,7 @@ export RMW_IMPLEMENTATION
 : "${MAVROS_PORT:=/dev/mavros}"
 : "${MAVROS_BAUD:=921600}"
 : "${MAVROS_GCS_URL:=}"
+: "${MAVROS_SYSTEM_ID:=255}"
 : "${MAVROS_TGT_SYSTEM:=1}"
 : "${MAVROS_TGT_COMPONENT:=1}"
 : "${MAVROS_AUTOPILOT:=ardupilot}"

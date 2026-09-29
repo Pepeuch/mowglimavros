@@ -10,7 +10,7 @@ from launch_ros.actions import Node
 import yaml
 
 
-def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, tgt_system, tgt_component, gnss_source):
+def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, tgt_system, tgt_component, gnss_source, canonical_gps1):
     source = gnss_source.perform(context)
     if source not in ("gps1", "gps2"):
         raise RuntimeError("GNSS_MAVROS_SOURCE must be gps1 or gps2")
@@ -37,6 +37,7 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, tgt_system,
     if not os.path.isfile(wheel_odom_config):
         raise RuntimeError("ESC wheel odometry MAVROS plugin configuration is unavailable")
     source_root = f"/mavros/universal_gnss/{source}"
+    canonical_serial = canonical_gps1.perform(context).lower() in ("1", "true", "yes")
     return [
         Node(
             package="mavros",
@@ -49,13 +50,16 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, tgt_system,
                 {
                     "fcu_url": fcu_url.perform(context),
                     "gcs_url": gcs_url.perform(context),
+                    "system_id": int(system_id.perform(context)),
                     "tgt_system": int(tgt_system.perform(context)),
                     "tgt_component": int(tgt_component.perform(context)),
                 },
             ],
             remappings=[
-                (f"{source_root}/fix", "/gps/fix"),
-                (f"{source_root}/status", "/gps/status"),
+                (f"{source_root}/fix", "/gps/fix") if not canonical_serial else
+                    (f"{source_root}/fix", f"{source_root}/fix"),
+                (f"{source_root}/status", "/gps/status") if not canonical_serial else
+                    (f"{source_root}/status", f"{source_root}/status"),
                 ("/mavros/esc_wheel_odometry/wheel_odom", "/wheel_odom"),
             ],
         )
@@ -88,9 +92,11 @@ def generate_launch_description():
     mavros_autopilot = EnvironmentVariable("MAVROS_AUTOPILOT", default_value="ardupilot")
     mavros_fcu_url = EnvironmentVariable("MAVROS_FCU_URL", default_value="serial:///dev/mavros:921600")
     mavros_gcs_url = EnvironmentVariable("MAVROS_GCS_URL", default_value="")
+    mavros_system_id = EnvironmentVariable("MAVROS_SYSTEM_ID", default_value="255")
     mavros_tgt_system = EnvironmentVariable("MAVROS_TGT_SYSTEM", default_value="1")
     mavros_tgt_component = EnvironmentVariable("MAVROS_TGT_COMPONENT", default_value="1")
     gnss_mavros_source = EnvironmentVariable("GNSS_MAVROS_SOURCE", default_value="gps1")
+    canonical_gps1 = EnvironmentVariable("MAVROS_GPS1_CANONICAL", default_value="false")
     use_ntrip_default = os.environ.get(
         "NTRIP_ENABLED", str(robot_params.get("ntrip_enabled", False)).lower()
     )
@@ -113,9 +119,11 @@ def generate_launch_description():
                     mavros_autopilot,
                     mavros_fcu_url,
                     mavros_gcs_url,
+                    mavros_system_id,
                     mavros_tgt_system,
                     mavros_tgt_component,
                     gnss_mavros_source,
+                    canonical_gps1,
                 ],
             ),
             Node(
@@ -123,7 +131,12 @@ def generate_launch_description():
                 executable="mavros_hardware_bridge_node",
                 name="hardware_bridge",
                 output="screen",
-                parameters=[bridge_params],
+                parameters=[bridge_params, {
+                    "gps1_canonical_enabled": os.environ.get(
+                        "MAVROS_GPS1_CANONICAL", "false").lower() in ("1", "true", "yes"),
+                    "neutral_manual_control_enabled": os.environ.get(
+                        "MAVROS_NEUTRAL_TEST", "false").lower() in ("1", "true", "yes"),
+                }],
                 remappings=hardware_bridge_remappings,
             ),
             IncludeLaunchDescription(
