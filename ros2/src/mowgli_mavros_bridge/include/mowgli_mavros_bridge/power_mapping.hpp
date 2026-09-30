@@ -24,6 +24,9 @@ struct PowerProjection
   bool charger_enabled;
   bool traction_fresh;
   bool dock_fresh;
+  double dock_current_raw;
+  double traction_current_raw;
+  int dock_charge_state_raw;
 };
 
 class PowerMapping

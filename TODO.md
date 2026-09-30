@@ -626,6 +626,8 @@ Validate individually:
 
 2026-09-29 no-motion Lyrical follow-up: POWER1 id0 reports +0.09 to +1.48 A off dock with `not_charging`; canonical charge current is therefore negative. POWER2 id1 reports ~28.8 V and ~0.47 A discharge while SoC fell to ~3%. Preserve the physical POWER1/POWER2 mapping; verify sensor zero/direction, dock backfeed and SoC calibration with independent measurements before any active test. Three ESC counters progress at zero RPM; slot3 remains empty. GPS1 NEO-M9N is a temporary standard-GNSS source, not RTK. See the active integration checkpoint for exact image and topic evidence.
 
+2026-09-30 contract correction (source only, not deployed): `Power.charge_current` is computed from fresh raw POWER1 minus fresh raw POWER2, otherwise NaN; only the resultant is displayed, while raw paths remain internal diagnostics. Per operator, fresh POWER1 voltage >0 V indicates dock/charging; the MAVLink charge-state enum remains raw diagnostic data (live `1` means OK). MowgliNext battery percent is an approximate estimate from filtered POWER2 voltage; GUI shows unavailable without a valid voltage, while preserving a real 0%. On-dock capture: POWER1 id0 ~+1.5 A, POWER2 id1 ~+0.5 A. Historical off-dock positive POWER1 voltage conflicts with the new rule and needs four-state physical verification: off dock, dock attached without charge, active charge, POWER1 disconnected. No FCU parameter changes.
+
 Hardware acceptance gates retained from the migration audit:
 
 - [ ] `HW-MAV-001` — ARM64/RPi4 USB `if00` deployment, reconnect, and FCU reboot recovery (`HARDWARE_PENDING`).

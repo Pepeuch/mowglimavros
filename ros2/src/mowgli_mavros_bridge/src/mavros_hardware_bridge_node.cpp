@@ -248,7 +248,7 @@ void MavrosHardwareBridgeNode::on_battery_status(
     is_charging_ = projection.charger_enabled;
     charger_enabled_ = projection.charger_enabled;
     charger_status_ = !projection.dock_fresh ? "unavailable" :
-        (projection.charger_enabled ? "charging" : "not_charging");
+        (projection.charger_enabled ? "charging" : "unknown");
   }
   if (traction_observation) {
     sensor_msgs::msg::BatteryState battery;
@@ -628,6 +628,9 @@ void MavrosHardwareBridgeNode::publish_readiness()
   current_status.level = power.traction_fresh ? diagnostic_msgs::msg::DiagnosticStatus::OK :
       diagnostic_msgs::msg::DiagnosticStatus::STALE;
   current_status.message = power.traction_fresh ? "traction_fresh" : "traction_missing_or_stale";
+  add_value(current_status, "dock_charge_state_raw", std::to_string(power.dock_charge_state_raw));
+  add_value(current_status, "dock_current_raw_a", format_value(power.dock_current_raw));
+  add_value(current_status, "traction_current_raw_a", format_value(power.traction_current_raw));
   add_value(current_status, "traction_current_a", format_value(power.traction_current));
   add_value(current_status, "charge_current_a", format_value(power.charge_current));
   add_value(current_status, "battery_net_current_a", format_value(power.battery_net_current));
@@ -635,7 +638,7 @@ void MavrosHardwareBridgeNode::publish_readiness()
   add_value(current_status, "charger_voltage_v", format_value(power.v_charge));
   add_value(current_status, "traction_percentage", format_value(power.traction_percentage));
   add_value(current_status, "charger_state", !power.dock_fresh ? "unavailable" :
-            (power.charger_enabled ? "charging" : "not_charging"));
+            (power.charger_enabled ? "charging" : "unknown"));
   output.status.push_back(std::move(current_status));
 
   constexpr const char* kEscNames[3] = {"right_wheel", "left_wheel", "mower"};
