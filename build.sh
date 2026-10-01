@@ -4,11 +4,11 @@ set -euo pipefail
 OWNER="${OWNER:-pepeuch}"
 REPO="${REPO:-mowglimavros}"
 IMAGE_NAME="${IMAGE_NAME:-mowgli-mavros-sidecar}"
-ROS_DISTRO="${ROS_DISTRO:-kilted}"
+ROS_DISTRO="${ROS_DISTRO:-lyrical}"
 
 if [[ -v TAG ]]; then
   TAG="${TAG}"
-elif [[ "${ROS_DISTRO}" == "kilted" ]]; then
+elif [[ "${ROS_DISTRO}" == "lyrical" ]]; then
   TAG="latest"
 else
   TAG="${ROS_DISTRO}"
@@ -57,7 +57,7 @@ load_canonical_pins() {
 }
 
 validate_inputs() {
-  case "$ROS_DISTRO" in kilted|lyrical) ;; *) error "ROS_DISTRO must be kilted or lyrical"; exit 1 ;; esac
+  case "$ROS_DISTRO" in lyrical) ;; *) error "ROS_DISTRO must be lyrical"; exit 1 ;; esac
 }
 
 ensure_buildx() {

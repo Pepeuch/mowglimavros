@@ -44,12 +44,6 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ros_distro: kilted
-            platform: linux/amd64
-            architecture: amd64
-          - ros_distro: kilted
-            platform: linux/arm64
-            architecture: arm64
           - ros_distro: lyrical
             platform: linux/amd64
             architecture: amd64
@@ -123,10 +117,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - ros_distro: kilted
-            primary: true
           - ros_distro: lyrical
-            primary: false
+            primary: true
 
     steps:
       - name: Set up Docker Buildx

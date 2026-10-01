@@ -78,7 +78,7 @@ and receiver state only; it is not a general hardware acceptance result.
 | Flight controller | Holybro Pixhawk 5X detected over USB |
 | MAVROS serial path | Stable `/dev/serial/by-id/<Pixhawk-5X-device>-if00` (`ttyACM0`) |
 | MAVROS baud rate | `921600` |
-| Sidecar ROS / RMW | ROS 2 Kilted, `rmw_cyclonedds_cpp` |
+| Sidecar ROS / RMW | ROS 2 Lyrical, `rmw_cyclonedds_cpp` |
 
 The Pixhawk serial endpoint opened successfully, MAVROS received an ArduPilot
 heartbeat, and both `mavros_node` and `mavros_hardware_bridge_node` remained
@@ -240,7 +240,7 @@ MAVLink proof that a VESC node exists on CAN1 or that it reports ESC telemetry.
 This later, read-only audit supersedes the preceding `PRESENT_NO_DATA` finding
 for `/mavros/esc_telemetry/telemetry` only. It is evidence for the running
 Rock 5B stack at the time of observation: Pixhawk 5X over the MAVROS USB
-endpoint, `mowgli-mavros:build-kilted-arm64`, MAVROS with MAVLink package
+endpoint, `mowgli-mavros:build-Lyrical-arm64`, MAVROS with MAVLink package
 `2026.8.8`, and the attached three-VESC DroneCAN bus. It does not establish
 wheel/mower identity, actuator safety, or a general rate guarantee.
 

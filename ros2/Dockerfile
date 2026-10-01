@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1.7
 
-ARG ROS_DISTRO=kilted
+ARG ROS_DISTRO=lyrical
 
 ARG MAVROS_VERSION=2.16.0
 
@@ -153,14 +153,17 @@ WORKDIR /universal_gnss_ws
 RUN /bin/bash -lc "\
     source /opt/ros/${ROS_DISTRO}/setup.bash && \
     source /opt/mowgli/mavros/setup.bash && \
-    colcon build --base-paths src/universal_gnss \
+    colcon build \
+      --base-paths \
+        src/universal_gnss/universal_gnss_msgs \
+        src/universal_gnss/gnss_ros2 \
+        src/universal_gnss/gnss_mavros \
       --packages-up-to universal_gnss_mavros \
       --install-base /opt/mowgli/universal_gnss \
       --cmake-args -DUNIVERSAL_GNSS_BUILD_MAVROS_PLUGIN=ON -DBUILD_TESTING=OFF && \
     test -f /opt/mowgli/universal_gnss/universal_gnss_mavros/share/universal_gnss_mavros/universal_gnss_mavros_plugins.xml && \
     printf '%s\n' '${UNIVERSAL_GNSS_COMMIT}' > /opt/mowgli/universal_gnss/.mowgli-universal-gnss-commit \
     "
-
 
 FROM universal-gnss-build AS workspace-build
 
