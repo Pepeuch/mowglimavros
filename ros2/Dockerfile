@@ -153,7 +153,7 @@ WORKDIR /universal_gnss_ws
 RUN /bin/bash -lc "\
     source /opt/ros/${ROS_DISTRO}/setup.bash && \
     source /opt/mowgli/mavros/setup.bash && \
-    colcon build --base-paths src/universal_gnss/gnss_ros2 src/universal_gnss/gnss_mavros \
+    colcon build --base-paths src/universal_gnss \
       --packages-up-to universal_gnss_mavros \
       --install-base /opt/mowgli/universal_gnss \
       --cmake-args -DUNIVERSAL_GNSS_BUILD_MAVROS_PLUGIN=ON -DBUILD_TESTING=OFF && \
