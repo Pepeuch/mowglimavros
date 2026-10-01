@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eo pipefail
 
-: "${ROS_DISTRO:=kilted}"
+: "${ROS_DISTRO:=lyrical}"
 : "${DEVCONTAINER_USER:=ubuntu}"
 source "/opt/ros/${ROS_DISTRO}/setup.bash"
 set -u

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14)
+cmake_minimum_required(VERSION 3.16...4.2)
 project(mowgli_ntrip_client)
 
 if(NOT CMAKE_CXX_STANDARD)
@@ -13,7 +13,7 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU|Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
-find_package(Boost REQUIRED)
+find_package(Boost CONFIG REQUIRED)
 find_package(mavros_msgs REQUIRED)
 find_package(rclcpp REQUIRED)
 

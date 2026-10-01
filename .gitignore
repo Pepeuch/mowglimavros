@@ -16,3 +16,5 @@ __pycache__/
 build/
 install/
 log/
+build-arm64-remote.sh
+printf '\n' >> .gitignore
