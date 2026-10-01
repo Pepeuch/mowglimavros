@@ -109,9 +109,10 @@ public:
       }
     }
 
-    // POWER1 is charger current (positive into robot), POWER2 is battery
-    // discharge current (positive on MAVLink, negative in Mowgli convention).
-    // Net charge current therefore is POWER1 + signed POWER2.
+    // The configured dock sample is charger current (positive into robot), while
+    // the configured traction sample is battery discharge current (positive on
+    // MAVLink, negative in Mowgli convention). Net charge current is therefore
+    // dock current + signed traction current.
     if (out.dock_fresh && out.battery_fresh && dock_->current && battery_->current)
     {
       out.charge_current = *dock_->current - *battery_->current;

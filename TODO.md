@@ -487,14 +487,14 @@ distance validation.
 Related migration finding: `MN-MAV-006`
 Status: DONE (software; HARDWARE_PENDING)
 
-Target installation semantics: `POWER1 = dock/charger`; `POWER2 = traction`.
+Target installation semantics: `POWER1 = traction`; `POWER2 = dock/charger`.
 
 Tasks:
 
 - [x] Add configurable dock and traction MAVLink instance IDs; never infer meaning from message arrival order or BATT numbering.
 - [x] Route dock state to `Power.v_charge`, explicit MAVLink charging state, `Status.is_charging`, and docking-compatible current semantics.
 - [x] Route traction state to `Power.v_battery`, SoC, and the sole `/battery_state` producer.
-- [x] Define missing/stale instance behavior and current sign convention. Dock POWER1 disappearance while undocked must not appear as traction failure.
+- [x] Define missing/stale instance behavior and current sign convention. Dock-source disappearance while undocked must not appear as traction failure.
 - [x] Do not change ArduPilot failsafe parameters in this software item.
 
 Acceptance tests:
@@ -632,7 +632,7 @@ Hardware acceptance gates retained from the migration audit:
 
 - [ ] `HW-MAV-001` — ARM64/RPi4 USB `if00` deployment, reconnect, and FCU reboot recovery (`HARDWARE_PENDING`).
 - [ ] `HW-MAV-002` — steering/throttle plus zero, HOLD, disarm, DDS, and USB-loss stop semantics (`HARDWARE_PENDING`).
-- [ ] `HW-MAV-003` — physical POWER1 dock and POWER2 traction behavior (`HARDWARE_PENDING`).
+- [ ] `HW-MAV-003` — physical POWER1 traction and POWER2 dock behavior (`HARDWARE_PENDING`).
 - [ ] `HW-MAV-004` — blade command/feedback and emergency authority (`HARDWARE_PENDING`; separate blade-on authorization required).
 - [ ] `HW-MAV-005` — outdoor GNSS/RTCM and HERE4 CAN1/VESC coexistence (`HARDWARE_PENDING`).
 
@@ -755,6 +755,19 @@ already disables the low-battery action, but the configured POWER1 monitor
 still fails the separate arming-health check. Choose an off-dock POWER1
 monitoring strategy that preserves POWER2 protection before a separately
 authorized parameter change and wheel-trial retry. See the same checkpoint.
+
+2026-10-01 POWER failover resolution: repeated live tests showed that the
+previous wiring, POWER1=dock/charger and POWER2=traction, caused a full Pixhawk
+5X reboot when the dock/POWER1 source was removed while traction remained
+available on POWER2. Linux observed USB disconnect, Pixhawk5X-BL enumeration,
+then a normal Pixhawk5X restart. The physical inputs were therefore swapped.
+The validated production wiring is now POWER1 / BATTERY_STATUS id0 = traction
+and POWER2 / BATTERY_STATUS id1 = dock/charger. With this wiring, removing the
+dock/POWER2 source leaves the FCU and MAVLink transport uninterrupted. The
+battery-observer semantic mapping is correspondingly dock_battery_instance=1
+and traction_battery_instance=0. Earlier dated POWER1=dock / POWER2=traction
+observations above are retained as historical evidence and are superseded by
+this hardware validation.
 
 ---
 

@@ -213,8 +213,8 @@ class ExternalBackendContractTest(unittest.TestCase):
             "ros2/src/mavros_battery_observer/config/battery_observer.yaml"
         )
 
-        self.assertIn("dock_battery_instance: 0", power)
-        self.assertIn("traction_battery_instance: 1", power)
+        self.assertIn("dock_battery_instance: 1", power)
+        self.assertIn("traction_battery_instance: 0", power)
         self.assertIn("charger_on_voltage: 14.0", power)
         self.assertIn("charger_off_voltage: 13.0", power)
 
