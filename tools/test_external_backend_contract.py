@@ -106,19 +106,12 @@ class ExternalBackendContractTest(unittest.TestCase):
             '(f"{source_root}/status", "/gps/status")',
             launch,
         )
-        self.assertIn(
+        for legacy_remap in (
             '("/mavros/esc_wheel_odometry/wheel_odom", "/wheel_odom")',
-            launch,
-        )
-
-        self.assertIn(
             '("/mavros/battery_observer/power", "/hardware_bridge/power")',
-            launch,
-        )
-        self.assertIn(
             '("/mavros/battery_observer/battery_state", "/battery_state")',
-            launch,
-        )
+        ):
+            self.assertNotIn(legacy_remap, launch)
 
         bridge = read(
             "ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp"
@@ -128,11 +121,11 @@ class ExternalBackendContractTest(unittest.TestCase):
         )
 
         self.assertIn(
-            'create_publisher<mowgli_interfaces::msg::Power>("~/power"',
+            'create_publisher<mowgli_interfaces::msg::Power>("/hardware_bridge/power"',
             battery,
         )
         self.assertIn(
-            'create_publisher<sensor_msgs::msg::BatteryState>("~/battery_state"',
+            'create_publisher<sensor_msgs::msg::BatteryState>("/battery_state"',
             battery,
         )
 
@@ -147,6 +140,13 @@ class ExternalBackendContractTest(unittest.TestCase):
 
         wheel = read(
             "ros2/src/mavros_esc_wheel_odometry/config/esc_wheel_odometry.yaml"
+        )
+        wheel_plugin = read(
+            "ros2/src/mavros_esc_wheel_odometry/src/esc_wheel_odometry_plugin.cpp"
+        )
+        self.assertIn(
+            'create_publisher<nav_msgs::msg::Odometry>("/wheel_odom"',
+            wheel_plugin,
         )
         self.assertIn(
             f'frame_id: {LOCK["frames"]["wheel_odom"]}',
@@ -241,13 +241,13 @@ class ExternalBackendContractTest(unittest.TestCase):
 
         self.assertEqual(
             battery.count(
-                'create_publisher<sensor_msgs::msg::BatteryState>("~/battery_state"'
+                'create_publisher<sensor_msgs::msg::BatteryState>("/battery_state"'
             ),
             1,
         )
         self.assertEqual(
             battery.count(
-                'create_publisher<mowgli_interfaces::msg::Power>("~/power"'
+                'create_publisher<mowgli_interfaces::msg::Power>("/hardware_bridge/power"'
             ),
             1,
         )

@@ -74,8 +74,10 @@ public:
     charger_off_voltage_(node->declare_parameter<double>("charger_off_voltage", 13.0)),
     state_(observation_timeout_s_, charger_on_voltage_, charger_off_voltage_)
   {
-    power_pub_ = node->create_publisher<mowgli_interfaces::msg::Power>("~/power", 10);
-    battery_pub_ = node->create_publisher<sensor_msgs::msg::BatteryState>("~/battery_state", 10);
+    power_pub_ =
+      node->create_publisher<mowgli_interfaces::msg::Power>("/hardware_bridge/power", 10);
+    battery_pub_ =
+      node->create_publisher<sensor_msgs::msg::BatteryState>("/battery_state", 10);
 
     if (dock_battery_instance_ < 0 || dock_battery_instance_ > 255 ||
       traction_battery_instance_ < 0 || traction_battery_instance_ > 255 ||

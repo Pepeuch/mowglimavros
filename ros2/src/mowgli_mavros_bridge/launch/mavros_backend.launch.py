@@ -68,9 +68,6 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
                     (f"{source_root}/fix", f"{source_root}/fix"),
                 (f"{source_root}/status", "/gps/status") if not canonical_serial else
                     (f"{source_root}/status", f"{source_root}/status"),
-                ("/mavros/esc_wheel_odometry/wheel_odom", "/wheel_odom"),
-                ("/mavros/battery_observer/power", "/hardware_bridge/power"),
-                ("/mavros/battery_observer/battery_state", "/battery_state"),
             ],
         )
     ]

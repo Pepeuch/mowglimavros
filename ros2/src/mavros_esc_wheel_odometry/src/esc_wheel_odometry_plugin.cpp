@@ -47,7 +47,7 @@ public:
       return;
     }
 
-    odom_pub_ = node->create_publisher<nav_msgs::msg::Odometry>("~/wheel_odom", 10);
+    odom_pub_ = node->create_publisher<nav_msgs::msg::Odometry>("/wheel_odom", 10);
     enable_connection_cb();
     RCLCPP_INFO(get_logger(), "ESC wheel odometry enabled; RPM #226 is gated by selected ESC telemetry counts.");
   }
