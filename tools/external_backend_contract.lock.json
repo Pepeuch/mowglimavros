@@ -2,12 +2,12 @@
   "format": 1,
   "pins": {
     "mavros": {
-      "version": "2.15.1",
-      "commit": "22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e"
+      "version": "2.16.0",
+      "commit": "5c68b905ab30de6ce630822dc46c33467e8f23ea"
     },
     "universal_gnss": {
       "repository": "https://github.com/Pepeuch/universal-gnss.git",
-      "commit": "34afbf01e770dd0b4c3863f3822a122dc25e7b7b"
+      "commit": "a09a6d062547d5d4192fa7e34b1b7c2b7fb3ebe1"
     }
   },
   "topics": {
