@@ -7,7 +7,6 @@
 #include <nav_msgs/msg/odometry.hpp>
 #include <diagnostic_msgs/msg/diagnostic_array.hpp>
 #include <rclcpp/rclcpp.hpp>
-#include <sensor_msgs/msg/battery_state.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 
 #include <mavros_msgs/msg/manual_control.hpp>
@@ -17,7 +16,6 @@
 #include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <mavros_msgs/srv/command_bool.hpp>
 #include <mavros_msgs/srv/set_mode.hpp>
-#include <mavros_battery_observer/msg/battery_status.hpp>
 #include <mowgli_interfaces/msg/gnss_status.hpp>
 #include <mowgli_interfaces/msg/emergency.hpp>
 #include <mowgli_interfaces/msg/high_level_status.hpp>
@@ -25,7 +23,6 @@
 #include <mowgli_interfaces/msg/status.hpp>
 #include <mowgli_interfaces/srv/emergency_stop.hpp>
 #include <mowgli_interfaces/srv/mower_control.hpp>
-#include "mowgli_mavros_bridge/power_mapping.hpp"
 #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
 #include "mowgli_mavros_bridge/readiness_state.hpp"
 
@@ -49,7 +46,7 @@ private:
 
   void on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg);
   void on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg);
-  void on_battery_status(const mavros_battery_observer::msg::BatteryStatus::SharedPtr msg);
+  void on_power(const mowgli_interfaces::msg::Power::SharedPtr msg);
   void on_serial_gps_raw(const mavros_msgs::msg::GPSRAW::SharedPtr msg);
   void publish_gps_stale();
   void on_esc_telemetry(const mavros_msgs::msg::ESCTelemetry::SharedPtr msg);
@@ -66,7 +63,6 @@ private:
 
   void publish_status();
   void publish_emergency();
-  void publish_power();
   void publish_readiness();
 
   bool send_arm_command(bool arm);
@@ -108,7 +104,6 @@ private:
   bool charger_enabled_{false};
   std::string charger_status_{"unknown"};
 
-  PowerMapping power_mapping_{0, 1, 5.0};
   ReadinessState readiness_{5.0};
   EscTelemetryTracker esc_tracker_{3.0};
 
@@ -120,16 +115,15 @@ private:
 
   mavros_msgs::msg::State mavros_state_{};
   sensor_msgs::msg::Imu last_imu_{};
-  sensor_msgs::msg::BatteryState traction_battery_{};
+  mowgli_interfaces::msg::Power last_power_{};
+  int64_t last_power_receipt_ns_{0};
   mowgli_interfaces::msg::HighLevelStatus last_high_level_status_{};
 
   rclcpp::Publisher<mowgli_interfaces::msg::Status>::SharedPtr pub_status_;
   rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr pub_gps_fix_;
   rclcpp::Publisher<mowgli_interfaces::msg::GnssStatus>::SharedPtr pub_gps_status_;
   rclcpp::Publisher<mowgli_interfaces::msg::Emergency>::SharedPtr pub_emergency_;
-  rclcpp::Publisher<mowgli_interfaces::msg::Power>::SharedPtr pub_power_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
-  rclcpp::Publisher<sensor_msgs::msg::BatteryState>::SharedPtr pub_battery_state_;
   rclcpp::Publisher<mavros_msgs::msg::ManualControl>::SharedPtr pub_manual_control_;
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr pub_readiness_;
 
@@ -137,7 +131,7 @@ private:
   rclcpp::Subscription<mowgli_interfaces::msg::HighLevelStatus>::SharedPtr sub_hl_status_;
   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
-  rclcpp::Subscription<mavros_battery_observer::msg::BatteryStatus>::SharedPtr sub_battery_status_;
+  rclcpp::Subscription<mowgli_interfaces::msg::Power>::SharedPtr sub_power_;
   rclcpp::Subscription<mavros_msgs::msg::ESCTelemetry>::SharedPtr sub_esc_telemetry_;
   rclcpp::Subscription<mavros_msgs::msg::GPSRAW>::SharedPtr sub_serial_gps_raw_;
   rclcpp::Subscription<mowgli_interfaces::msg::GnssStatus>::SharedPtr sub_gnss_status_;

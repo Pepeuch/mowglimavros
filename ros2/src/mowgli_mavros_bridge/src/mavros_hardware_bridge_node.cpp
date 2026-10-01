@@ -1,4 +1,5 @@
 #include "mavros_hardware_bridge_node.hpp"
+#include "mowgli_mavros_bridge/vesc_telemetry_projection.hpp"
 #include "mowgli_mavros_bridge/rover_manual_control.hpp"
 #include "mowgli_mavros_bridge/serial_gps_projection.hpp"
 
@@ -25,10 +26,7 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   manual_control_linear_scale_ = declare_parameter<double>("manual_control_linear_scale", 1000.0);
   manual_control_yaw_scale_ = declare_parameter<double>("manual_control_yaw_scale", 1000.0);
   blade_control_enabled_ = declare_parameter<bool>("blade_control_enabled", false);
-  const auto dock_battery_instance = declare_parameter<int>("dock_battery_instance", -1);
-  const auto traction_battery_instance = declare_parameter<int>("traction_battery_instance", -1);
   battery_observation_timeout_s_ = declare_parameter<double>("battery_observation_timeout_s", 5.0);
-  power_mapping_ = PowerMapping(dock_battery_instance, traction_battery_instance, battery_observation_timeout_s_);
   const auto readiness_timeout_s = declare_parameter<double>("readiness_observation_timeout_s", 5.0);
   gnss_required_ = declare_parameter<bool>("gnss_required", true);
   wheel_odometry_required_ = declare_parameter<bool>("wheel_odometry_required", false);
@@ -60,13 +58,6 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
         get_logger(),
         "blade_control_enabled=false: mower_control remains provisional and will report failure.");
   }
-  if (!power_mapping_.valid())
-  {
-    RCLCPP_WARN(
-        get_logger(),
-        "Power mapping disabled: configure distinct dock_battery_instance and traction_battery_instance (0..255).");
-  }
-
   RCLCPP_INFO(get_logger(), "MAVROS hardware bridge started.");
 }
 
@@ -79,11 +70,7 @@ void MavrosHardwareBridgeNode::create_publishers()
     pub_gps_status_ = create_publisher<mowgli_interfaces::msg::GnssStatus>("/gps/status", 10);
   }
   pub_emergency_ = create_publisher<mowgli_interfaces::msg::Emergency>("~/emergency", 10);
-  pub_power_ = create_publisher<mowgli_interfaces::msg::Power>("~/power", 10);
   pub_imu_ = create_publisher<sensor_msgs::msg::Imu>("~/imu/data_raw", 10);
-  pub_battery_state_ =
-      create_publisher<sensor_msgs::msg::BatteryState>("/battery_state", 10);
-
   pub_manual_control_ =
       create_publisher<mavros_msgs::msg::ManualControl>("/mavros/manual_control/send", 10);
   pub_readiness_ = create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", 10);
@@ -114,9 +101,9 @@ void MavrosHardwareBridgeNode::create_subscriptions()
       sensor_qos,
       std::bind(&MavrosHardwareBridgeNode::on_mavros_imu, this, std::placeholders::_1));
 
-  sub_battery_status_ = create_subscription<mavros_battery_observer::msg::BatteryStatus>(
-      "/mavros/battery_observer/status", sensor_qos,
-      std::bind(&MavrosHardwareBridgeNode::on_battery_status, this, std::placeholders::_1));
+  sub_power_ = create_subscription<mowgli_interfaces::msg::Power>(
+      "/hardware_bridge/power", sensor_qos,
+      std::bind(&MavrosHardwareBridgeNode::on_power, this, std::placeholders::_1));
   if (gps1_canonical_enabled_)
   {
     sub_serial_gps_raw_ = create_subscription<mavros_msgs::msg::GPSRAW>(
@@ -202,7 +189,8 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
 {
   std::lock_guard<std::mutex> lock(mutex_);
   if (mavros_state_.connected && !msg->connected) {
-    power_mapping_.reset();
+    last_power_receipt_ns_ = 0;
+    last_power_ = mowgli_interfaces::msg::Power{};
     esc_tracker_.reset();
     is_charging_ = false;
     charger_enabled_ = false;
@@ -227,49 +215,17 @@ void MavrosHardwareBridgeNode::on_mavros_imu(const sensor_msgs::msg::Imu::Shared
   pub_imu_->publish(*msg);
 }
 
-void MavrosHardwareBridgeNode::on_battery_status(
-    const mavros_battery_observer::msg::BatteryStatus::SharedPtr msg)
+void MavrosHardwareBridgeNode::on_power(
+    const mowgli_interfaces::msg::Power::SharedPtr msg)
 {
-  const auto stamp_ns = now().nanoseconds();
-  const BatteryInput input{static_cast<int>(msg->id),
-                           msg->voltage_available ? std::optional<double>(msg->voltage) : std::nullopt,
-                           msg->current_available ? std::optional<double>(msg->current) : std::nullopt,
-                           msg->percentage_available ? std::optional<double>(msg->percentage) : std::nullopt,
-                           msg->charge_state, stamp_ns};
-  PowerProjection projection{};
-  bool traction_observation = false;
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (!power_mapping_.valid()) return;
-    traction_observation = input.instance == get_parameter("traction_battery_instance").as_int();
-    power_mapping_.observe(input);
-    if (traction_observation) readiness_.traction(stamp_ns, input.voltage.has_value());
-    projection = power_mapping_.project(stamp_ns);
-    is_charging_ = projection.charger_enabled;
-    charger_enabled_ = projection.charger_enabled;
-    charger_status_ = !projection.dock_fresh ? "unavailable" :
-        (projection.charger_enabled ? "charging" : "unknown");
-  }
-  if (traction_observation) {
-    sensor_msgs::msg::BatteryState battery;
-    battery.header = msg->header;
-    battery.location = "id" + std::to_string(msg->id);
-    battery.voltage = projection.v_battery;
-    // ArduPilot BATTERY_STATUS current is positive discharge; canonical
-    // Mowgli current is positive into, negative out of the mower battery.
-    battery.current = projection.traction_current;
-    battery.percentage = input.percentage.value_or(NAN);
-    battery.present = projection.traction_fresh;
-    pub_battery_state_->publish(battery);
-  }
-  mowgli_interfaces::msg::Power power;
-  power.stamp = msg->header.stamp;
-  power.v_charge = projection.v_charge;
-  power.v_battery = projection.v_battery;
-  power.charge_current = projection.charge_current;
-  power.charger_enabled = projection.charger_enabled;
-  power.charger_status = charger_status_;
-  pub_power_->publish(power);
+  const auto receipt_ns = now().nanoseconds();
+  std::lock_guard<std::mutex> lock(mutex_);
+  last_power_ = *msg;
+  last_power_receipt_ns_ = receipt_ns;
+  is_charging_ = msg->charger_enabled;
+  charger_enabled_ = msg->charger_enabled;
+  charger_status_ = msg->charger_status;
+  readiness_.traction(receipt_ns, std::isfinite(msg->v_battery));
 }
 
 void MavrosHardwareBridgeNode::on_serial_gps_raw(
@@ -520,19 +476,22 @@ void MavrosHardwareBridgeNode::publish_status()
     msg.mower_status = mowgli_interfaces::msg::Status::MOWER_STATUS_INITIALIZING;
 
     const auto mower = esc_tracker_.project(2, now().nanoseconds());
-    msg.mower_esc_status = !mower.online ? 99U : (mower.sample.rpm == 0 ? 200U : 201U);
-    if (mower.online)
+    const auto blade = blade_telemetry_from_esc2(mower);
+    msg.mower_esc_status = blade.status;
+    if (blade.available)
     {
-      msg.mower_esc_temperature = mower.sample.temperature;
-      msg.mower_esc_current = mower.sample.current;
-      msg.mower_motor_rpm = std::abs(mower.sample.rpm);
-      msg.blade_status_stamp.sec = static_cast<int32_t>(mower.last_update_ns / 1000000000LL);
+      msg.mower_esc_temperature = blade.temperature;
+      msg.mower_esc_current = blade.current;
+      msg.mower_motor_rpm = blade.rpm;
+      msg.blade_status_stamp.sec = static_cast<int32_t>(blade.stamp_ns / 1000000000LL);
       msg.blade_status_stamp.nanosec =
-          static_cast<uint32_t>(mower.last_update_ns % 1000000000LL);
+          static_cast<uint32_t>(blade.stamp_ns % 1000000000LL);
     }
-    // Motor winding temperature and hardware E-stop are not available through
-    // ESC_TELEMETRY; leave those fields unset. No automatic blade control.
-    msg.esc_power = mower.online;
+    // ESC2 is the blade controller. ESC0/right and ESC1/left stay diagnostics-only
+    // here; their unsigned ESC_TELEMETRY RPM must never be used for wheel direction
+    // or odometry. Motor winding temperature and hardware E-stop are not available
+    // through ESC_TELEMETRY, so those fields remain unset.
+    msg.esc_power = blade.available;
   }
 
   pub_status_->publish(msg);
@@ -553,25 +512,22 @@ void MavrosHardwareBridgeNode::publish_emergency()
   pub_emergency_->publish(msg);
 }
 
-void MavrosHardwareBridgeNode::publish_power()
-{
-  // Power is published only by genuine BATTERY_STATUS observations.  A timer
-  // must not make cached battery state appear fresh.
-}
-
 void MavrosHardwareBridgeNode::publish_readiness()
 {
   diagnostic_msgs::msg::DiagnosticArray output;
   output.header.stamp = now();
   const auto now_ns = rclcpp::Time(output.header.stamp).nanoseconds();
   Readiness readiness{};
-  PowerProjection power{};
+  mowgli_interfaces::msg::Power power{};
+  bool power_fresh = false;
   std::array<EscState, 3> esc{};
   mavros_msgs::msg::State fcu{};
   {
     std::lock_guard<std::mutex> lock(mutex_);
     readiness = readiness_.project(now_ns);
-    power = power_mapping_.project(now_ns);
+    power = last_power_;
+    power_fresh = last_power_receipt_ns_ > 0 && now_ns >= last_power_receipt_ns_ &&
+      now_ns - last_power_receipt_ns_ <= static_cast<int64_t>(battery_observation_timeout_s_ * 1e9);
     for (unsigned i = 0; i < esc.size(); ++i)
     {
       esc[i] = esc_tracker_.project(i, now_ns);
@@ -616,30 +572,17 @@ void MavrosHardwareBridgeNode::publish_readiness()
                 readiness.traction_fresh && readiness.traction_valid,
                 readiness.traction_fresh && readiness.traction_valid ? "fresh_valid" :
                 "missing_stale_or_invalid");
-  diagnostic_msgs::msg::DiagnosticStatus dock_status;
-  dock_status.name = "mowgli_mavros_bridge/dock_power";
-  dock_status.level = power.dock_fresh ? diagnostic_msgs::msg::DiagnosticStatus::OK :
+  diagnostic_msgs::msg::DiagnosticStatus power_status;
+  power_status.name = "mowgli_mavros_bridge/power";
+  power_status.level = power_fresh ? diagnostic_msgs::msg::DiagnosticStatus::OK :
       diagnostic_msgs::msg::DiagnosticStatus::STALE;
-  dock_status.message = power.dock_fresh ? "fresh" : "absent_or_stale_non_blocking";
-  output.status.push_back(std::move(dock_status));
-
-  diagnostic_msgs::msg::DiagnosticStatus current_status;
-  current_status.name = "mowgli_mavros_bridge/power_currents";
-  current_status.level = power.traction_fresh ? diagnostic_msgs::msg::DiagnosticStatus::OK :
-      diagnostic_msgs::msg::DiagnosticStatus::STALE;
-  current_status.message = power.traction_fresh ? "traction_fresh" : "traction_missing_or_stale";
-  add_value(current_status, "dock_charge_state_raw", std::to_string(power.dock_charge_state_raw));
-  add_value(current_status, "dock_current_raw_a", format_value(power.dock_current_raw));
-  add_value(current_status, "traction_current_raw_a", format_value(power.traction_current_raw));
-  add_value(current_status, "traction_current_a", format_value(power.traction_current));
-  add_value(current_status, "charge_current_a", format_value(power.charge_current));
-  add_value(current_status, "battery_net_current_a", format_value(power.battery_net_current));
-  add_value(current_status, "traction_voltage_v", format_value(power.v_battery));
-  add_value(current_status, "charger_voltage_v", format_value(power.v_charge));
-  add_value(current_status, "traction_percentage", format_value(power.traction_percentage));
-  add_value(current_status, "charger_state", !power.dock_fresh ? "unavailable" :
-            (power.charger_enabled ? "charging" : "unknown"));
-  output.status.push_back(std::move(current_status));
+  power_status.message = power_fresh ? "fresh_canonical_power" : "missing_or_stale";
+  add_value(power_status, "charge_current_a", format_value(power.charge_current));
+  add_value(power_status, "battery_voltage_v", format_value(power.v_battery));
+  add_value(power_status, "charger_voltage_v", format_value(power.v_charge));
+  add_value(power_status, "charger_enabled", power.charger_enabled ? "true" : "false");
+  add_value(power_status, "charger_status", power_fresh ? power.charger_status : "unavailable");
+  output.status.push_back(std::move(power_status));
 
   constexpr const char* kEscNames[3] = {"right_wheel", "left_wheel", "mower"};
   for (unsigned i = 0; i < esc.size(); ++i)

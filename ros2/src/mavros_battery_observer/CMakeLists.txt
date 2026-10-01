@@ -10,27 +10,48 @@ find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(mavlink REQUIRED)
-find_package(libmavconn REQUIRED)
 find_package(mavros REQUIRED)
 find_package(mavros_msgs REQUIRED)
+find_package(mowgli_interfaces REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
-find_package(rosidl_default_generators REQUIRED)
-find_package(std_msgs REQUIRED)
-find_package(tf2_ros REQUIRED)
 find_package(tf2_eigen REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
-
-rosidl_generate_interfaces(${PROJECT_NAME} "msg/BatteryStatus.msg" DEPENDENCIES std_msgs)
-rosidl_get_typesupport_target(battery_status_typesupport ${PROJECT_NAME} "rosidl_typesupport_cpp")
+find_package(tf2_ros REQUIRED)
 
 add_library(${PROJECT_NAME}_plugins SHARED src/battery_observer_plugin.cpp)
-target_include_directories(${PROJECT_NAME}_plugins PRIVATE ${mavlink_INCLUDE_DIRS} ${mavros_INCLUDE_DIRS} ${libmavconn_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME}_plugins ${diagnostic_msgs_TARGETS} diagnostic_updater::diagnostic_updater ${geometry_msgs_TARGETS} ${libmavconn_LIBRARIES} ${mavros_LIBRARIES} ${mavros_msgs_TARGETS} pluginlib::pluginlib rclcpp::rclcpp ${sensor_msgs_TARGETS} tf2_eigen::tf2_eigen tf2_geometry_msgs::tf2_geometry_msgs tf2_ros::tf2_ros ${battery_status_typesupport})
+target_include_directories(${PROJECT_NAME}_plugins
+  PRIVATE ${mavlink_INCLUDE_DIRS} ${mavros_INCLUDE_DIRS}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(${PROJECT_NAME}_plugins
+  ${diagnostic_msgs_TARGETS}
+  diagnostic_updater::diagnostic_updater
+  ${geometry_msgs_TARGETS}
+  ${mavros_LIBRARIES}
+  ${mavros_msgs_TARGETS}
+  ${mowgli_interfaces_TARGETS}
+  ${sensor_msgs_TARGETS}
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  sensor_msgs::sensor_msgs_library
+  tf2_eigen::tf2_eigen
+  tf2_geometry_msgs::tf2_geometry_msgs
+  tf2_ros::tf2_ros
+)
 pluginlib_export_plugin_description_file(mavros mavros_plugins.xml)
 
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_power_state test/test_power_state.cpp)
+  target_include_directories(test_power_state PRIVATE include)
+endif()
+
 install(TARGETS ${PROJECT_NAME}_plugins LIBRARY DESTINATION lib)
+install(DIRECTORY include/ DESTINATION include)
+install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 install(FILES mavros_plugins.xml DESTINATION share/${PROJECT_NAME})
-ament_export_dependencies(rosidl_default_runtime)
 ament_package()

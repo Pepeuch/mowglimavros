@@ -1,0 +1,12 @@
+/**/battery_observer:
+  ros__parameters:
+    # Physically validated mapping on the current robot:
+    # POWER1 (MAVLink BATTERY_STATUS id 0) = dock/charger.
+    # POWER2 (MAVLink BATTERY_STATUS id 1) = traction battery/robot consumption.
+    dock_battery_instance: 0
+    traction_battery_instance: 1
+    observation_timeout_s: 5.0
+    # POWER1 charger presence detection. 14 V rejects residual/backfeed
+    # voltage on mower systems whose supported battery floor is 6S.
+    charger_on_voltage: 14.0
+    charger_off_voltage: 13.0

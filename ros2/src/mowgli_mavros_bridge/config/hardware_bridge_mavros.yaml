@@ -11,10 +11,8 @@ hardware_bridge:
     # Blade output path via Pixhawk is not validated yet.
     blade_control_enabled: false
 
-    # Physically validated: POWER1 is dock charging; POWER2 is traction.
-    # MAVLink BATTERY_STATUS IDs are 0 and 1, independent of arrival order.
-    dock_battery_instance: 0
-    traction_battery_instance: 1
+    # Canonical Power is produced by the MAVROS battery_observer plugin.
+    # This timeout is used only for bridge readiness/diagnostic freshness.
     battery_observation_timeout_s: 5.0
 
     # Mandatory source freshness for internal backend readiness diagnostics.

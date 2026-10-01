@@ -34,8 +34,15 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
         "config",
         "esc_wheel_odometry.yaml",
     )
+    battery_observer_config = os.path.join(
+        get_package_share_directory("mavros_battery_observer"),
+        "config",
+        "battery_observer.yaml",
+    )
     if not os.path.isfile(wheel_odom_config):
         raise RuntimeError("ESC wheel odometry MAVROS plugin configuration is unavailable")
+    if not os.path.isfile(battery_observer_config):
+        raise RuntimeError("MAVROS battery observer configuration is unavailable")
     source_root = f"/mavros/universal_gnss/{source}"
     canonical_serial = canonical_gps1.perform(context).lower() in ("1", "true", "yes")
     return [
@@ -47,6 +54,7 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
                 os.path.join(mavros_share, "launch", plugin_list),
                 os.path.join(mavros_share, "launch", config),
                 wheel_odom_config,
+                battery_observer_config,
                 {
                     "fcu_url": fcu_url.perform(context),
                     "gcs_url": gcs_url.perform(context),
@@ -61,6 +69,8 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
                 (f"{source_root}/status", "/gps/status") if not canonical_serial else
                     (f"{source_root}/status", f"{source_root}/status"),
                 ("/mavros/esc_wheel_odometry/wheel_odom", "/wheel_odom"),
+                ("/mavros/battery_observer/power", "/hardware_bridge/power"),
+                ("/mavros/battery_observer/battery_state", "/battery_state"),
             ],
         )
     ]
@@ -84,7 +94,6 @@ def generate_launch_description():
     hardware_bridge_remappings = [
         ("~/imu/data_raw", "/imu/data"),
         ("~/emergency", "/hardware_bridge/emergency"),
-        ("~/power", "/hardware_bridge/power"),
         ("~/status", "/hardware_bridge/status"),
         ("~/cmd_vel", "/cmd_vel"),
     ]

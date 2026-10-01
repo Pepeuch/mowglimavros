@@ -18,11 +18,9 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(mowgli_interfaces REQUIRED)
 find_package(mavros_msgs REQUIRED)
 find_package(mavros REQUIRED)
-find_package(mavros_battery_observer REQUIRED)
 
 add_executable(mavros_hardware_bridge_node
   src/mavros_hardware_bridge_node.cpp
-  src/power_mapping.cpp
   src/readiness_state.cpp
 )
 
@@ -36,7 +34,6 @@ target_link_libraries(mavros_hardware_bridge_node PUBLIC
   ${nav_msgs_TARGETS}
   ${diagnostic_msgs_TARGETS}
   ${mavros_msgs_TARGETS}
-  ${mavros_battery_observer_TARGETS}
   ${mowgli_interfaces_TARGETS}
   ${sensor_msgs_TARGETS}
   ${std_msgs_TARGETS}
@@ -49,7 +46,6 @@ target_link_libraries(mavros_hardware_bridge_node PUBLIC
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
-  ament_add_gtest(test_power_mapping test/test_power_mapping.cpp src/power_mapping.cpp)
   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
   ament_add_gtest(test_serial_gps_projection test/test_serial_gps_projection.cpp)
   target_include_directories(test_serial_gps_projection PRIVATE include)
@@ -58,7 +54,6 @@ if(BUILD_TESTING)
   ament_add_gtest(test_rover_manual_control test/test_rover_manual_control.cpp)
   target_include_directories(test_rover_manual_control PRIVATE include)
   target_link_libraries(test_rover_manual_control ${geometry_msgs_TARGETS} ${mavros_msgs_TARGETS})
-  target_include_directories(test_power_mapping PRIVATE include)
   target_include_directories(test_readiness_state PRIVATE include)
 endif()
 

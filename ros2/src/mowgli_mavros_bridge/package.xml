@@ -20,13 +20,13 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>mowgli_interfaces</depend>
   <depend>mavros</depend>
-  <depend>mavros_battery_observer</depend>
   <depend>mavros_msgs</depend>
 
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>mowgli_ntrip_client</exec_depend>
+  <exec_depend>mavros_battery_observer</exec_depend>
 
   <export>
     <build_type>ament_cmake</build_type>
