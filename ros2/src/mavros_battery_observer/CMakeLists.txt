@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
 find_package(diagnostic_updater REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(libmavconn REQUIRED)
 find_package(mavlink REQUIRED)
 find_package(mavros REQUIRED)
 find_package(mavros_msgs REQUIRED)
@@ -22,7 +23,10 @@ find_package(tf2_ros REQUIRED)
 
 add_library(${PROJECT_NAME}_plugins SHARED src/battery_observer_plugin.cpp)
 target_include_directories(${PROJECT_NAME}_plugins
-  PRIVATE ${mavlink_INCLUDE_DIRS} ${mavros_INCLUDE_DIRS}
+  PRIVATE
+    ${mavlink_INCLUDE_DIRS}
+    ${mavros_INCLUDE_DIRS}
+    ${libmavconn_INCLUDE_DIRS}
   PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:include>
@@ -31,6 +35,7 @@ target_link_libraries(${PROJECT_NAME}_plugins
   ${diagnostic_msgs_TARGETS}
   diagnostic_updater::diagnostic_updater
   ${geometry_msgs_TARGETS}
+  ${libmavconn_LIBRARIES}
   ${mavros_LIBRARIES}
   ${mavros_msgs_TARGETS}
   ${mowgli_interfaces_TARGETS}

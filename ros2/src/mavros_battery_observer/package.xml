@@ -9,6 +9,7 @@
   <depend>diagnostic_msgs</depend>
   <depend>diagnostic_updater</depend>
   <depend>geometry_msgs</depend>
+  <depend>libmavconn</depend>
   <depend>mavlink</depend>
   <depend>mavros</depend>
   <depend>mavros_msgs</depend>
