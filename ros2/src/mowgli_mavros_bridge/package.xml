@@ -25,7 +25,6 @@
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
-  <exec_depend>mowgli_ntrip_client</exec_depend>
   <exec_depend>mavros_battery_observer</exec_depend>
 
   <export>

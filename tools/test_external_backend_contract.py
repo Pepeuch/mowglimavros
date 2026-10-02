@@ -99,10 +99,30 @@ class ExternalBackendContractTest(unittest.TestCase):
             launch,
         )
         self.assertIn(
-            '(f"{source_root}/fix", "/gps/fix")',
+            'gnss_source_mode = EnvironmentVariable(',
             launch,
         )
         self.assertIn(
+            '"GNSS_SOURCE",',
+            launch,
+        )
+        self.assertIn(
+            'if source_mode not in ("direct", "mavros")',
+            launch,
+        )
+        self.assertIn(
+            '("/rtcm", rtcm_input)',
+            launch,
+        )
+        self.assertIn(
+            '"/mavros/universal_gnss/rtcm_disabled"',
+            launch,
+        )
+        self.assertNotIn(
+            '(f"{source_root}/fix", "/gps/fix")',
+            launch,
+        )
+        self.assertNotIn(
             '(f"{source_root}/status", "/gps/status")',
             launch,
         )
@@ -155,6 +175,50 @@ class ExternalBackendContractTest(unittest.TestCase):
         self.assertIn(
             f'child_frame_id: {LOCK["frames"]["wheel_child"]}',
             wheel,
+        )
+
+    def test_gnss_source_ownership_and_rtcm_gating(self):
+        launch = read(
+            "ros2/src/mowgli_mavros_bridge/launch/mavros_backend.launch.py"
+        )
+        entrypoint = read("ros2_entrypoint.sh")
+        package = read(
+            "ros2/src/mowgli_mavros_bridge/package.xml"
+        )
+
+        self.assertIn(
+            'default_value="mavros"',
+            launch,
+        )
+        self.assertIn(
+            'source_mode == "mavros"',
+            launch,
+        )
+        self.assertIn(
+            'else "/mavros/universal_gnss/rtcm_disabled"',
+            launch,
+        )
+        self.assertIn(
+            '"gps1_canonical_enabled": gps1_canonical_expected',
+            launch,
+        )
+
+        # Universal GNSS owns NTRIP. MowgliMAVROS only translates RTCM
+        # to MAVLink when the selected GNSS receiver is behind the FCU.
+        self.assertNotIn("mowgli_ntrip_client", launch)
+        self.assertNotIn("IncludeLaunchDescription", launch)
+        self.assertNotIn(
+            "<exec_depend>mowgli_ntrip_client</exec_depend>",
+            package,
+        )
+
+        self.assertIn(
+            ': "${GNSS_SOURCE:=mavros}"',
+            entrypoint,
+        )
+        self.assertIn(
+            "export GNSS_SOURCE",
+            entrypoint,
         )
 
     def test_plugin_descriptors_and_exports(self):

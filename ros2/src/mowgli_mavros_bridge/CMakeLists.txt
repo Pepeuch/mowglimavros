@@ -53,7 +53,11 @@ if(BUILD_TESTING)
   target_include_directories(test_esc_telemetry_tracker PRIVATE include)
   ament_add_gtest(test_rover_manual_control test/test_rover_manual_control.cpp)
   target_include_directories(test_rover_manual_control PRIVATE include)
-  target_link_libraries(test_rover_manual_control ${geometry_msgs_TARGETS} ${mavros_msgs_TARGETS})
+  target_link_libraries(
+    test_rover_manual_control
+    geometry_msgs::geometry_msgs__rosidl_generator_cpp
+    mavros_msgs::mavros_msgs__rosidl_generator_cpp
+  )
   target_include_directories(test_readiness_state PRIVATE include)
 endif()
 

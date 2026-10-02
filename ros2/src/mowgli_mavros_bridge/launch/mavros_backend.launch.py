@@ -2,18 +2,35 @@ import os
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction
-from launch.conditions import IfCondition
-from launch.launch_description_sources import PythonLaunchDescriptionSource
-from launch.substitutions import EnvironmentVariable, LaunchConfiguration
+from launch.actions import OpaqueFunction
+from launch.substitutions import EnvironmentVariable
 from launch_ros.actions import Node
-import yaml
 
 
-def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, tgt_system, tgt_component, gnss_source, canonical_gps1):
-    source = gnss_source.perform(context)
+def _as_bool(value):
+    return value.strip().lower() in ("1", "true", "yes")
+
+
+def _mavros_node(
+    context,
+    mavros_share,
+    autopilot,
+    fcu_url,
+    gcs_url,
+    system_id,
+    tgt_system,
+    tgt_component,
+    gnss_source_mode,
+    gnss_mavros_source,
+):
+    source_mode = gnss_source_mode.perform(context).strip().lower()
+    if source_mode not in ("direct", "mavros"):
+        raise RuntimeError("GNSS_SOURCE must be direct or mavros")
+
+    source = gnss_mavros_source.perform(context).strip().lower()
     if source not in ("gps1", "gps2"):
         raise RuntimeError("GNSS_MAVROS_SOURCE must be gps1 or gps2")
+
     autopilot_value = autopilot.perform(context).lower()
     if autopilot_value in ("ardupilot", "apm"):
         plugin_list = "apm_pluginlists.yaml"
@@ -23,12 +40,14 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
         config = "px4_config.yaml"
     else:
         raise RuntimeError("MAVROS_AUTOPILOT must be ardupilot, apm, or px4")
+
     plugin_xml = os.path.join(
         get_package_share_directory("universal_gnss_mavros"),
         "universal_gnss_mavros_plugins.xml",
     )
     if not os.path.isfile(plugin_xml):
         raise RuntimeError("Universal GNSS MAVROS pluginlib export is unavailable")
+
     wheel_odom_config = os.path.join(
         get_package_share_directory("mavros_esc_wheel_odometry"),
         "config",
@@ -39,12 +58,31 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
         "config",
         "battery_observer.yaml",
     )
+
     if not os.path.isfile(wheel_odom_config):
-        raise RuntimeError("ESC wheel odometry MAVROS plugin configuration is unavailable")
+        raise RuntimeError(
+            "ESC wheel odometry MAVROS plugin configuration is unavailable"
+        )
+
     if not os.path.isfile(battery_observer_config):
-        raise RuntimeError("MAVROS battery observer configuration is unavailable")
-    source_root = f"/mavros/universal_gnss/{source}"
-    canonical_serial = canonical_gps1.perform(context).lower() in ("1", "true", "yes")
+        raise RuntimeError(
+            "MAVROS battery observer configuration is unavailable"
+        )
+
+    # Universal GNSS owns the canonical /rtcm stream.
+    #
+    # GNSS_SOURCE=mavros:
+    #   UG /rtcm -> MAVROS Universal GNSS plugin -> GPS_RTCM_DATA -> FCU
+    #
+    # GNSS_SOURCE=direct:
+    #   UG /rtcm belongs to the receiver connected directly to the SoC.
+    #   MAVROS must not consume or forward that correction stream.
+    rtcm_input = (
+        "/rtcm"
+        if source_mode == "mavros"
+        else "/mavros/universal_gnss/rtcm_disabled"
+    )
+
     return [
         Node(
             package="mavros",
@@ -63,11 +101,11 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
                     "tgt_component": int(tgt_component.perform(context)),
                 },
             ],
+            # Keep Universal GNSS MAVROS output on its private canonical
+            # adapter topics in every mode. Never remap its GnssStatus type
+            # onto Mowgli's /gps/status topic.
             remappings=[
-                (f"{source_root}/fix", "/gps/fix") if not canonical_serial else
-                    (f"{source_root}/fix", f"{source_root}/fix"),
-                (f"{source_root}/status", "/gps/status") if not canonical_serial else
-                    (f"{source_root}/status", f"{source_root}/status"),
+                ("/rtcm", rtcm_input),
             ],
         )
     ]
@@ -75,18 +113,13 @@ def _mavros_node(context, mavros_share, autopilot, fcu_url, gcs_url, system_id, 
 
 def generate_launch_description():
     bridge_share = get_package_share_directory("mowgli_mavros_bridge")
-    ntrip_share = get_package_share_directory("mowgli_ntrip_client")
     mavros_share = get_package_share_directory("mavros")
 
-    robot_config_path = "/ros2_ws/config/mowgli_robot.yaml"
-    robot_params = {}
-    if os.path.isfile(robot_config_path):
-        with open(robot_config_path, "r", encoding="utf-8") as config_file:
-            robot_config = yaml.safe_load(config_file) or {}
-        robot_params = robot_config.get("mowgli", {}).get("ros__parameters", {})
-
-    bridge_params = os.path.join(bridge_share, "config", "hardware_bridge_mavros.yaml")
-    ntrip_launch = os.path.join(ntrip_share, "launch", "mowgli_ntrip_client.launch.py")
+    bridge_params = os.path.join(
+        bridge_share,
+        "config",
+        "hardware_bridge_mavros.yaml",
+    )
 
     hardware_bridge_remappings = [
         ("~/imu/data_raw", "/imu/data"),
@@ -95,29 +128,76 @@ def generate_launch_description():
         ("~/cmd_vel", "/cmd_vel"),
     ]
 
-    mavros_autopilot = EnvironmentVariable("MAVROS_AUTOPILOT", default_value="ardupilot")
-    mavros_fcu_url = EnvironmentVariable("MAVROS_FCU_URL", default_value="serial:///dev/mavros:921600")
-    mavros_gcs_url = EnvironmentVariable("MAVROS_GCS_URL", default_value="")
-    mavros_system_id = EnvironmentVariable("MAVROS_SYSTEM_ID", default_value="255")
-    mavros_tgt_system = EnvironmentVariable("MAVROS_TGT_SYSTEM", default_value="1")
-    mavros_tgt_component = EnvironmentVariable("MAVROS_TGT_COMPONENT", default_value="1")
-    gnss_mavros_source = EnvironmentVariable("GNSS_MAVROS_SOURCE", default_value="gps1")
-    canonical_gps1 = EnvironmentVariable("MAVROS_GPS1_CANONICAL", default_value="false")
-    use_ntrip_default = os.environ.get(
-        "NTRIP_ENABLED", str(robot_params.get("ntrip_enabled", False)).lower()
+    mavros_autopilot = EnvironmentVariable(
+        "MAVROS_AUTOPILOT",
+        default_value="ardupilot",
     )
-    ntrip_host_default = os.environ.get("NTRIP_HOST", str(robot_params.get("ntrip_host", "127.0.0.1")))
-    ntrip_port_default = os.environ.get("NTRIP_PORT", str(robot_params.get("ntrip_port", 2101)))
-    ntrip_mountpoint_default = os.environ.get(
-        "NTRIP_MOUNTPOINT", str(robot_params.get("ntrip_mountpoint", ""))
+    mavros_fcu_url = EnvironmentVariable(
+        "MAVROS_FCU_URL",
+        default_value="serial:///dev/mavros:921600",
     )
-    ntrip_username_default = os.environ.get("NTRIP_USERNAME", str(robot_params.get("ntrip_user", "")))
-    ntrip_password_default = os.environ.get("NTRIP_PASSWORD", str(robot_params.get("ntrip_password", "")))
-    use_ntrip = LaunchConfiguration("use_ntrip")
+    mavros_gcs_url = EnvironmentVariable(
+        "MAVROS_GCS_URL",
+        default_value="",
+    )
+    mavros_system_id = EnvironmentVariable(
+        "MAVROS_SYSTEM_ID",
+        default_value="255",
+    )
+    mavros_tgt_system = EnvironmentVariable(
+        "MAVROS_TGT_SYSTEM",
+        default_value="1",
+    )
+    mavros_tgt_component = EnvironmentVariable(
+        "MAVROS_TGT_COMPONENT",
+        default_value="1",
+    )
+
+    gnss_source_mode = EnvironmentVariable(
+        "GNSS_SOURCE",
+        default_value="mavros",
+    )
+    gnss_mavros_source = EnvironmentVariable(
+        "GNSS_MAVROS_SOURCE",
+        default_value="gps1",
+    )
+
+    source_mode_default = os.environ.get(
+        "GNSS_SOURCE",
+        "mavros",
+    ).strip().lower()
+
+    if source_mode_default not in ("direct", "mavros"):
+        raise RuntimeError("GNSS_SOURCE must be direct or mavros")
+
+    mavros_source_default = os.environ.get(
+        "GNSS_MAVROS_SOURCE",
+        "gps1",
+    ).strip().lower()
+
+    if mavros_source_default not in ("gps1", "gps2"):
+        raise RuntimeError("GNSS_MAVROS_SOURCE must be gps1 or gps2")
+
+    # GNSS_SOURCE is now authoritative.
+    #
+    # The existing MAVROS_GPS1_CANONICAL variable remains accepted as a
+    # deployment consistency guard while MowgliNext transitions to the new
+    # GNSS_SOURCE contract.
+    gps1_canonical_expected = (
+        source_mode_default == "mavros"
+        and mavros_source_default == "gps1"
+    )
+
+    if "MAVROS_GPS1_CANONICAL" in os.environ:
+        configured = _as_bool(os.environ["MAVROS_GPS1_CANONICAL"])
+        if configured != gps1_canonical_expected:
+            raise RuntimeError(
+                "MAVROS_GPS1_CANONICAL conflicts with "
+                "GNSS_SOURCE/GNSS_MAVROS_SOURCE"
+            )
 
     return LaunchDescription(
         [
-            DeclareLaunchArgument("use_ntrip", default_value=use_ntrip_default),
             OpaqueFunction(
                 function=_mavros_node,
                 args=[
@@ -128,8 +208,8 @@ def generate_launch_description():
                     mavros_system_id,
                     mavros_tgt_system,
                     mavros_tgt_component,
+                    gnss_source_mode,
                     gnss_mavros_source,
-                    canonical_gps1,
                 ],
             ),
             Node(
@@ -137,31 +217,19 @@ def generate_launch_description():
                 executable="mavros_hardware_bridge_node",
                 name="hardware_bridge",
                 output="screen",
-                parameters=[bridge_params, {
-                    "gps1_canonical_enabled": os.environ.get(
-                        "MAVROS_GPS1_CANONICAL", "false").lower() in ("1", "true", "yes"),
-                    "neutral_manual_control_enabled": os.environ.get(
-                        "MAVROS_NEUTRAL_TEST", "false").lower() in ("1", "true", "yes"),
-                }],
+                parameters=[
+                    bridge_params,
+                    {
+                        "gps1_canonical_enabled": gps1_canonical_expected,
+                        "neutral_manual_control_enabled": _as_bool(
+                            os.environ.get(
+                                "MAVROS_NEUTRAL_TEST",
+                                "false",
+                            )
+                        ),
+                    },
+                ],
                 remappings=hardware_bridge_remappings,
-            ),
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(ntrip_launch),
-                condition=IfCondition(use_ntrip),
-                launch_arguments={
-                    "enabled": "true",
-                    "host": ntrip_host_default,
-                    "port": ntrip_port_default,
-                    "mountpoint": ntrip_mountpoint_default,
-                    "username": ntrip_username_default,
-                    "password": ntrip_password_default,
-                    "frame_id": EnvironmentVariable("NTRIP_FRAME_ID", default_value="gps"),
-                    "user_agent": EnvironmentVariable("NTRIP_USER_AGENT", default_value="mowgli_ntrip_client/0.1"),
-                    "reconnect_delay_ms": EnvironmentVariable("NTRIP_RECONNECT_DELAY_MS", default_value="5000"),
-                    "connect_timeout_ms": EnvironmentVariable("NTRIP_CONNECT_TIMEOUT_MS", default_value="5000"),
-                    "read_timeout_ms": EnvironmentVariable("NTRIP_READ_TIMEOUT_MS", default_value="15000"),
-                    "status_log_period_ms": EnvironmentVariable("NTRIP_STATUS_LOG_PERIOD_MS", default_value="10000"),
-                }.items(),
             ),
         ]
     )
