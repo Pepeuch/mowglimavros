@@ -53,7 +53,7 @@ load_canonical_pins() {
     [[ "$current" == "$canonical" ]] || { error "$name must match canonical Dockerfile pin ($canonical)"; exit 1; }
     printf -v "$name" "%s" "$canonical"
   done
-  CACHE_SCOPE="${CACHE_SCOPE:-${IMAGE_NAME}-${ROS_DISTRO}-${MAVROS_VERSION}-${MAVROS_COMMIT}-${UNIVERSAL_GNSS_COMMIT}-${PLATFORMS//\//-}}"
+  CACHE_SCOPE="${CACHE_SCOPE:-${IMAGE_NAME}-${ROS_DISTRO}-${MAVROS_VERSION}-${PLATFORMS//\//-}}"
 }
 
 validate_inputs() {
