@@ -174,6 +174,7 @@ ARG TARGETARCH
 
 COPY ros2/src/ /ros2_ws/src/
 COPY tools/ /ros2_ws/tools/
+COPY ros2_entrypoint.sh /ros2_ws/ros2_entrypoint.sh
 COPY ros2/Dockerfile /ros2_ws/Dockerfile
 
 WORKDIR /ros2_ws
