@@ -118,6 +118,11 @@ RUN source "/opt/ros/${ROS_DISTRO}/setup.bash" \
       = "${MAVROS_VERSION}"
 
 #
+# GeographicLib datasets required by MAVROS runtime
+#
+RUN /opt/mowgli/mavros/mavros/lib/mavros/install_geographiclib_datasets.sh
+
+#
 # Shell environment
 #
 RUN printf '\nsource /opt/ros/%s/setup.bash\n' "${ROS_DISTRO}" \
