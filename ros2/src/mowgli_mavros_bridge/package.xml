@@ -26,6 +26,14 @@
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
   <exec_depend>mavros_battery_observer</exec_depend>
+  <exec_depend>mavros_gnss_adapter</exec_depend>
+  <exec_depend>universal_gnss_mavros</exec_depend>
+
+  <test_depend>ament_cmake_gtest</test_depend>
+  <test_depend>ament_cmake_test</test_depend>
+  <test_depend>mavros_gnss_adapter</test_depend>
+  <test_depend>rclpy</test_depend>
+  <test_depend>universal_gnss_msgs</test_depend>
 
   <export>
     <build_type>ament_cmake</build_type>

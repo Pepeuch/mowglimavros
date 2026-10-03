@@ -4,6 +4,8 @@ Navigation only. Not the project backlog.
 
 ## Active
 
+- `MM-GNSS-CANONICAL-ADAPTER-20261003` — dedicated MAVROS GNSS owner, Lyrical software/graph evidence; ARM64 target acceptance pending.
+
 - `MM-MOWGLINEXT-INTEGRATION-20260929` — live Lyrical ARM64/GUI integration evidence with temporary NEO-M9N GPS1; hardware gates pending.
 - `MM-MAVROS-COMPAT` — Kilted/Lyrical + MAVROS 2.15.1 software compatibility.
 

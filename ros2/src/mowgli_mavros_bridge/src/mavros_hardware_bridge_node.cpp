@@ -1,7 +1,6 @@
 #include "mavros_hardware_bridge_node.hpp"
 #include "mowgli_mavros_bridge/vesc_telemetry_projection.hpp"
 #include "mowgli_mavros_bridge/rover_manual_control.hpp"
-#include "mowgli_mavros_bridge/serial_gps_projection.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -30,7 +29,6 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   const auto readiness_timeout_s = declare_parameter<double>("readiness_observation_timeout_s", 5.0);
   gnss_required_ = declare_parameter<bool>("gnss_required", true);
   wheel_odometry_required_ = declare_parameter<bool>("wheel_odometry_required", false);
-  gps1_canonical_enabled_ = declare_parameter<bool>("gps1_canonical_enabled", false);
   readiness_ = ReadinessState(readiness_timeout_s, gnss_required_, wheel_odometry_required_);
   esc_observation_timeout_s_ = declare_parameter<double>("esc_observation_timeout_s", 3.0);
   esc_tracker_ = EscTelemetryTracker(esc_observation_timeout_s_);
@@ -64,11 +62,6 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
 void MavrosHardwareBridgeNode::create_publishers()
 {
   pub_status_ = create_publisher<mowgli_interfaces::msg::Status>("~/status", 10);
-  if (gps1_canonical_enabled_)
-  {
-    pub_gps_fix_ = create_publisher<sensor_msgs::msg::NavSatFix>("/gps/fix", 10);
-    pub_gps_status_ = create_publisher<mowgli_interfaces::msg::GnssStatus>("/gps/status", 10);
-  }
   pub_emergency_ = create_publisher<mowgli_interfaces::msg::Emergency>("~/emergency", 10);
   pub_imu_ = create_publisher<sensor_msgs::msg::Imu>("~/imu/data_raw", 10);
   pub_manual_control_ =
@@ -104,12 +97,6 @@ void MavrosHardwareBridgeNode::create_subscriptions()
   sub_power_ = create_subscription<mowgli_interfaces::msg::Power>(
       "/hardware_bridge/power", sensor_qos,
       std::bind(&MavrosHardwareBridgeNode::on_power, this, std::placeholders::_1));
-  if (gps1_canonical_enabled_)
-  {
-    sub_serial_gps_raw_ = create_subscription<mavros_msgs::msg::GPSRAW>(
-        "/mavros/gpsstatus/gps1/raw", default_qos,
-        std::bind(&MavrosHardwareBridgeNode::on_serial_gps_raw, this, std::placeholders::_1));
-  }
   sub_esc_telemetry_ = create_subscription<mavros_msgs::msg::ESCTelemetry>(
       "/mavros/esc_telemetry/telemetry", sensor_qos,
       std::bind(&MavrosHardwareBridgeNode::on_esc_telemetry, this, std::placeholders::_1));
@@ -157,7 +144,6 @@ void MavrosHardwareBridgeNode::create_timers()
                                     });
   timer_diagnostics_ = create_wall_timer(1s, [this]() {
     publish_readiness();
-    publish_gps_stale();
   });
 }
 
@@ -196,11 +182,6 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
     charger_enabled_ = false;
     charger_status_ = "unknown";
   }
-  if (!mavros_state_.connected && msg->connected)
-  {
-    gps_observation_sequence_ = 0;
-    gps_last_receipt_ns_ = 0;
-  }
   readiness_.connection(msg->connected);
   mavros_state_ = *msg;
 }
@@ -226,107 +207,6 @@ void MavrosHardwareBridgeNode::on_power(
   charger_enabled_ = msg->charger_enabled;
   charger_status_ = msg->charger_status;
   readiness_.traction(receipt_ns, std::isfinite(msg->v_battery));
-}
-
-void MavrosHardwareBridgeNode::on_serial_gps_raw(
-    const mavros_msgs::msg::GPSRAW::SharedPtr msg)
-{
-  if (!gps1_canonical_enabled_)
-  {
-    return;
-  }
-  const auto receipt = now();
-  const auto projected = project_serial_gps(
-      SerialGpsRaw{msg->fix_type, msg->lat, msg->lon, msg->alt, msg->alt_ellipsoid,
-                   msg->eph, msg->satellites_visible, msg->h_acc, msg->v_acc});
-  mowgli_interfaces::msg::GnssStatus status;
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (!mavros_state_.connected)
-    {
-      return;
-    }
-    gps_last_receipt_ns_ = receipt.nanoseconds();
-    ++gps_observation_sequence_;
-    status.position_observation_sequence = gps_observation_sequence_;
-  }
-  status.header.stamp = receipt;
-  status.header.frame_id = "gps_link";
-  status.backend = "mavros_serial_gps1";
-  status.fix_valid = projected.has_value();
-  status.fix_type = projected ? mowgli_interfaces::msg::GnssStatus::FIX_TYPE_GPS_FIX :
-      mowgli_interfaces::msg::GnssStatus::FIX_TYPE_NO_FIX;
-  status.rtk_mode = mowgli_interfaces::msg::GnssStatus::RTK_MODE_NONE;
-  status.quality_percent = projected ? 40.0F : 0.0F;
-  status.capability_flags = mowgli_interfaces::msg::GnssStatus::CAP_HDOP |
-      mowgli_interfaces::msg::GnssStatus::CAP_HORIZONTAL_ACCURACY |
-      mowgli_interfaces::msg::GnssStatus::CAP_VERTICAL_ACCURACY |
-      mowgli_interfaces::msg::GnssStatus::CAP_SATELLITES_VISIBLE;
-  if (projected)
-  {
-    status.satellites_visible = projected->satellites_visible;
-    status.value_flags |= mowgli_interfaces::msg::GnssStatus::CAP_SATELLITES_VISIBLE;
-    if (projected->hdop)
-    {
-      status.hdop = static_cast<float>(*projected->hdop);
-      status.value_flags |= mowgli_interfaces::msg::GnssStatus::CAP_HDOP;
-    }
-    if (projected->horizontal_accuracy_m)
-    {
-      status.horizontal_accuracy_m = static_cast<float>(*projected->horizontal_accuracy_m);
-      status.value_flags |= mowgli_interfaces::msg::GnssStatus::CAP_HORIZONTAL_ACCURACY;
-    }
-    if (projected->vertical_accuracy_m)
-    {
-      status.vertical_accuracy_m = static_cast<float>(*projected->vertical_accuracy_m);
-      status.value_flags |= mowgli_interfaces::msg::GnssStatus::CAP_VERTICAL_ACCURACY;
-    }
-    sensor_msgs::msg::NavSatFix fix;
-    fix.header = status.header;
-    fix.status.status = sensor_msgs::msg::NavSatStatus::STATUS_FIX;
-    fix.status.service = sensor_msgs::msg::NavSatStatus::SERVICE_GPS;
-    fix.latitude = projected->latitude_deg;
-    fix.longitude = projected->longitude_deg;
-    fix.altitude = projected->altitude_m;
-    if (projected->horizontal_accuracy_m && projected->vertical_accuracy_m)
-    {
-      const auto h = *projected->horizontal_accuracy_m;
-      const auto v = *projected->vertical_accuracy_m;
-      fix.position_covariance[0] = h * h;
-      fix.position_covariance[4] = h * h;
-      fix.position_covariance[8] = v * v;
-      fix.position_covariance_type = sensor_msgs::msg::NavSatFix::COVARIANCE_TYPE_DIAGONAL_KNOWN;
-    }
-    pub_gps_fix_->publish(fix);
-  }
-  pub_gps_status_->publish(status);
-}
-
-void MavrosHardwareBridgeNode::publish_gps_stale()
-{
-  if (!gps1_canonical_enabled_)
-  {
-    return;
-  }
-  mowgli_interfaces::msg::GnssStatus status;
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (gps_last_receipt_ns_ == 0 ||
-        now().nanoseconds() - gps_last_receipt_ns_ <= 3000000000LL)
-    {
-      return;
-    }
-    status.position_observation_sequence = gps_observation_sequence_;
-  }
-  // A repeated no-fix status informs the GUI; the unchanged observation
-  // sequence cannot refresh backend readiness or create a fake position.
-  status.header.stamp = now();
-  status.header.frame_id = "gps_link";
-  status.backend = "mavros_serial_gps1";
-  status.fix_valid = false;
-  status.fix_type = mowgli_interfaces::msg::GnssStatus::FIX_TYPE_NO_FIX;
-  status.rtk_mode = mowgli_interfaces::msg::GnssStatus::RTK_MODE_NONE;
-  pub_gps_status_->publish(status);
 }
 
 void MavrosHardwareBridgeNode::on_esc_telemetry(

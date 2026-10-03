@@ -103,10 +103,10 @@ TEST(ReadinessState, CachedGnssStatusDoesNotCreateObservation) {
 TEST(ReadinessState, RestartedGnssSequenceRecoversAfterOldDataExpires) {
   ReadinessState state(1.0);
   state.connection(true);
-  state.gnss(100, 100, "mavros_serial_gps1", true);
-  state.gnss(200, 1, "mavros_serial_gps1", true);
+  state.gnss(100, 100, "mavros_gps1", true);
+  state.gnss(200, 1, "mavros_gps1", true);
   EXPECT_FALSE(state.project(100 + kSecond + 1).gnss_fresh);
-  state.gnss(100 + kSecond + 2, 1, "mavros_serial_gps1", true);
+  state.gnss(100 + kSecond + 2, 1, "mavros_gps1", true);
   EXPECT_TRUE(state.project(100 + kSecond + 2).gnss_fresh);
 }
 

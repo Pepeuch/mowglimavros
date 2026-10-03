@@ -1,0 +1,72 @@
+cmake_minimum_required(VERSION 3.16...4.2)
+project(mavros_gnss_adapter)
+
+if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wall -Wextra -Wpedantic -Werror)
+endif()
+
+find_package(ament_cmake REQUIRED)
+find_package(diagnostic_msgs REQUIRED)
+find_package(diagnostic_updater REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(libmavconn REQUIRED)
+find_package(mavlink REQUIRED)
+find_package(mavros REQUIRED)
+find_package(mavros_msgs REQUIRED)
+find_package(mowgli_interfaces REQUIRED)
+find_package(universal_gnss_ros2 REQUIRED)
+find_package(pluginlib REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
+find_package(tf2_eigen REQUIRED)
+find_package(tf2_geometry_msgs REQUIRED)
+find_package(tf2_ros REQUIRED)
+
+add_library(${PROJECT_NAME}_plugins SHARED src/gnss_adapter_plugin.cpp)
+target_include_directories(${PROJECT_NAME}_plugins
+  PRIVATE
+    ${mavlink_INCLUDE_DIRS}
+    ${mavros_INCLUDE_DIRS}
+    ${libmavconn_INCLUDE_DIRS}
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:include>
+)
+target_link_libraries(${PROJECT_NAME}_plugins
+  ${diagnostic_msgs_TARGETS}
+  diagnostic_updater::diagnostic_updater
+  ${geometry_msgs_TARGETS}
+  ${libmavconn_LIBRARIES}
+  ${mavros_LIBRARIES}
+  ${mavros_msgs_TARGETS}
+  ${mowgli_interfaces_TARGETS}
+  ${universal_gnss_ros2_TARGETS}
+  ${sensor_msgs_TARGETS}
+  pluginlib::pluginlib
+  rclcpp::rclcpp
+  sensor_msgs::sensor_msgs_library
+  tf2_eigen::tf2_eigen
+  tf2_geometry_msgs::tf2_geometry_msgs
+  tf2_ros::tf2_ros
+)
+target_compile_features(${PROJECT_NAME}_plugins PRIVATE cxx_std_17)
+pluginlib_export_plugin_description_file(mavros mavros_plugins.xml)
+
+if(BUILD_TESTING)
+  find_package(ament_cmake_gtest REQUIRED)
+  ament_add_gtest(test_gnss_adapter test/test_gnss_adapter.cpp)
+  target_include_directories(test_gnss_adapter PRIVATE include)
+  target_compile_features(test_gnss_adapter PRIVATE cxx_std_17)
+  target_link_libraries(test_gnss_adapter
+    ${mowgli_interfaces_TARGETS}
+    ${universal_gnss_ros2_TARGETS}
+    ${sensor_msgs_TARGETS}
+  )
+endif()
+
+install(TARGETS ${PROJECT_NAME}_plugins LIBRARY DESTINATION lib)
+install(DIRECTORY include/ DESTINATION include)
+install(PROGRAMS test/test_gnss_graph.py DESTINATION lib/${PROJECT_NAME})
+install(FILES README.md DESTINATION share/${PROJECT_NAME})
+install(FILES mavros_plugins.xml DESTINATION share/${PROJECT_NAME})
+ament_package()

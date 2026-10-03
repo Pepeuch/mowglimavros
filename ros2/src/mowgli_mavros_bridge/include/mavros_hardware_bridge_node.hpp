@@ -12,8 +12,6 @@
 #include <mavros_msgs/msg/manual_control.hpp>
 #include <mavros_msgs/msg/state.hpp>
 #include <mavros_msgs/msg/esc_telemetry.hpp>
-#include <mavros_msgs/msg/gpsraw.hpp>
-#include <sensor_msgs/msg/nav_sat_fix.hpp>
 #include <mavros_msgs/srv/command_bool.hpp>
 #include <mavros_msgs/srv/set_mode.hpp>
 #include <mowgli_interfaces/msg/gnss_status.hpp>
@@ -47,8 +45,6 @@ private:
   void on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg);
   void on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg);
   void on_power(const mowgli_interfaces::msg::Power::SharedPtr msg);
-  void on_serial_gps_raw(const mavros_msgs::msg::GPSRAW::SharedPtr msg);
-  void publish_gps_stale();
   void on_esc_telemetry(const mavros_msgs::msg::ESCTelemetry::SharedPtr msg);
   void on_gnss_status(const mowgli_interfaces::msg::GnssStatus::SharedPtr msg);
   void on_wheel_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
@@ -81,9 +77,6 @@ private:
   double esc_observation_timeout_s_{3.0};
   bool gnss_required_{true};
   bool wheel_odometry_required_{false};
-  bool gps1_canonical_enabled_{false};
-  uint64_t gps_observation_sequence_{0};
-  int64_t gps_last_receipt_ns_{0};
   bool emergency_disarm_{true};
   std::string emergency_mode_{"HOLD"};
   bool rain_detected_{false};
@@ -120,8 +113,6 @@ private:
   mowgli_interfaces::msg::HighLevelStatus last_high_level_status_{};
 
   rclcpp::Publisher<mowgli_interfaces::msg::Status>::SharedPtr pub_status_;
-  rclcpp::Publisher<sensor_msgs::msg::NavSatFix>::SharedPtr pub_gps_fix_;
-  rclcpp::Publisher<mowgli_interfaces::msg::GnssStatus>::SharedPtr pub_gps_status_;
   rclcpp::Publisher<mowgli_interfaces::msg::Emergency>::SharedPtr pub_emergency_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
   rclcpp::Publisher<mavros_msgs::msg::ManualControl>::SharedPtr pub_manual_control_;
@@ -133,7 +124,6 @@ private:
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
   rclcpp::Subscription<mowgli_interfaces::msg::Power>::SharedPtr sub_power_;
   rclcpp::Subscription<mavros_msgs::msg::ESCTelemetry>::SharedPtr sub_esc_telemetry_;
-  rclcpp::Subscription<mavros_msgs::msg::GPSRAW>::SharedPtr sub_serial_gps_raw_;
   rclcpp::Subscription<mowgli_interfaces::msg::GnssStatus>::SharedPtr sub_gnss_status_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_wheel_odom_;
 

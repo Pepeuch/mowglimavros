@@ -22,7 +22,8 @@
   "plugins": {
     "universal_gnss_mavros": "universal_gnss_mavros_plugins.xml",
     "esc_wheel_odometry": "mavros_plugins.xml",
-    "battery_observer": "mavros_plugins.xml"
+    "battery_observer": "mavros_plugins.xml",
+    "mowgli_gnss": "mavros_plugins.xml"
   },
   "frames": {
     "wheel_odom": "odom",

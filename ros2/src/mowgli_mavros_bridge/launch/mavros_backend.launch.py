@@ -1,4 +1,5 @@
 import os
+import warnings
 
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
@@ -48,6 +49,13 @@ def _mavros_node(
     if not os.path.isfile(plugin_xml):
         raise RuntimeError("Universal GNSS MAVROS pluginlib export is unavailable")
 
+    adapter_xml = os.path.join(
+        get_package_share_directory("mavros_gnss_adapter"),
+        "mavros_plugins.xml",
+    )
+    if not os.path.isfile(adapter_xml):
+        raise RuntimeError("Mowgli GNSS adapter pluginlib export is unavailable")
+
     wheel_odom_config = os.path.join(
         get_package_share_directory("mavros_esc_wheel_odometry"),
         "config",
@@ -88,6 +96,7 @@ def _mavros_node(
             package="mavros",
             executable="mavros_node",
             output="screen",
+            additional_env={"GNSS_SOURCE": source_mode, "GNSS_MAVROS_SOURCE": source},
             parameters=[
                 os.path.join(mavros_share, "launch", plugin_list),
                 os.path.join(mavros_share, "launch", config),
@@ -189,6 +198,10 @@ def generate_launch_description():
     )
 
     if "MAVROS_GPS1_CANONICAL" in os.environ:
+        warnings.warn(
+            "MAVROS_GPS1_CANONICAL is deprecated; use GNSS_SOURCE/GNSS_MAVROS_SOURCE",
+            FutureWarning,
+        )
         configured = _as_bool(os.environ["MAVROS_GPS1_CANONICAL"])
         if configured != gps1_canonical_expected:
             raise RuntimeError(
@@ -220,7 +233,6 @@ def generate_launch_description():
                 parameters=[
                     bridge_params,
                     {
-                        "gps1_canonical_enabled": gps1_canonical_expected,
                         "neutral_manual_control_enabled": _as_bool(
                             os.environ.get(
                                 "MAVROS_NEUTRAL_TEST",

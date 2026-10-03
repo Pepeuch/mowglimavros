@@ -149,10 +149,15 @@ class ExternalBackendContractTest(unittest.TestCase):
             battery,
         )
 
-        self.assertIn(
-            'create_publisher<sensor_msgs::msg::NavSatFix>("/gps/fix", 10)',
-            bridge,
-        )
+        gnss = read("ros2/src/mavros_gnss_adapter/src/gnss_adapter_plugin.cpp")
+        self.assertIn('create_publisher<sensor_msgs::msg::NavSatFix>("/gps/fix", 10)', gnss)
+        self.assertNotIn('create_publisher<sensor_msgs::msg::NavSatFix>', bridge)
+        self.assertNotIn('create_publisher<mowgli_interfaces::msg::GnssStatus>', bridge)
+        self.assertIn('create_subscription<mowgli_interfaces::msg::GnssStatus>', bridge)
+        self.assertIn('"/gps/status", sensor_qos', bridge)
+        for legacy in ("gps1_canonical_enabled", "serial_gps_projection", "on_serial_gps_raw", "publish_gps_stale"):
+            self.assertNotIn(legacy, bridge)
+            self.assertNotIn(legacy, read("ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp"))
         self.assertIn(
             'create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics"',
             bridge,
@@ -198,10 +203,9 @@ class ExternalBackendContractTest(unittest.TestCase):
             'else "/mavros/universal_gnss/rtcm_disabled"',
             launch,
         )
-        self.assertIn(
-            '"gps1_canonical_enabled": gps1_canonical_expected',
-            launch,
-        )
+        self.assertNotIn('gps1_canonical_enabled', launch)
+        self.assertIn('additional_env={"GNSS_SOURCE": source_mode, "GNSS_MAVROS_SOURCE": source}', launch)
+        self.assertIn('<exec_depend>mavros_gnss_adapter</exec_depend>', package)
 
         # Universal GNSS owns NTRIP. MowgliMAVROS only translates RTCM
         # to MAVLink when the selected GNSS receiver is behind the FCU.
@@ -223,6 +227,7 @@ class ExternalBackendContractTest(unittest.TestCase):
 
     def test_plugin_descriptors_and_exports(self):
         descriptors = {
+            "mowgli_gnss": SRC / "mavros_gnss_adapter/mavros_plugins.xml",
             "esc_wheel_odometry":
                 SRC / "mavros_esc_wheel_odometry/mavros_plugins.xml",
             "battery_observer":
@@ -241,6 +246,7 @@ class ExternalBackendContractTest(unittest.TestCase):
             )
 
         for package in (
+            "mavros_gnss_adapter",
             "mavros_esc_wheel_odometry",
             "mavros_battery_observer",
         ):

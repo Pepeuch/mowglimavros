@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<library path="mavros_gnss_adapter_plugins">
+  <class name="mowgli_gnss" type="mavros::plugin::PluginFactoryTemplate&lt;mavros_gnss_adapter::GnssAdapterPlugin&gt;" base_class_type="mavros::plugin::PluginFactory">
+    <description>Adapts private Universal GNSS outputs to the canonical Mowgli GNSS contract.</description>
+  </class>
+</library>

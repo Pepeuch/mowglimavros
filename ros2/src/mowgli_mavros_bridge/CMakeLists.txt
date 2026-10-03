@@ -46,9 +46,20 @@ target_link_libraries(mavros_hardware_bridge_node PUBLIC
 
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
+  find_package(ament_cmake_test REQUIRED)
+  find_package(mavros_gnss_adapter REQUIRED)
+  ament_add_test(test_gnss_launch
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_gnss_launch.py"
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
+  ament_add_test(test_gnss_graph
+    COMMAND "${Python3_EXECUTABLE}"
+      "${mavros_gnss_adapter_DIR}/../../../lib/mavros_gnss_adapter/test_gnss_graph.py"
+      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
+    TIMEOUT 180
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
-  ament_add_gtest(test_serial_gps_projection test/test_serial_gps_projection.cpp)
-  target_include_directories(test_serial_gps_projection PRIVATE include)
   ament_add_gtest(test_esc_telemetry_tracker test/test_esc_telemetry_tracker.cpp)
   target_include_directories(test_esc_telemetry_tracker PRIVATE include)
   ament_add_gtest(test_rover_manual_control test/test_rover_manual_control.cpp)

@@ -438,20 +438,24 @@ Acceptance:
 
 ## MM-603 — Provide canonical public GNSS adapter
 Related migration finding: `MN-MAV-004`
-Status: DONE (software); HARDWARE_PENDING (live FCU/GPS validation)
+Status: IN_PROGRESS (implementation complete; Lyrical software PASS; ARM64/target acceptance pending)
 
 Tasks:
 
-- [x] Publish canonical `/gps/fix` and `/gps/status` directly from the pinned Universal GNSS MAVROS plugin; `/mavros/global_position/raw/fix` is not selected GNSS truth.
-- [x] Build and load the external GPS1/GPS2 Universal GNSS transport; `GNSS_MAVROS_SOURCE` selects `gps1` or `gps2` by remap only.
-- [x] Preserve Universal GNSS `source_id`, `source_incarnation`, and `position_observation_sequence` unchanged; the sidecar contains no GNSS observation state machine.
-- [x] Use the exact pinned Universal GNSS transport contract for fix/status pairing, RTK enrichment, cached delivery, connection/reboot invalidation, and source incarnation.
-- [x] Do not fabricate receiver-native diagnostics unavailable from MAVROS.
+- [x] Dedicated MowgliMAVROS `mowgli_gnss` plugin adapts private Universal GNSS status/fix to canonical `/gps/status` and `/gps/fix`; no GNSS publisher or raw projection remains in the hardware bridge, which only consumes status for readiness.
+- [x] `GNSS_SOURCE=mavros` enables canonical ownership; `GNSS_MAVROS_SOURCE=gps1|gps2` selects the private receiver. `direct` creates no canonical endpoints. `MAVROS_GPS1_CANONICAL` is only a deprecated consistency guard.
+- [x] Map fix/RTK/baseline enums and capability/value flags symbolically; preserve rich available fields and `position_observation_sequence`. Source identity/incarnation invalidate adapter queues internally; the public Mowgli IDL has no corresponding fields.
+- [x] Preserve ellipsoidal canonical altitude with a selected-receiver raw altitude side channel inside the plugin. Never remap private MSL altitude silently; unavailable/ambiguous height is NaN. Document correlation limits in `ros2/src/mavros_gnss_adapter/README.md`.
+- [x] Invalidate stale positions without advancing their sequence; RTK enrichment cannot refresh position lifetime. Leave unavailable NTRIP/MSM fields for downstream diagnostics enrichment.
 
 Acceptance tests:
 
-- [x] Software proof: exact source pin, Kilted build, pluginlib discovery/loading, GPS1/GPS2 source surfaces, canonical remap, no bridge-side GNSS producer, and fail-closed interface fingerprint.
-- [ ] `HARDWARE_PENDING`: validate live MAVLink GPS1/GPS2 traffic, receiver selection, RTK, stale/invalid behavior, FCU reconnect/reboot invalidation, and canonical DDS delivery on the target robot.
+- [x] Lyrical build with MAVROS 2.16.0 and exact Universal GNSS pin `6f0eb09`; symbolic mapping/altitude/freshness tests, unchanged bridge readiness tests, interface lock and external contracts.
+- [x] Isolated real-plugin graph tests for GPS1/GPS2 and direct mode: exclusive ownership, bridge subscription, rich RTK fields, sequence, no-fix/stale, ellipsoid vs MSL, absent extension => NaN. Registered in bridge CTest.
+- Kilted is historical and is not a current acceptance target. Humble support is deferred until the planned repository refactor.
+- [ ] `HARDWARE_PENDING`: target ARM64 build and passive deployment acceptance of source selection, ellipsoid pairing under load, receiver RTK/correction diagnostics, stale/no-fix, FCU reconnect/reboot and canonical DDS delivery. No robot/configuration/deployment changes in the 2026-10-03 software task.
+
+Evidence: `.agent/shared/checkpoints/active/MM-GNSS-CANONICAL-ADAPTER-20261003.md`.
 
 ## MM-604 — Establish wheel-only odometry contract
 Related migration finding: `MN-MAV-005`
