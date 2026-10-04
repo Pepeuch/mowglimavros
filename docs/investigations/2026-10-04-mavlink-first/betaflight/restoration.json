@@ -1,0 +1,19 @@
+{
+  "status": "VERIFIED_FINAL_SETTING_RESTORED",
+  "method": "Earlier complete before/after snapshots match for the original motor sweep. During the final EDT probe only dshot_edt was changed; get dshot confirmed it OFF after the final reboot. MSP #104 confirmed all four outputs at 1000.",
+  "persistent_configuration_changed": false,
+  "temporary_action": "For the final probe, dshot_edt was temporarily set ON and saved; each motor was briefly run individually at output 1150. No non-RPM ESC telemetry fields appeared in MSP #139. dshot_edt was then set OFF and saved. Motor override was written neutral and verified.",
+  "post_test_idle_capture": "captures/edt-restored-idle.csv",
+  "cli_exit_ack": "Native USB CDC de-enumerated during CLI exit. The report records the evidence boundary; no host USB identifier is published.",
+  "notes": "Final persistent configuration matches the original baseline. dshot_edt was temporarily enabled for the last test and restored to OFF. The motor override is runtime state; post-test MSP reports all motor outputs at 1000 and RPM at rest.",
+  "final_runtime_temperature_c": 92,
+  "final_battery_voltage_v": 22.69,
+  "final_confirmed_setting": "dshot_edt=OFF",
+  "final_motor_outputs": [
+    1000,
+    1000,
+    1000,
+    1000
+  ],
+  "original_full_snapshot_comparison": "Verified locally for the original motor sweep; full configuration dumps are intentionally not included in this public copy."
+}
