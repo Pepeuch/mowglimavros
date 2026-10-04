@@ -8,7 +8,7 @@ This bundle consolidates two investigations into one handoff because their findi
 ## Findings for the backend
 
 - The inspected Betaflight 2026.6.1 and INAV 9.1 MAVLink senders emit shared navigation/state/battery messages conditionally, but neither has a sender for common `ESC_INFO` (#290) / `ESC_STATUS` (#291), `RPM` (#226), `WHEEL_DISTANCE` (#9000), or legacy `ESC_TELEMETRY_*`. These are source findings; no MAVLink packet capture was performed on either test FC.
-- MAVROS can receive common ESC info/status, but its status plugin needs ESC_INFO first to size the ESC vector. The current Mowgli wheel-odometry plugin relies on RPM plus the legacy ESC telemetry counters, so adding only common ESC_STATUS output upstream will not yet feed its existing path.
+- MAVROS can receive common ESC info/status, but its status plugin needs ESC_INFO first to size the ESC vector. The current Mowgli wheel-odometry plugin relies on RPM plus legacy ESC telemetry counters, so adding only common ESC_STATUS output upstream will not yet feed its existing path. Current MowgliMAVROS main also preserves explicit 2D/3D/DGPS GNSS solution types through synthetic graph-tested mappings; this does not supply live FC/MAVLink evidence.
 - INAV's connected GPS spoke UBX and its packet counter advanced, but no indoor fix was obtained. Its MAVLink GPS semantics and Betaflight's differ, including `alt_ellipsoid` handling and accuracy/DOP fields; the detailed reports identify the source locations and limitations.
 - On the Betaflight/AM32 quad, bidirectional DShot produced per-motor RPM. A final temporary EDT-ON trial still produced no ESC temperature/voltage/current/consumption in MSP #139. The setting was restored to OFF. The actual ESC firmware build is unknown.
 

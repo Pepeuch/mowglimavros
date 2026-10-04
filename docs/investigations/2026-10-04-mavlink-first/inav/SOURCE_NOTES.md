@@ -9,9 +9,9 @@ Research date: 2026-10-04. Source-level statements below are pinned to identifia
 | INAV | 9.1.0 release | `e519b69b02e27c8bdc03b4a0889f1baaae211a54` | Exact installed device version; GPS/MSP/MAVLink path. |
 | Betaflight | 2026.6.2 release | `e0b7bb0` | Current stable source comparison and the matching DIAT target metadata. |
 | MowgliNext | `feat/mavros-refresh` | `b18e6c394a2bed9bd0e60880395cd3a171ff10f7` | Integration branch and expected sidecar contract. 18 ahead / 34 behind `dev` at `6f37770878e4558d385320664ac737d91a8b5eea`. |
-| Pepeuch MAVROS backend | `Pepeuch/mowglimavros` main | `a1fe22c11171b0074a6a1771e249a0bba6c6c1b9` | Actual current backend implementation. |
+| Pepeuch MAVROS backend | `Pepeuch/mowglimavros` main | `82a1e390b59eeb7ab08c10dcd8e4c5675ec4c492` | Current backend source at final review; see the explicit fix-type refresh. |
 | MAVROS | 2.16.0 | `5c68b905ab30de6ce630822dc46c33467e8f23ea` | Pinned by sidecar Dockerfile. |
-| Universal GNSS | pinned sidecar source | `6f0eb09ff48893ad56c70956266f19e5a775552c` | Private GNSS MAVROS plugin and canonical ROS mapping. |
+| Universal GNSS | pinned sidecar source | `383caba3de94e16167764393d5a4ef046078b015` | Private GNSS MAVROS plugin and canonical ROS mapping. |
 
 The INAV 9.1.0 release page shows the tag resolves to `e519b69`; the Betaflight 2026.6.2 release page shows `e0b7bb0`. INAV later published 10.0.0-rc2 before this research date. This comparison uses installed 9.1.0 source rather than assuming the aircraft runs the later release candidate. [INAV 9.1.0 release](https://github.com/iNavFlight/inav/releases/tag/9.1.0), [INAV releases](https://github.com/iNavFlight/inav/releases), [Betaflight 2026.6.2 release](https://github.com/betaflight/betaflight/releases/tag/2026.6.2).
 
@@ -61,11 +61,11 @@ The INAV 9.1.0 release page shows the tag resolves to `e519b69`; the Betaflight 
 
 The complete Mowgli/MAVROS analysis, exact topic expectations, readiness/odometry caveats, and source links are in [`MOWGLI_MAVROS_SOURCE_FINDINGS.md`](MOWGLI_MAVROS_SOURCE_FINDINGS.md). Key permalinks:
 
-- [MowgliNext integration README](https://github.com/mowglinext/mowglinext/blob/b18e6c394a2bed9bd0e60880395cd3a171ff10f7/sensors/mavros/README.md) and [sidecar Dockerfile pins](https://github.com/Pepeuch/mowglimavros/blob/a1fe22c11171b0074a6a1771e249a0bba6c6c1b9/ros2/Dockerfile#L5-L13).
-- [Canonical GNSS adapter](https://github.com/Pepeuch/mowglimavros/blob/a1fe22c11171b0074a6a1771e249a0bba6c6c1b9/ros2/src/mavros_gnss_adapter/src/gnss_adapter_plugin.cpp#L39-L94).
-- [Universal GNSS raw GPS conversion](https://github.com/Pepeuch/universal-gnss/blob/6f0eb09ff48893ad56c70956266f19e5a775552c/gnss_mavros/src/universal_gnss_plugin.cpp#L41-L211), [accuracy/covariance conversion](https://github.com/Pepeuch/universal-gnss/blob/6f0eb09ff48893ad56c70956266f19e5a775552c/gnss_ros2/src/navsat_fix_adapter.cpp#L35-L63), and [measurement packet identity/freshness](https://github.com/Pepeuch/universal-gnss/blob/6f0eb09ff48893ad56c70956266f19e5a775552c/gnss_mavros/src/mavlink_gnss_adapter.cpp#L223-L245).
+- [MowgliNext integration README](https://github.com/mowglinext/mowglinext/blob/b18e6c394a2bed9bd0e60880395cd3a171ff10f7/sensors/mavros/README.md) and [sidecar Dockerfile pins](https://github.com/Pepeuch/mowglimavros/blob/82a1e390b59eeb7ab08c10dcd8e4c5675ec4c492/ros2/Dockerfile#L5-L13).
+- [Canonical GNSS adapter](https://github.com/Pepeuch/mowglimavros/blob/82a1e390b59eeb7ab08c10dcd8e4c5675ec4c492/ros2/src/mavros_gnss_adapter/src/gnss_adapter_plugin.cpp#L39-L94).
+- [Universal GNSS raw GPS conversion](https://github.com/Pepeuch/universal-gnss/blob/383caba3de94e16167764393d5a4ef046078b015/gnss_mavros/src/universal_gnss_plugin.cpp#L41-L211), [accuracy/covariance conversion](https://github.com/Pepeuch/universal-gnss/blob/383caba3de94e16167764393d5a4ef046078b015/gnss_ros2/src/navsat_fix_adapter.cpp#L35-L63), and [measurement packet identity/freshness](https://github.com/Pepeuch/universal-gnss/blob/383caba3de94e16167764393d5a4ef046078b015/gnss_mavros/src/mavlink_gnss_adapter.cpp#L223-L245).
 - [Mowgli fusion covariance acceptance](https://github.com/mowglinext/mowglinext/blob/b18e6c394a2bed9bd0e60880395cd3a171ff10f7/ros2/src/fusion_graph/src/fusion_graph_node_callbacks_a.cpp#L258-L288).
-- [Bridge topic subscriptions](https://github.com/Pepeuch/mowglimavros/blob/a1fe22c11171b0074a6a1771e249a0bba6c6c1b9/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp#L72-L108), [INAV/BF profile gate](https://github.com/Pepeuch/mowglimavros/blob/a1fe22c11171b0074a6a1771e249a0bba6c6c1b9/ros2/src/mowgli_mavros_bridge/launch/mavros_backend.launch.py#L35-L43), and [readiness rules](https://github.com/Pepeuch/mowglimavros/blob/a1fe22c11171b0074a6a1771e249a0bba6c6c1b9/ros2/src/mowgli_mavros_bridge/src/readiness_state.cpp#L40-L106).
+- [Bridge topic subscriptions](https://github.com/Pepeuch/mowglimavros/blob/82a1e390b59eeb7ab08c10dcd8e4c5675ec4c492/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp#L72-L108), [INAV/BF profile gate](https://github.com/Pepeuch/mowglimavros/blob/82a1e390b59eeb7ab08c10dcd8e4c5675ec4c492/ros2/src/mowgli_mavros_bridge/launch/mavros_backend.launch.py#L35-L43), and [readiness rules](https://github.com/Pepeuch/mowglimavros/blob/82a1e390b59eeb7ab08c10dcd8e4c5675ec4c492/ros2/src/mowgli_mavros_bridge/src/readiness_state.cpp#L40-L106).
 
 ## Evidence boundaries
 

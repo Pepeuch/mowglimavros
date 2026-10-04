@@ -2,7 +2,7 @@
 
 Repository: `Pepeuch/mowglimavros`
 Audited branch/ref: `main`
-Audited HEAD: `a1fe22c11171b0074a6a1771e249a0bba6c6c1b9`
+Audited HEAD: `82a1e390b59eeb7ab08c10dcd8e4c5675ec4c492` (source findings refreshed after this commit landed during preparation)
 Disposition: `RETAINED`
 Canonical evidence bundle: [`docs/investigations/2026-10-04-mavlink-first/`](../../../../docs/investigations/2026-10-04-mavlink-first/)
 
@@ -16,7 +16,7 @@ Record source-grounded Betaflight/INAV MAVLink sender and MowgliMAVROS compatibi
 - Current MowgliMAVROS ESC wheel odometry consumes RPM plus legacy ESC telemetry freshness counters; common ESC_STATUS alone will not feed the current path. MAVROS ESC status sizes its array from ESC_INFO and exposes empty status if INFO is absent.
 - INAV F722 target on firmware 9.1.0 detected UBLOX10/protocol 34.09 and parsed valid UBX frames during a 180 s indoor poll (2,520/2,520 selected read requests; packet counter 181→3091), but had no fix. Its GPS receiver serial link/protocol path worked; outdoor fix and GPS MAVLink delivery remain unverified.
 - Betaflight HDZERO_HALO on firmware 2026.6.1 returned per-motor RPM from bidirectional DShot/MSP #139. A temporary EDT-ON trial produced no temperature, voltage, current, or consumption fields. `dshot_edt=OFF` was restored and verified; all motor outputs were verified neutral. ESC firmware/version remains unknown.
-- GPS MAVLink producer semantics differ: Betaflight source copies MSL altitude to `alt_ellipsoid`; INAV uses zero there and has accuracy/DOP semantic differences. Details/revisions are in the evidence bundle.
+- GPS MAVLink producer semantics differ: Betaflight source copies MSL altitude to `alt_ellipsoid`; INAV uses zero there and has accuracy/DOP semantic differences. Current MowgliMAVROS main at 82a1e39 preserves explicit 2D/3D/DGPS canonical fix types and adds synthetic graph coverage; this is not live FC evidence and does not change covariance/ellipsoid requirements. Details/revisions are in the evidence bundle.
 
 ## Evidence boundaries
 
@@ -31,6 +31,8 @@ Record source-grounded Betaflight/INAV MAVLink sender and MowgliMAVROS compatibi
 - Confirmed public INAV GPS_RAW_GPS records have `fix=0`, `satellites=0`, and zero latitude/longitude.
 - Sanitized public copy for local absolute paths, USB serial identifiers, and Betaflight pilot/craft/rate-profile names.
 - No implementation tests or builds apply; changes are documentation and captured evidence only.
+
+The source audit initially used MowgliMAVROS `main` a1fe22c and Universal GNSS 6f0eb09. Final review refreshed these to main 82a1e39 and Universal GNSS 383caba3; the newer source adds explicit canonical 2D/3D/DGPS fix preservation.
 
 ## Exact next step
 
