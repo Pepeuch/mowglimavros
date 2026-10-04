@@ -54,7 +54,10 @@ TEST(Mapping, FixRtkAndBaselineEnums)
     {UniversalStatus::FIX_TYPE_FIX, Status::FIX_TYPE_GPS_FIX},
     {UniversalStatus::FIX_TYPE_RTK_FLOAT, Status::FIX_TYPE_RTK_FLOAT},
     {UniversalStatus::FIX_TYPE_RTK_FIXED, Status::FIX_TYPE_RTK_FIXED},
-    {UniversalStatus::FIX_TYPE_DEAD_RECKONING, Status::FIX_TYPE_DEAD_RECKONING}};
+    {UniversalStatus::FIX_TYPE_DEAD_RECKONING, Status::FIX_TYPE_DEAD_RECKONING},
+    {UniversalStatus::FIX_TYPE_2D_FIX, Status::FIX_TYPE_2D_FIX},
+    {UniversalStatus::FIX_TYPE_3D_FIX, Status::FIX_TYPE_3D_FIX},
+    {UniversalStatus::FIX_TYPE_DGPS, Status::FIX_TYPE_DGPS}};
   for (const auto & pair : fixes) {EXPECT_EQ(map_fix(pair.first), pair.second);}
   EXPECT_EQ(map_fix(255), Status::FIX_TYPE_NO_FIX);
   EXPECT_EQ(map_rtk(UniversalStatus::RTK_MODE_UNKNOWN), Status::RTK_MODE_UNKNOWN);
@@ -64,6 +67,23 @@ TEST(Mapping, FixRtkAndBaselineEnums)
   EXPECT_EQ(map_rtk(255), Status::RTK_MODE_UNKNOWN);
   EXPECT_EQ(map_baseline(UniversalStatus::BASELINE_STATUS_COMPUTED), Status::BASELINE_STATUS_COMPUTED);
   EXPECT_EQ(map_baseline(255), Status::BASELINE_STATUS_UNKNOWN);
+}
+
+TEST(Mapping, ExplicitSolutionTypesRemainValidThroughCanonicalStatus)
+{
+  const std::pair<uint8_t, uint8_t> solutions[] = {
+    {UniversalStatus::FIX_TYPE_2D_FIX, Status::FIX_TYPE_2D_FIX},
+    {UniversalStatus::FIX_TYPE_3D_FIX, Status::FIX_TYPE_3D_FIX},
+    {UniversalStatus::FIX_TYPE_DGPS, Status::FIX_TYPE_DGPS}};
+
+  for (const auto & solution : solutions) {
+    auto input = observation();
+    input.fix_type = solution.first;
+    const auto output = map_status(input, "gps1");
+    EXPECT_TRUE(output.fix_valid);
+    EXPECT_EQ(output.fix_type, solution.second);
+    EXPECT_NE(output.fix_type, Status::FIX_TYPE_NO_FIX);
+  }
 }
 
 TEST(Mapping, IndependentCapabilityBitsAndValues)

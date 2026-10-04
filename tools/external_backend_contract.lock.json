@@ -7,7 +7,7 @@
     },
     "universal_gnss": {
       "repository": "https://github.com/Pepeuch/universal-gnss.git",
-      "commit": "6f0eb09ff48893ad56c70956266f19e5a775552c"
+      "commit": "383caba3de94e16167764393d5a4ef046078b015"
     }
   },
   "topics": {

@@ -49,6 +49,9 @@ inline uint8_t map_fix(uint8_t value)
     case UniversalStatus::FIX_TYPE_RTK_FLOAT: return Status::FIX_TYPE_RTK_FLOAT;
     case UniversalStatus::FIX_TYPE_RTK_FIXED: return Status::FIX_TYPE_RTK_FIXED;
     case UniversalStatus::FIX_TYPE_DEAD_RECKONING: return Status::FIX_TYPE_DEAD_RECKONING;
+    case UniversalStatus::FIX_TYPE_2D_FIX: return Status::FIX_TYPE_2D_FIX;
+    case UniversalStatus::FIX_TYPE_3D_FIX: return Status::FIX_TYPE_3D_FIX;
+    case UniversalStatus::FIX_TYPE_DGPS: return Status::FIX_TYPE_DGPS;
     default: return Status::FIX_TYPE_NO_FIX;
   }
 }
