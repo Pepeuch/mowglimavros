@@ -172,6 +172,18 @@ def main():
                 assert latest.position_observation_sequence == private_statuses[-1].position_observation_sequence
                 assert all(f.altitude == (230.0 if args.source == "gps1" else 330.0) for f in fixes), fixes
                 assert private_fixes[-1].altitude == (180.0 if args.source == "gps1" else 280.0)
+                for mavlink_fix, canonical_fix in (
+                    (2, Status.FIX_TYPE_2D_FIX),
+                    (3, Status.FIX_TYPE_3D_FIX),
+                    (4, Status.FIX_TYPE_DGPS),
+                ):
+                    gps(args.source, fix_type=mavlink_fix)
+                    spin(0.25)
+                    assert statuses[-1].fix_valid, statuses[-1]
+                    assert statuses[-1].fix_type == canonical_fix, statuses[-1]
+                    assert statuses[-1].fix_type != Status.FIX_TYPE_NO_FIX, statuses[-1]
+                gps(args.source)
+                spin(0.25)
                 before = len(fixes)
                 other = "gps2" if args.source == "gps1" else "gps1"
                 gps(other)

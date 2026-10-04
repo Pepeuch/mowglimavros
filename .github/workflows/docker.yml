@@ -23,7 +23,7 @@ jobs:
       mavlink_version: ${{ steps.pins.outputs.mavlink_version }}
       geographiclib_dataset_version: ${{ steps.pins.outputs.geographiclib_dataset_version }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - id: pins
         shell: bash
@@ -53,7 +53,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3

@@ -1,10 +1,17 @@
 # MM-GNSS-CANONICAL-ADAPTER-20261003
 
-Disposition: ACTIVE — implementation complete; Lyrical software validation PASS; ARM64/target acceptance remains in TODO MM-603.
+Disposition: ACTIVE — Lyrical software acceptance complete; only ARM64/real target runtime acceptance remains in TODO MM-603.
 Repository: Pepeuch/mowglimavros, `/workspaces/mowglimavros`.
-Branch: `main`; baseline/unchanged HEAD `6fd9d3b31c9df124e6d92428552484b57fe6b854`.
-Initially clean worktree; origin `https://github.com/Pepeuch/mowglimavros.git`; no submodules.
-Changes remain unstaged/uncommitted; no push or deployment.
+Branch: `main`; initial implementation baseline `6fd9d3b31c9df124e6d92428552484b57fe6b854`.
+Initial canonical-adapter implementation HEAD:
+`a1fe22c11171b0074a6a1771e249a0bba6c6c1b9`
+(`feat(gnss): add canonical MAVROS GNSS adapter`).
+The 2026-10-04 follow-up refreshes Universal GNSS to `v0.7.2-rc4`
+(`383caba3de94e16167764393d5a4ef046078b015`), synchronizes the Mowgli GNSS
+interface from MowgliNext `e789ccc2ecc249377c385e79b34fb48ff5a90927`,
+and preserves explicit 2D/3D/DGPS solution types.
+Origin is `https://github.com/Pepeuch/mowglimavros.git`; no submodules.
+No deployment or robot-local configuration change was performed.
 
 ## Scope and ownership
 
@@ -24,11 +31,14 @@ check, not an activation switch, to avoid breaking existing deployment contracts
 Bridge source/header no longer contain GPS raw/projection state, publishers,
 `gps1_canonical_enabled`, `on_serial_gps_raw`, or `publish_gps_stale`.
 `serial_gps_projection.hpp` and its tests are removed. `on_gnss_status` and the
-`/gps/status` readiness subscription are unchanged. No public IDL was modified.
+`/gps/status` readiness subscription are unchanged. The 2026-10-04 rc4 follow-up
+extends the public Mowgli `GnssStatus` enum append-only with `FIX_TYPE_2D_FIX=5`,
+`FIX_TYPE_3D_FIX=6`, and `FIX_TYPE_DGPS=7`.
 
 ## Established contracts — do not rediscover
 
-- Repository UG pin `6f0eb09ff48893ad56c70956266f19e5a775552c`; MAVROS pin 2.16.0.
+- Repository UG pin is now `383caba3de94e16167764393d5a4ef046078b015`
+  (`v0.7.2-rc4`); MAVROS remains pinned to 2.16.0.
   At this UG pin the C++ `universal_gnss_ros2::msg::GnssStatus` compatibility alias
   resolves to generated `universal_gnss_msgs/msg/GnssStatus`; Python imports the
   latter. The installed old runtime image's `universal_gnss_ros2` Python package
@@ -54,6 +64,17 @@ Bridge source/header no longer contain GPS raw/projection state, publishers,
 - See package README for QoS, frame, limitations and exact behavior; TODO MM-603
   is the remaining work queue. Historical 2026-09-29 checkpoint describes the
   deployed legacy image, not this new source implementation.
+
+## Current acceptance policy
+
+ROS 2 Lyrical fully replaces Kilted as the current primary/runtime baseline for
+MowgliMAVROS and MowgliNext. The established Lyrical software validation below
+satisfies current distro acceptance. Kilted is not a supported acceptance target
+for this work and requires no revalidation. Humble support is planned only after
+the repository/refactor policy is completed and is outside this task.
+Remaining acceptance is limited to ARM64 and real target runtime validation in
+TODO MM-603. No Kilted revalidation is required; the 2026-10-04 rc4 changes
+were revalidated on Lyrical as recorded below.
 
 ## Validation
 
@@ -97,14 +118,31 @@ colcon --log-base /tmp/mm-gnss-build/log test \
 colcon test-result --test-result-base /tmp/mm-gnss-build/build --verbose
 ```
 
+## 2026-10-04 explicit solution-type refresh
+
+- Universal GNSS exact source: `383caba3de94e16167764393d5a4ef046078b015`
+  (`v0.7.2-rc4`).
+- Mowgli interface source revision:
+  `e789ccc2ecc249377c385e79b34fb48ff5a90927`.
+- Public Mowgli fix types append 2D/3D/DGPS without renumbering existing values.
+- Mapping remains symbolic: UG uses 2D/3D/DGPS values 6/7/8 while Mowgli uses
+  5/6/7, so numeric casts are intentionally forbidden.
+- Static validation PASS: three MM-602 interface-contract tests, nine external
+  backend-contract tests, graph-test Python syntax and `git diff --check`.
+- Native Lyrical build against the exact rc4 source PASS.
+- Adapter + bridge validation: 48 tests, zero errors/failures/skips.
+- Targeted registered `test_gnss_graph`: 1/1 PASS in 29.69 s. The graph now
+  verifies MAVLink fix type 2 -> canonical 2D, 3 -> 3D and 4 -> DGPS in addition
+  to the existing GPS1/GPS2/direct ownership, RTK, freshness and altitude cases.
+- GitHub checkout actions were advanced from v4 to v7.
+- No FCU, robot, deployment or physical actuator was involved.
+
 ## Pending acceptance / exact next step
 
-Review the uncommitted diff. Lyrical is the current supported acceptance target;
-Kilted is historical and requires no further validation for MM-603. Humble support
-is deferred until the planned repository refactor. No new broad/multiarch image
-build was performed. Then build the target Lyrical ARM64 image and, in a separately
-authorized deployment,
+Build the target Lyrical ARM64 image and, in a separately authorized deployment,
 validate selected-source delivery, ellipsoid pairing under real load, RTK and
-external NTRIP/MSM enrichment, FCU disconnect/reconnect/reboot. Existing robot
-runtime remains untouched. Do not claim hardware or release readiness from the
-synthetic software tests; do not change robot-local configuration in this task.
+external NTRIP/MSM enrichment, stale/no-fix recovery, FCU disconnect/reconnect/reboot
+and canonical DDS delivery. These are the only remaining acceptance gates for
+MM-603. Existing robot runtime remains untouched by this work. Do not claim
+hardware or release readiness from the synthetic software tests; do not change
+robot-local configuration in this documentation task.

@@ -157,7 +157,8 @@ Evidence:
 - every emitted ROS RTCM chunk is <=720 bytes.
 - concatenation preserves the original input byte-for-byte.
 - local test compiled against ros-kilted-mavros-msgs 2.15.0;
-  production MAVROS remains pinned to 2.15.1 / 22ae5b7c.
+  at that validation point production MAVROS was pinned to 2.15.1 / 22ae5b7c;
+  the current baseline is MAVROS 2.16.0 / 5c68b905ab30de6ce630822dc46c33467e8f23ea.
 - physical RTCM delivery remains HARDWARE_PENDING under HW-MAV-005.
 ---
 
@@ -425,7 +426,7 @@ Status: DONE
 
 Tasks:
 
-- [x] Consume the required interface subset from pinned MowgliNext revision `3b0974809809ace589a567b6c32e5bed6e599489` using `tools/mowgli_interface_contract.py sync`.
+- [x] Consume the required interface subset from pinned MowgliNext revision `e789ccc2ecc249377c385e79b34fb48ff5a90927` using `tools/mowgli_interface_contract.py sync`.
 - [x] Replace the uncontrolled local definitions with the pinned generated subset and lock its source/content in `ros2/src/mowgli_interfaces/interface-contract.lock.json`.
 - [x] Add a deterministic SHA-256 canonical-content fingerprint gate, executed before the Docker workspace build, plus focused hardware-free tests.
 
@@ -438,7 +439,7 @@ Acceptance:
 
 ## MM-603 — Provide canonical public GNSS adapter
 Related migration finding: `MN-MAV-004`
-Status: IN_PROGRESS (implementation complete; Lyrical software PASS; ARM64/target acceptance pending)
+Status: DONE (Lyrical software); HARDWARE_PENDING (ARM64/real target runtime acceptance)
 
 Tasks:
 
@@ -448,11 +449,17 @@ Tasks:
 - [x] Preserve ellipsoidal canonical altitude with a selected-receiver raw altitude side channel inside the plugin. Never remap private MSL altitude silently; unavailable/ambiguous height is NaN. Document correlation limits in `ros2/src/mavros_gnss_adapter/README.md`.
 - [x] Invalidate stale positions without advancing their sequence; RTK enrichment cannot refresh position lifetime. Leave unavailable NTRIP/MSM fields for downstream diagnostics enrichment.
 
+Acceptance policy: ROS 2 Lyrical is the current primary/runtime baseline for
+MowgliMAVROS and MowgliNext, fully replacing Kilted. The validated Lyrical
+software tests satisfy current distro acceptance; no Kilted revalidation is
+required. Humble support is planned only after the repository/refactor policy
+is completed and is outside MM-603's current scope.
+
 Acceptance tests:
 
-- [x] Lyrical build with MAVROS 2.16.0 and exact Universal GNSS pin `6f0eb09`; symbolic mapping/altitude/freshness tests, unchanged bridge readiness tests, interface lock and external contracts.
-- [x] Isolated real-plugin graph tests for GPS1/GPS2 and direct mode: exclusive ownership, bridge subscription, rich RTK fields, sequence, no-fix/stale, ellipsoid vs MSL, absent extension => NaN. Registered in bridge CTest.
-- Kilted is historical and is not a current acceptance target. Humble support is deferred until the planned repository refactor.
+- [x] Lyrical build with MAVROS 2.16.0 and exact Universal GNSS `v0.7.2-rc4` pin `383caba3de94e16167764393d5a4ef046078b015`; symbolic mapping/altitude/freshness tests, unchanged bridge readiness tests, interface lock and external contracts.
+- [x] Explicit solution-type refresh preserves MAVLink 2D/3D/DGPS through Universal GNSS into canonical Mowgli `FIX_TYPE_2D_FIX` / `FIX_TYPE_3D_FIX` / `FIX_TYPE_DGPS`; mappings are symbolic because the UG and Mowgli enum numeric values intentionally differ.
+- [x] Lyrical rc4 adapter/bridge suite: 48 tests, 0 errors, 0 failures, 0 skipped. Targeted `test_gnss_graph`: 1/1 PASS (29.69 s), covering GPS1/GPS2/direct ownership plus MAVLink fix types 2/3/4 -> canonical 2D/3D/DGPS.
 - [ ] `HARDWARE_PENDING`: target ARM64 build and passive deployment acceptance of source selection, ellipsoid pairing under load, receiver RTK/correction diagnostics, stale/no-fix, FCU reconnect/reboot and canonical DDS delivery. No robot/configuration/deployment changes in the 2026-10-03 software task.
 
 Evidence: `.agent/shared/checkpoints/active/MM-GNSS-CANONICAL-ADAPTER-20261003.md`.
@@ -546,8 +553,8 @@ Tasks:
 - [x] Assert exact type/interface fingerprints, semantics, ownership, and failure behavior at the external backend boundary.
 - [x] Keep hardware-dependent delivery/actuator proof in MM-801 rather than substituting software fixtures for it.
 - [x] Validate the public `/imu/data` contract against exact MowgliNext
-      `3b0974809809ace589a567b6c32e5bed6e599489` consumers and exact MAVROS
-      2.15.1 `22ae5b7cc7cdb4cb9c2070a8213c72dae445a23e` semantics.
+      `e789ccc2ecc249377c385e79b34fb48ff5a90927` consumers and exact MAVROS
+      2.16.0 `5c68b905ab30de6ce630822dc46c33467e8f23ea` semantics.
 - [x] Prove that relayed MAVROS IMU data is compatible with all relevant
       current MowgliNext consumers before declaring contract parity.
 
@@ -579,7 +586,7 @@ Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTC
 
 ## MM-701 — MowgliNext integration dependency and execution plan
 Related migration findings: `MN-MAV-001` through `MN-MAV-008`
-Status: ACTIVE (bounded no-motion Lyrical integration deployed; production acceptance blocked)
+Status: IN PROGRESS (bounded no-motion Lyrical integration deployed; production acceptance blocked)
 
 Audit provenance: the MowgliNext migration audit is complete and retained at `.agent/shared/checkpoints/retained/MAVROS_EXTERNAL_BACKEND_MIGRATION.md`. Operational enablement must not begin until the external prerequisites below are accepted.
 
