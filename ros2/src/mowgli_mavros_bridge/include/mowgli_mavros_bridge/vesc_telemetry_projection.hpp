@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <limits>
 
 #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
 
@@ -19,29 +20,30 @@ constexpr uint8_t kMowerEscStatusRunning = 201U;
 struct BladeTelemetryProjection
 {
   uint8_t status{kMowerEscStatusUnavailable};
-  float temperature{0.0F};
+  float temperature{std::numeric_limits<float>::quiet_NaN()};
   float current{0.0F};
   float rpm{0.0F};
   int64_t stamp_ns{0};
   bool available{false};
 };
 
-inline BladeTelemetryProjection blade_telemetry_from_esc2(const EscState & mower)
+inline BladeTelemetryProjection blade_telemetry_from_esc(const EscState & mower)
 {
   BladeTelemetryProjection out;
-  if (!mower.online || !mower.observed || mower.last_update_ns <= 0)
+  if (!mower.online || !mower.observed || mower.last_update_ns <= 0 ||
+    !mower.sample.rpm_valid || !mower.sample.current_valid)
   {
     return out;
   }
 
   out.available = true;
   out.status = mower.sample.rpm == 0 ? kMowerEscStatusStopped : kMowerEscStatusRunning;
-  out.temperature = mower.sample.temperature;
+  // Public Status has no per-field validity flag; user-approved unknown marker.
+  out.temperature = mower.sample.temperature_valid ? mower.sample.temperature :
+    std::numeric_limits<float>::quiet_NaN();
   out.current = mower.sample.current;
-  // ESC_TELEMETRY carries an unsigned RPM magnitude in ArduPilot.  Blade load
-  // control only needs the physical speed magnitude; wheel direction is handled
-  // separately from signed MAVLink RPM and is intentionally not implemented here.
-  out.rpm = static_cast<float>(std::abs(mower.sample.rpm));
+  // Blade projection uses magnitude; wheel motion is not transported here.
+  out.rpm = static_cast<float>(std::abs(static_cast<double>(mower.sample.rpm)));
   out.stamp_ns = mower.last_update_ns;
   return out;
 }

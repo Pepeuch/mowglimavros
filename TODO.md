@@ -505,14 +505,29 @@ Tasks:
 
 Acceptance: no production path labels fused MAVROS local position as wheel-only odometry.
 
-Architecture: use signed RPM #226 for wheel values and selected
-`ESC_TELEMETRY_* .count[]` fields solely as per-ESC genuine-observation
-sequences. The stock MAVROS 2.15.1 wheel-odometry plugin remains unsuitable;
-the external plugin must not use its unsigned ESC telemetry RPM field.
+Architecture: the external plugin normalizes COMMON ESC_STATUS/ESC_INFO and
+legacy ESC_TELEMETRY into the approved internal EscObservation message. Wheel
+motion stays in C++, with one differential core and one /wheel_odom producer.
+Auto prefers configured/fresh WHEEL_DISTANCE, signed ESC_STATUS, then signed
+RPM #226 gated by legacy telemetry counters. Unsigned legacy ESC telemetry RPM
+never provides wheel direction. Measurement time controls deltas/monotonicity;
+reception controls freshness. Same-SYSID encoder components are accepted.
+Mappings, radii, track width and COMMON conversion factors are parameters,
+including atomic runtime changes; bridge roles retain right0/left1/blade2 defaults.
+COMMON STATUS acquires/renews the component owner; INFO only enriches that owner.
+Pre-STATUS INFO is candidate metadata and cannot block another STATUS component.
+Encoder ownership is independent.
+MAVLink clock resets isolate their source, INFO resets isolate metadata, while
+ROS clock rollback/disconnect resets all sources. Wheel STATUS pair skew uses
+common_pair_max_skew_s=0.25 independently of reception freshness.
 
-Software evidence: 20 focused pairing/kinematics tests, Kilted sidecar build,
-pluginlib discovery, safe-disabled and synthetic-config no-FCU startup, and
-canonical plugin remap passed on 2026-09-09. `git diff --check` passed.
+Software evidence: retained 20 legacy pairing/kinematics cases plus source-engine
+and canonical bridge tests. Lyrical build/install and native MAVROS/bridge graph
+cover COMMON without INFO, temperature validity/recovery, different encoder
+COMPID, one publisher, mapping/geometry updates, source expiry and lifecycle.
+See [feature checkpoint](.agent/shared/checkpoints/active/MM-ESC-ODOMETRY-20261005.md)
+for final test results and the passive Rock baseline. Physical acceptance remains
+pending; no new feature code has been deployed to the test robot.
 
 `HARDWARE_PENDING`: VESC command-index configuration and routing (CAN1
 `Status.esc_index` 0/1/2 was passively reconfirmed on 2026-09-28;

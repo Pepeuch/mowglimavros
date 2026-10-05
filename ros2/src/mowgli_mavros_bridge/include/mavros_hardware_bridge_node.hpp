@@ -12,7 +12,7 @@
 
 #include <mavros_msgs/msg/manual_control.hpp>
 #include <mavros_msgs/msg/state.hpp>
-#include <mavros_msgs/msg/esc_telemetry.hpp>
+#include <mavros_esc_wheel_odometry/msg/esc_observation.hpp>
 #include <mavros_msgs/srv/command_bool.hpp>
 #include <mavros_msgs/srv/set_mode.hpp>
 #include <mowgli_interfaces/msg/gnss_status.hpp>
@@ -47,7 +47,7 @@ private:
   void on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg);
   void on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg);
   void on_power(const mowgli_interfaces::msg::Power::SharedPtr msg);
-  void on_esc_telemetry(const mavros_msgs::msg::ESCTelemetry::SharedPtr msg);
+  void on_esc_telemetry(const mavros_esc_wheel_odometry::msg::EscObservation::SharedPtr msg);
   void on_gnss_status(const mowgli_interfaces::msg::GnssStatus::SharedPtr msg);
   void on_wheel_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
 
@@ -102,6 +102,9 @@ private:
 
   ReadinessState readiness_{5.0};
   EscTelemetryTracker esc_tracker_{3.0};
+  int64_t right_esc_slot_{0}, left_esc_slot_{1}, blade_esc_slot_{2};
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr esc_mapping_callback_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr esc_mapping_apply_;
 
   uint8_t mower_esc_status_{0};
   float mower_esc_temperature_{0.0F};
@@ -126,7 +129,7 @@ private:
   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
   rclcpp::Subscription<mowgli_interfaces::msg::Power>::SharedPtr sub_power_;
-  rclcpp::Subscription<mavros_msgs::msg::ESCTelemetry>::SharedPtr sub_esc_telemetry_;
+  rclcpp::Subscription<mavros_esc_wheel_odometry::msg::EscObservation>::SharedPtr sub_esc_telemetry_;
   rclcpp::Subscription<mowgli_interfaces::msg::GnssStatus>::SharedPtr sub_gnss_status_;
   rclcpp::Subscription<nav_msgs::msg::Odometry>::SharedPtr sub_wheel_odom_;
 

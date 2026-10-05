@@ -1,151 +1,333 @@
 #include <array>
+#include <chrono>
+#include <cmath>
 #include <cstdint>
 #include <memory>
+#include <mutex>
 #include <string>
+#include <stdexcept>
 
 #include "mavros/mavros_uas.hpp"
 #include "mavros/plugin.hpp"
 #include "mavros/plugin_filter.hpp"
-#include "mavros_msgs/msg/state.hpp"
+#include "diagnostic_msgs/msg/diagnostic_array.hpp"
+#include "diagnostic_msgs/msg/diagnostic_status.hpp"
+#include "diagnostic_msgs/msg/key_value.hpp"
 #include "nav_msgs/msg/odometry.hpp"
-
-#include "mavros_esc_wheel_odometry/wheel_odometry_core.hpp"
+#include "mavros_esc_wheel_odometry/msg/esc_observation.hpp"
+#include "mavros_esc_wheel_odometry/observation_engine.hpp"
 
 namespace mavros_esc_wheel_odometry
 {
-
 class EscWheelOdometryPlugin : public mavros::plugin::Plugin
 {
 public:
   explicit EscWheelOdometryPlugin(mavros::plugin::UASPtr uas)
-  : Plugin(uas, "esc_wheel_odometry"),
-    core_(WheelGeometry{
-      static_cast<int>(node->declare_parameter<int>("left_esc_slot", -1)),
-      static_cast<int>(node->declare_parameter<int>("right_esc_slot", -1)),
+  : Plugin(uas, "esc_wheel_odometry")
+  {
+    ObservationConfig config;
+    config.geometry = WheelGeometry{
+      declare_index("left_esc_slot", -1, 63),
+      declare_index("right_esc_slot", -1, 63),
       node->declare_parameter<double>("left_wheel_radius_m", 0.0),
       node->declare_parameter<double>("right_wheel_radius_m", 0.0),
-      node->declare_parameter<double>("track_width_m", 0.0)})
-  {
-    left_rpm_instance_ = static_cast<int>(node->declare_parameter<int>("left_rpm_instance", -1));
-    right_rpm_instance_ = static_cast<int>(node->declare_parameter<int>("right_rpm_instance", -1));
-    expected_esc_telem_mav_offset_ =
-      static_cast<int>(node->declare_parameter<int>("expected_esc_telem_mav_offset", -1));
+      node->declare_parameter<double>("track_width_m", 0.0)};
+    left_rpm_instance_ = declare_index("left_rpm_instance", -1, 2);
+    right_rpm_instance_ = declare_index("right_rpm_instance", -1, 2);
+    const int offset = declare_index("expected_esc_telem_mav_offset", -1, 255);
+    config.legacy_enabled = offset == 0 && (left_rpm_instance_ == 1 || left_rpm_instance_ == 2) &&
+      (right_rpm_instance_ == 1 || right_rpm_instance_ == 2) &&
+      left_rpm_instance_ != right_rpm_instance_;
+    config.left_esc_rpm_to_wheel_ratio =
+      node->declare_parameter<double>("left_esc_rpm_to_wheel_ratio", 1.0);
+    config.right_esc_rpm_to_wheel_ratio =
+      node->declare_parameter<double>("right_esc_rpm_to_wheel_ratio", 1.0);
+    config.esc_component_id = declare_index("esc_component_id", -1, 255);
+    config.common_pair_max_skew_s = node->declare_parameter<double>("common_pair_max_skew_s", 0.25);
+    config.source = node->declare_parameter<std::string>("source", "auto");
+    config.left_wheel_index = declare_index("left_wheel_index", -1, 15);
+    config.wheel_distance_component_id = declare_index("wheel_distance_component_id", -1, 255);
+    config.right_wheel_index = declare_index("right_wheel_index", -1, 15);
+    const double timeout = node->declare_parameter<double>("observation_timeout_s", 3.0);
+    if (!std::isfinite(timeout) || timeout <= 0 || timeout > 3600) {
+      throw std::invalid_argument("observation_timeout_s must be finite and in (0, 3600]");
+    }
+    config.timeout_ns = static_cast<int64_t>(timeout * 1e9);
+    config.max_distance_speed_mps = node->declare_parameter<double>("max_distance_speed_mps", 10.0);
     frame_id_ = node->declare_parameter<std::string>("frame_id", "odom");
     child_frame_id_ = node->declare_parameter<std::string>("child_frame_id", "base_link");
     velocity_stddev_ = node->declare_parameter<double>("velocity_stddev_mps", 0.1);
-
-    if (!core_.valid() || (left_rpm_instance_ != 1 && left_rpm_instance_ != 2) ||
-      (right_rpm_instance_ != 1 && right_rpm_instance_ != 2) ||
-      left_rpm_instance_ == right_rpm_instance_ || expected_esc_telem_mav_offset_ != 0 ||
-      frame_id_.empty() || child_frame_id_.empty() || velocity_stddev_ < 0.0) {
-      RCLCPP_ERROR(
-        get_logger(),
-        "ESC wheel odometry disabled: configure distinct left/right ESC slots in [0, 11], "
-        "positive wheel radii/track width, RPM fields 1/2 assigned once each, nonempty frames, "
-        "nonnegative velocity_stddev_mps, and expected_esc_telem_mav_offset=0. "
-        "Verify ArduPilot ESC_TELEM_MAV_OFS=0 before enabling.");
-      return;
+    config_ = config; expected_offset_ = offset; connected_ = uas->is_connected();
+    engine_ = std::make_unique<ObservationEngine>(config);
+    engine_->connection(connected_);
+    esc_pub_ = node->create_publisher<msg::EscObservation>(
+      "/mavros/esc_wheel_odometry/esc_observation", rclcpp::SensorDataQoS().keep_last(64));
+    diagnostics_pub_ = node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics",
+        10);
+    if (engine_->wheel_configured() && !frame_id_.empty() && !child_frame_id_.empty() &&
+      std::isfinite(velocity_stddev_) && velocity_stddev_ >= 0 &&
+      std::isfinite(velocity_stddev_ * velocity_stddev_))
+    {
+      odom_pub_ = node->create_publisher<nav_msgs::msg::Odometry>("/wheel_odom", 10);
+    } else {
+      RCLCPP_WARN(get_logger(),
+          "Wheel odometry disabled until source mapping, geometry, frames and covariance are configured; ESC normalization remains active.");
     }
-
-    odom_pub_ = node->create_publisher<nav_msgs::msg::Odometry>("/wheel_odom", 10);
     enable_connection_cb();
-    RCLCPP_INFO(get_logger(), "ESC wheel odometry enabled; RPM #226 is gated by selected ESC telemetry counts.");
+    parameter_validation_ = node->add_on_set_parameters_callback(
+      [this](const std::vector<rclcpp::Parameter> & parameters) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        rcl_interfaces::msg::SetParametersResult result; result.successful = false;
+        pending_.reset();
+        try {
+          auto next = std::make_unique<Pending>(Pending{config_, frame_id_, child_frame_id_,
+            velocity_stddev_, left_rpm_instance_, right_rpm_instance_, expected_offset_, {}});
+          bool changed = false;
+          for (const auto & p : parameters) {changed = update_parameter(*next, p) || changed;}
+          if (changed) {
+            next->config.legacy_enabled = next->offset == 0 &&
+            (next->left_rpm == 1 || next->left_rpm == 2) &&
+            (next->right_rpm == 1 || next->right_rpm == 2) && next->left_rpm != next->right_rpm;
+            if (next->frame.empty() || next->child.empty() || !std::isfinite(next->stddev) ||
+            next->stddev < 0 ||
+            !std::isfinite(next->stddev * next->stddev))
+            {
+              throw std::invalid_argument("invalid odometry frames or covariance");
+            }
+            next->engine = std::make_unique<ObservationEngine>(next->config);
+            pending_ = std::move(next);
+          }
+          result.successful = true;
+        } catch (const std::exception & e) {result.reason = e.what();}
+        return result;
+      });
+    parameter_apply_ = node->add_post_set_parameters_callback(
+      [this](const std::vector<rclcpp::Parameter> &) {
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (!pending_) {return;}
+        config_ = pending_->config; frame_id_ = pending_->frame; child_frame_id_ = pending_->child;
+        velocity_stddev_ = pending_->stddev; left_rpm_instance_ = pending_->left_rpm;
+        right_rpm_instance_ = pending_->right_rpm; expected_offset_ = pending_->offset;
+        pending_->engine->retain_esc_observations(*engine_, node->now().nanoseconds());
+        engine_ = std::move(pending_->engine); pending_.reset();
+        if (engine_->wheel_configured()) {
+          if (!odom_pub_) {
+            odom_pub_ = node->create_publisher<nav_msgs::msg::Odometry>("/wheel_odom", 10);
+          }
+        } else {odom_pub_.reset();}
+      });
+    timer_ = node->create_wall_timer(std::chrono::milliseconds(500), [this]() {
+          std::lock_guard<std::mutex> lock(mutex_);
+          const auto now = node->now().nanoseconds();
+          engine_->poll(now); publish_esc(now); publish_diagnostics();
+    });
   }
-
   Subscriptions get_subscriptions() override
   {
-    return {
-      make_handler(&EscWheelOdometryPlugin::handle_rpm),
-      make_handler(&EscWheelOdometryPlugin::handle_esc_telemetry_1_to_4),
-      make_handler(&EscWheelOdometryPlugin::handle_esc_telemetry_5_to_8),
-      make_handler(&EscWheelOdometryPlugin::handle_esc_telemetry_9_to_12),
-    };
+    return {make_handler(&EscWheelOdometryPlugin::handle_rpm),
+      make_handler(&EscWheelOdometryPlugin::handle_legacy_1),
+      make_handler(&EscWheelOdometryPlugin::handle_legacy_5),
+      make_handler(&EscWheelOdometryPlugin::handle_legacy_9),
+      make_handler(&EscWheelOdometryPlugin::handle_status),
+      make_handler(&EscWheelOdometryPlugin::handle_info),
+      make_handler(&EscWheelOdometryPlugin::handle_distance)};
   }
 
 private:
-  template<typename EscTelemetryMessage>
-  void handle_esc_telemetry(const EscTelemetryMessage & telemetry, int group_offset)
+  struct Pending
   {
-    std::array<uint16_t, 4> counts{};
-    for (size_t index = 0; index < counts.size(); ++index) {
-      counts[index] = telemetry.count[index];
+    ObservationConfig config;
+    std::string frame, child;
+    double stddev;
+    int left_rpm, right_rpm, offset;
+    std::unique_ptr<ObservationEngine> engine;
+  };
+  static int checked_index(int64_t value, int maximum)
+  {
+    if (value < -1 || value > maximum) {
+      throw std::invalid_argument("index parameter out of range");
     }
-    core_.receive_esc_counts(group_offset, counts);
+    return static_cast<int>(value);
   }
-
-  void handle_rpm(
-    const mavlink::mavlink_message_t * /* message */,
-    mavlink::ardupilotmega::msg::RPM & rpm,
-    mavros::plugin::filter::SystemAndOk /* filter */)
+  int declare_index(const std::string & name, int value, int maximum)
+  {return checked_index(node->declare_parameter<int64_t>(name, value), maximum);}
+  static bool update_parameter(Pending & next, const rclcpp::Parameter & p)
   {
-    const double left_rpm = left_rpm_instance_ == 1 ? rpm.rpm1 : rpm.rpm2;
-    const double right_rpm = right_rpm_instance_ == 1 ? rpm.rpm1 : rpm.rpm2;
-    const auto observation = core_.receive_rpm(left_rpm, right_rpm, node->now().nanoseconds());
-    if (!observation || !odom_pub_) {
-      return;
+    const auto & name = p.get_name(); auto & g = next.config.geometry;
+    if (name == "esc_component_id") {
+      next.config.esc_component_id = checked_index(p.as_int(), 255);
+    } else if (name == "common_pair_max_skew_s") {
+      next.config.common_pair_max_skew_s = p.as_double();
+    } else if (name == "source") {
+      next.config.source = p.as_string();
+    } else if (name == "left_esc_slot") {
+      g.left_esc_slot = checked_index(p.as_int(), 63);
+    } else if (name == "right_esc_slot") {
+      g.right_esc_slot = checked_index(p.as_int(), 63);
+    } else if (name == "left_wheel_radius_m") {
+      g.left_radius_m = p.as_double();
+    } else if (name == "right_wheel_radius_m") {
+      g.right_radius_m = p.as_double();
+    } else if (name == "left_esc_rpm_to_wheel_ratio") {
+      next.config.left_esc_rpm_to_wheel_ratio = p.as_double();
+    } else if (name == "right_esc_rpm_to_wheel_ratio") {
+      next.config.right_esc_rpm_to_wheel_ratio = p.as_double();
+    } else if (name == "track_width_m") {
+      g.track_width_m = p.as_double();
+    } else if (name == "left_wheel_index") {
+      next.config.left_wheel_index = checked_index(p.as_int(), 15);
+    } else if (name == "right_wheel_index") {
+      next.config.right_wheel_index = checked_index(p.as_int(), 15);
+    } else if (name == "wheel_distance_component_id") {
+      next.config.wheel_distance_component_id = checked_index(p.as_int(), 255);
+    } else if (name == "left_rpm_instance") {
+      next.left_rpm = checked_index(p.as_int(), 2);
+    } else if (name == "right_rpm_instance") {
+      next.right_rpm = checked_index(p.as_int(), 2);
+    } else if (name == "expected_esc_telem_mav_offset") {
+      next.offset = checked_index(p.as_int(), 255);
+    } else if (name == "observation_timeout_s") {
+      const double value = p.as_double();
+      if (!std::isfinite(value) || value <= 0 || value > 3600) {
+        throw std::invalid_argument("invalid observation timeout");
+      }
+      next.config.timeout_ns = static_cast<int64_t>(value * 1e9);
+    } else if (name == "max_distance_speed_mps") {
+      next.config.max_distance_speed_mps = p.as_double();
+    } else if (name == "frame_id") {
+      next.frame = p.as_string();
+    } else if (name == "child_frame_id") {
+      next.child = p.as_string();
+    } else if (name == "velocity_stddev_mps") {next.stddev = p.as_double();} else {return false;}
+    return true;
+  }
+  static builtin_interfaces::msg::Time stamp(int64_t ns)
+  {
+    builtin_interfaces::msg::Time out;
+    if (ns > 0) {
+      out.sec = static_cast<int32_t>(ns / 1000000000LL); out.nanosec = ns % 1000000000LL;
     }
-
+    return out;
+  }
+  void publish_esc(int64_t now)
+  {
+    for (unsigned index = 0; index < 64; ++index) {
+      if (!engine_->touched(index)) {continue;}
+      const auto d = engine_->esc(index, now);
+      msg::EscObservation out;
+      out.header.stamp = stamp(d.stamp_ns); out.metadata_stamp = stamp(d.metadata_stamp_ns);
+      out.esc_index = index; out.source = static_cast<uint8_t>(d.source); out.valid = d.valid;
+      out.rpm = d.rpm; out.rpm_valid = d.rpm_valid; out.rpm_direction_valid = d.rpm_direction_valid;
+      out.voltage = d.voltage; out.voltage_valid = d.voltage_valid;
+      out.current = d.current; out.current_valid = d.current_valid;
+      out.temperature = d.temperature; out.temperature_valid = d.temperature_valid;
+      out.failure_flags = d.failure_flags; out.failure_flags_valid = d.failure_flags_valid;
+      out.error_count = d.error_count; out.error_count_valid = d.error_count_valid;
+      out.totalcurrent = d.totalcurrent; out.totalcurrent_valid = d.totalcurrent_valid;
+      out.count = d.count; out.count_valid = d.count_valid;
+      esc_pub_->publish(out);
+    }
+  }
+  void publish_diagnostics()
+  {
+    diagnostic_msgs::msg::DiagnosticArray out;
+    out.header.stamp = node->now();
+    diagnostic_msgs::msg::DiagnosticStatus status;
+    status.name = "mavros_esc_wheel_odometry/source";
+    status.level = engine_->active_source() == WheelSource::None ? status.STALE : status.OK;
+    status.message = source_name(engine_->active_source());
+    diagnostic_msgs::msg::KeyValue key;
+    key.key = "active_source"; key.value = status.message; status.values.push_back(key);
+    out.status.push_back(status); diagnostics_pub_->publish(out);
+  }
+  void publish_wheel(const std::optional<WheelObservation> & observation)
+  {
+    if (!observation || !odom_pub_) {return;}
     nav_msgs::msg::Odometry odom;
-    odom.header.stamp.sec = static_cast<int32_t>(observation->receipt_stamp_ns / 1000000000LL);
-    odom.header.stamp.nanosec =
-      static_cast<uint32_t>(observation->receipt_stamp_ns % 1000000000LL);
-    odom.header.frame_id = frame_id_;
-    odom.child_frame_id = child_frame_id_;
+    odom.header.stamp = stamp(observation->receipt_stamp_ns);
+    odom.header.frame_id = frame_id_; odom.child_frame_id = child_frame_id_;
     odom.twist.twist.linear.x = observation->linear_x_mps;
     odom.twist.twist.angular.z = observation->angular_z_rps;
     const double variance = velocity_stddev_ * velocity_stddev_;
-    odom.twist.covariance[0] = variance;
-    odom.twist.covariance[7] = variance;
-    odom.twist.covariance[35] = variance;
-    odom.pose.covariance[0] = 1.0e6;
-    odom.pose.covariance[7] = 1.0e6;
-    odom.pose.covariance[14] = 1.0e6;
-    odom.pose.covariance[21] = 1.0e6;
-    odom.pose.covariance[28] = 1.0e6;
-    odom.pose.covariance[35] = 1.0e6;
+    odom.twist.covariance[0] = odom.twist.covariance[7] = odom.twist.covariance[35] = variance;
+    for (unsigned index : {0U, 7U, 14U, 21U, 28U, 35U}) {odom.pose.covariance[index] = 1.0e6;}
     odom_pub_->publish(odom);
   }
-
-  void handle_esc_telemetry_1_to_4(
-    const mavlink::mavlink_message_t * /* message */,
-    mavlink::ardupilotmega::msg::ESC_TELEMETRY_1_TO_4 & telemetry,
-    mavros::plugin::filter::SystemAndOk /* filter */)
+  void handle_status(
+    const mavlink::mavlink_message_t * message, mavlink::common::msg::ESC_STATUS & m,
+    mavros::plugin::filter::SystemAndOk)
   {
-    handle_esc_telemetry(telemetry, 0);
+    std::lock_guard<std::mutex> lock(mutex_); const auto now = node->now().nanoseconds();
+    publish_wheel(engine_->common_status(CommonStatusPacket{m.index, m.time_usec, m.rpm, m.voltage,
+        m.current, message->compid}, now));
+    publish_esc(now);
   }
-
-  void handle_esc_telemetry_5_to_8(
-    const mavlink::mavlink_message_t * /* message */,
-    mavlink::ardupilotmega::msg::ESC_TELEMETRY_5_TO_8 & telemetry,
-    mavros::plugin::filter::SystemAndOk /* filter */)
+  void handle_info(
+    const mavlink::mavlink_message_t * message, mavlink::common::msg::ESC_INFO & m,
+    mavros::plugin::filter::SystemAndOk)
   {
-    handle_esc_telemetry(telemetry, 4);
+    std::lock_guard<std::mutex> lock(mutex_); const auto now = node->now().nanoseconds();
+    engine_->common_info(CommonInfoPacket{m.index, m.count, m.time_usec, m.temperature,
+        m.failure_flags, m.error_count, message->compid}, now);
+    publish_esc(now);
   }
-
-  void handle_esc_telemetry_9_to_12(
-    const mavlink::mavlink_message_t * /* message */,
-    mavlink::ardupilotmega::msg::ESC_TELEMETRY_9_TO_12 & telemetry,
-    mavros::plugin::filter::SystemAndOk /* filter */)
+  void handle_distance(
+    const mavlink::mavlink_message_t * message, mavlink::common::msg::WHEEL_DISTANCE & m,
+    mavros::plugin::filter::SystemAndOk)
   {
-    handle_esc_telemetry(telemetry, 8);
+    std::lock_guard<std::mutex> lock(mutex_);
+    publish_wheel(engine_->wheel_distance(DistancePacket{m.time_usec, m.count, m.distance,
+        message->compid}, node->now().nanoseconds()));
   }
-
-  void connection_cb(bool /* connected */) override
+  void handle_rpm(
+    const mavlink::mavlink_message_t *, mavlink::ardupilotmega::msg::RPM & m,
+    mavros::plugin::filter::SystemAndOk)
   {
-    core_.reset();
+    std::lock_guard<std::mutex> lock(mutex_);
+    publish_wheel(engine_->legacy_rpm(left_rpm_instance_ == 1 ? m.rpm1 : m.rpm2,
+      right_rpm_instance_ == 1 ? m.rpm1 : m.rpm2, node->now().nanoseconds()));
   }
-
-  WheelOdometryCore core_;
-  std::string frame_id_;
-  std::string child_frame_id_;
-  int left_rpm_instance_{-1};
-  int right_rpm_instance_{-1};
-  int expected_esc_telem_mav_offset_{-1};
+  template<typename T> void legacy_packet(const T & m, unsigned index)
+  {
+    std::lock_guard<std::mutex> lock(mutex_); const auto now = node->now().nanoseconds();
+    LegacyEscPacket packet; packet.index = index; packet.counts = m.count; packet.rpm = m.rpm;
+    for (unsigned i = 0; i < 4; ++i) {
+      packet.voltage[i] = m.voltage[i] / 100.0F; packet.current[i] = m.current[i] / 100.0F;
+      packet.temperature[i] = m.temperature[i];
+      packet.totalcurrent[i] = m.totalcurrent[i] / 1000.0F;
+    }
+    engine_->legacy_esc(packet, now); publish_esc(now);
+  }
+  void handle_legacy_1(
+    const mavlink::mavlink_message_t *, mavlink::ardupilotmega::msg::ESC_TELEMETRY_1_TO_4 & m,
+    mavros::plugin::filter::SystemAndOk) {legacy_packet(m, 0);}
+  void handle_legacy_5(
+    const mavlink::mavlink_message_t *, mavlink::ardupilotmega::msg::ESC_TELEMETRY_5_TO_8 & m,
+    mavros::plugin::filter::SystemAndOk) {legacy_packet(m, 4);}
+  void handle_legacy_9(
+    const mavlink::mavlink_message_t *, mavlink::ardupilotmega::msg::ESC_TELEMETRY_9_TO_12 & m,
+    mavros::plugin::filter::SystemAndOk) {legacy_packet(m, 8);}
+  void connection_cb(bool connected) override
+  {
+    std::lock_guard<std::mutex> lock(mutex_); connected_ = connected;
+    engine_->connection(connected);
+  }
+  ObservationConfig config_;
+  int expected_offset_{-1};
+  bool connected_{false};
+  std::unique_ptr<Pending> pending_;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_validation_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr parameter_apply_;
+  std::unique_ptr<ObservationEngine> engine_;
+  std::mutex mutex_;
+  std::string frame_id_, child_frame_id_;
+  int left_rpm_instance_{-1}, right_rpm_instance_{-1};
   double velocity_stddev_{0.1};
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+  rclcpp::Publisher<msg::EscObservation>::SharedPtr esc_pub_;
+  rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_;
+  rclcpp::TimerBase::SharedPtr timer_;
 };
-
 }  // namespace mavros_esc_wheel_odometry
-
 #include <mavros/mavros_plugin_register_macro.hpp>
 MAVROS_PLUGIN_REGISTER(mavros_esc_wheel_odometry::EscWheelOdometryPlugin)

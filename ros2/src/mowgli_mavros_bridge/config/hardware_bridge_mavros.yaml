@@ -19,6 +19,10 @@ hardware_bridge:
     # Dock power is informational and never blocks backend readiness.
     readiness_observation_timeout_s: 5.0
     esc_observation_timeout_s: 3.0
+    # Compatibility defaults only; roles can be atomically changed at runtime.
+    right_esc_slot: 0
+    left_esc_slot: 1
+    blade_esc_slot: 2
     gnss_required: true
     wheel_odometry_required: false
 

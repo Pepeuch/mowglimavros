@@ -11,6 +11,7 @@
   <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>rclcpp</depend>
+  <depend>rcl_interfaces</depend>
   <depend>geometry_msgs</depend>
   <depend>nav_msgs</depend>
   <depend>diagnostic_msgs</depend>
@@ -24,6 +25,7 @@
   <depend>libmavconn</depend>
   <depend>mavlink</depend>
   <depend>mavros_msgs</depend>
+  <depend>mavros_esc_wheel_odometry</depend>
 
   <exec_depend>ament_index_python</exec_depend>
   <exec_depend>launch</exec_depend>

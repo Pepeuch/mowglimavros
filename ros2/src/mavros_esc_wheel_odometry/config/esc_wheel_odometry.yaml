@@ -1,5 +1,19 @@
 /**/esc_wheel_odometry:
   ros__parameters:
+    # Wheel source selection only; ESC normalization is independent of geometry.
+    source: auto
+    observation_timeout_s: 3.0
+    common_pair_max_skew_s: 0.25
+    # One COMMON component owns all STATUS/INFO slots; -1 selects a live owner.
+    esc_component_id: -1
+    left_wheel_index: -1
+    right_wheel_index: -1
+    # -1 accepts one live encoder component of the target SYSID, including ESP32.
+    wheel_distance_component_id: -1
+    max_distance_speed_mps: 10.0
+    # COMMON motor RPM / gearing only. Legacy RPM226 is already wheel-scaled.
+    left_esc_rpm_to_wheel_ratio: 1.0
+    right_esc_rpm_to_wheel_ratio: 1.0
     # These must match ArduPilot ESC slots with ESC_TELEM_MAV_OFS=0. Leave
     # invalid until the physical VESC/AP configuration is verified.
     left_esc_slot: -1

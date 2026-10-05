@@ -41,7 +41,7 @@ The repository contains the sidecar-specific ROS packages:
 - `ros2/src/mowgli_mavros_bridge` — canonical Mowgli hardware bridge
 - `ros2/src/mowgli_ntrip_client` — RTCM/NTRIP support
 - `ros2/src/mavros_battery_observer` — MAVLink battery/power observation
-- `ros2/src/mavros_esc_wheel_odometry` — wheel-only odometry from ESC/RPM telemetry
+- `ros2/src/mavros_esc_wheel_odometry` — canonical ESC observations and wheel-only odometry
 - `ros2/src/mavros_gnss_adapter` — canonical GNSS adapter for Universal GNSS over MAVROS
 
 Runtime/container tooling includes `ros2/Dockerfile`, `ros2_entrypoint.sh`,
@@ -77,3 +77,8 @@ The [firmware provider layer](ros2/src/mowgli_mavros_bridge/README.md) owns prof
 metadata, MANUAL_CONTROL mapping, emergency policy and explicit command
 capabilities. ArduPilot/PX4 retain their current profiles and runtime behavior;
 ROS transport, telemetry, readiness, GNSS, power and ESC handling remain shared.
+
+The [ESC/wheel pipeline](ros2/src/mavros_esc_wheel_odometry/README.md) supports
+COMMON ESC_STATUS/ESC_INFO and WHEEL_DISTANCE alongside legacy signed RPM.
+Source selection, physical mappings and geometry are configured by parameters;
+COMMON ingestion does not imply physical firmware validation.

@@ -3,6 +3,6 @@
   <class name="esc_wheel_odometry"
          type="mavros::plugin::PluginFactoryTemplate&lt;mavros_esc_wheel_odometry::EscWheelOdometryPlugin&gt;"
          base_class_type="mavros::plugin::PluginFactory">
-    <description>Signed RPM #226 wheel odometry gated by per-ESC telemetry counters.</description>
+    <description>COMMON and legacy ESC normalization with selectable signed wheel odometry.</description>
   </class>
 </library>

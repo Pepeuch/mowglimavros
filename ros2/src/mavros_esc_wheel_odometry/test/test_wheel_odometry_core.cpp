@@ -4,11 +4,35 @@
 #include <gtest/gtest.h>
 
 #include "mavros_esc_wheel_odometry/wheel_odometry_core.hpp"
+#include "mavros_esc_wheel_odometry/legacy_wheel_adapter.hpp"
 
 namespace
 {
 using mavros_esc_wheel_odometry::WheelGeometry;
-using mavros_esc_wheel_odometry::WheelOdometryCore;
+// Same twenty legacy assertions, now testing the adapter + generic core pipeline.
+class WheelOdometryCore
+{
+public:
+  explicit WheelOdometryCore(WheelGeometry geometry)
+  : adapter_(geometry), core_(geometry) {}
+  bool valid() const {return adapter_.valid() && core_.valid();}
+  void reset() {adapter_.reset(); core_.reset();}
+  static bool counter_advanced(uint16_t a, uint16_t b)
+  {return mavros_esc_wheel_odometry::LegacyWheelAdapter::counter_advanced(a, b);}
+  void receive_esc_counts(int offset, const std::array<uint16_t, 4> & counts)
+  {adapter_.receive_esc_counts(offset, counts, 1);}
+  std::optional<mavros_esc_wheel_odometry::WheelObservation> receive_rpm(
+    double l, double r,
+    int64_t stamp)
+  {
+    auto motion = adapter_.receive_rpm(l, r, stamp);
+    return motion ? core_.receive_motion(*motion) : std::nullopt;
+  }
+
+private:
+  mavros_esc_wheel_odometry::LegacyWheelAdapter adapter_;
+  mavros_esc_wheel_odometry::WheelOdometryCore core_;
+};
 
 WheelOdometryCore make_core()
 {
@@ -20,14 +44,14 @@ void baseline(WheelOdometryCore & core, uint16_t left = 10, uint16_t right = 20)
   core.receive_esc_counts(0, {left, right, 0, 0});
 }
 
-TEST(WheelOdometryCore, InitialBaselineDoesNotPublish)
+TEST(ArduPilotLegacyEquivalence, InitialBaselineDoesNotPublish)
 {
   auto core = make_core();
   baseline(core);
   EXPECT_FALSE(core.receive_rpm(10.0, 10.0, 1));
 }
 
-TEST(WheelOdometryCore, InvalidGeometryCannotPublish)
+TEST(ArduPilotLegacyEquivalence, InvalidGeometryCannotPublish)
 {
   WheelOdometryCore core(WheelGeometry{0, 1, 0.0, 0.1, 0.5});
   EXPECT_FALSE(core.valid());
@@ -36,7 +60,7 @@ TEST(WheelOdometryCore, InvalidGeometryCannotPublish)
   EXPECT_FALSE(core.receive_rpm(10.0, 10.0, 1));
 }
 
-TEST(WheelOdometryCore, RequiresBothCountersThenOneSubsequentRpm)
+TEST(ArduPilotLegacyEquivalence, RequiresBothCountersThenOneSubsequentRpm)
 {
   auto core = make_core();
   baseline(core);
@@ -49,7 +73,7 @@ TEST(WheelOdometryCore, RequiresBothCountersThenOneSubsequentRpm)
   EXPECT_FALSE(core.receive_rpm(10.0, 10.0, 3));
 }
 
-TEST(WheelOdometryCore, RightCounterOnlyDoesNotPublish)
+TEST(ArduPilotLegacyEquivalence, RightCounterOnlyDoesNotPublish)
 {
   auto core = make_core();
   baseline(core);
@@ -57,7 +81,7 @@ TEST(WheelOdometryCore, RightCounterOnlyDoesNotPublish)
   EXPECT_FALSE(core.receive_rpm(10.0, 10.0, 1));
 }
 
-TEST(WheelOdometryCore, LeftCounterOnlyDoesNotPublish)
+TEST(ArduPilotLegacyEquivalence, LeftCounterOnlyDoesNotPublish)
 {
   auto core = make_core();
   baseline(core);
@@ -65,7 +89,7 @@ TEST(WheelOdometryCore, LeftCounterOnlyDoesNotPublish)
   EXPECT_FALSE(core.receive_rpm(10.0, 10.0, 1));
 }
 
-TEST(WheelOdometryCore, RpmBeforeCountersIsRejected)
+TEST(ArduPilotLegacyEquivalence, RpmBeforeCountersIsRejected)
 {
   auto core = make_core();
   baseline(core);
@@ -74,7 +98,7 @@ TEST(WheelOdometryCore, RpmBeforeCountersIsRejected)
   EXPECT_TRUE(core.receive_rpm(10.0, 10.0, 2));
 }
 
-TEST(WheelOdometryCore, IdenticalCountsAndFrozenZeroDoNotPublish)
+TEST(ArduPilotLegacyEquivalence, IdenticalCountsAndFrozenZeroDoNotPublish)
 {
   auto core = make_core();
   baseline(core);
@@ -82,7 +106,7 @@ TEST(WheelOdometryCore, IdenticalCountsAndFrozenZeroDoNotPublish)
   EXPECT_FALSE(core.receive_rpm(0.0, 0.0, 1));
 }
 
-TEST(WheelOdometryCore, CounterWrapAndRealZeroAreFresh)
+TEST(ArduPilotLegacyEquivalence, CounterWrapAndRealZeroAreFresh)
 {
   auto core = make_core();
   baseline(core, 65535, 65535);
@@ -93,14 +117,14 @@ TEST(WheelOdometryCore, CounterWrapAndRealZeroAreFresh)
   EXPECT_DOUBLE_EQ(observation->angular_z_rps, 0.0);
 }
 
-TEST(WheelOdometryCore, CounterProgressionIsModuloUint16)
+TEST(ArduPilotLegacyEquivalence, CounterProgressionIsModuloUint16)
 {
   EXPECT_TRUE(WheelOdometryCore::counter_advanced(65535, 0));
   EXPECT_TRUE(WheelOdometryCore::counter_advanced(10, 9));
   EXPECT_FALSE(WheelOdometryCore::counter_advanced(10, 10));
 }
 
-TEST(WheelOdometryCore, RepeatedGenuineRpmValuesRemainFresh)
+TEST(ArduPilotLegacyEquivalence, RepeatedGenuineRpmValuesRemainFresh)
 {
   auto core = make_core();
   baseline(core);
@@ -110,7 +134,7 @@ TEST(WheelOdometryCore, RepeatedGenuineRpmValuesRemainFresh)
   EXPECT_TRUE(core.receive_rpm(20.0, 20.0, 2));
 }
 
-TEST(WheelOdometryCore, FrozenCountersAfterObservationDoNotRepublish)
+TEST(ArduPilotLegacyEquivalence, FrozenCountersAfterObservationDoNotRepublish)
 {
   auto core = make_core();
   baseline(core);
@@ -119,7 +143,7 @@ TEST(WheelOdometryCore, FrozenCountersAfterObservationDoNotRepublish)
   EXPECT_FALSE(core.receive_rpm(0.0, 0.0, 2));
 }
 
-TEST(WheelOdometryCore, SignedDifferentialKinematics)
+TEST(ArduPilotLegacyEquivalence, SignedDifferentialKinematics)
 {
   auto core = make_core();
   baseline(core);
@@ -141,7 +165,7 @@ TEST(WheelOdometryCore, SignedDifferentialKinematics)
   EXPECT_NEAR(rotation->angular_z_rps, 0.8 * M_PI, 1e-12);
 }
 
-TEST(WheelOdometryCore, UnequalRpmProducesCurvedMotion)
+TEST(ArduPilotLegacyEquivalence, UnequalRpmProducesCurvedMotion)
 {
   auto core = make_core();
   baseline(core);
@@ -152,7 +176,7 @@ TEST(WheelOdometryCore, UnequalRpmProducesCurvedMotion)
   EXPECT_GT(curved->angular_z_rps, 0.0);
 }
 
-TEST(WheelOdometryCore, EqualNegativeRpmProducesReverse)
+TEST(ArduPilotLegacyEquivalence, EqualNegativeRpmProducesReverse)
 {
   auto core = make_core();
   baseline(core);
@@ -163,7 +187,7 @@ TEST(WheelOdometryCore, EqualNegativeRpmProducesReverse)
   EXPECT_NEAR(observation->angular_z_rps, 0.0, 1e-12);
 }
 
-TEST(WheelOdometryCore, OppositeSignedRpmRotatesInPlace)
+TEST(ArduPilotLegacyEquivalence, OppositeSignedRpmRotatesInPlace)
 {
   auto core = make_core();
   baseline(core);
@@ -174,7 +198,7 @@ TEST(WheelOdometryCore, OppositeSignedRpmRotatesInPlace)
   EXPECT_GT(observation->angular_z_rps, 0.0);
 }
 
-TEST(WheelOdometryCore, PhysicalRadiusIsAppliedPerWheel)
+TEST(ArduPilotLegacyEquivalence, PhysicalRadiusIsAppliedPerWheel)
 {
   WheelOdometryCore core(WheelGeometry{0, 1, 0.1, 0.2, 0.5});
   baseline(core);
@@ -184,7 +208,7 @@ TEST(WheelOdometryCore, PhysicalRadiusIsAppliedPerWheel)
   EXPECT_NEAR(observation->linear_x_mps, 0.3 * M_PI, 1e-12);
 }
 
-TEST(WheelOdometryCore, TrackWidthScalesAngularVelocity)
+TEST(ArduPilotLegacyEquivalence, TrackWidthScalesAngularVelocity)
 {
   WheelOdometryCore core(WheelGeometry{0, 1, 0.1, 0.1, 1.0});
   baseline(core);
@@ -194,7 +218,7 @@ TEST(WheelOdometryCore, TrackWidthScalesAngularVelocity)
   EXPECT_NEAR(observation->angular_z_rps, 0.4 * M_PI, 1e-12);
 }
 
-TEST(WheelOdometryCore, ThirdEscIsIgnoredAndResetRequiresNewBaseline)
+TEST(ArduPilotLegacyEquivalence, ThirdEscIsIgnoredAndResetRequiresNewBaseline)
 {
   auto core = make_core();
   baseline(core);
@@ -207,7 +231,7 @@ TEST(WheelOdometryCore, ThirdEscIsIgnoredAndResetRequiresNewBaseline)
   EXPECT_TRUE(core.receive_rpm(10.0, 10.0, 3));
 }
 
-TEST(WheelOdometryCore, DelayedPreResetRpmCannotPublish)
+TEST(ArduPilotLegacyEquivalence, DelayedPreResetRpmCannotPublish)
 {
   auto core = make_core();
   baseline(core);
@@ -216,7 +240,7 @@ TEST(WheelOdometryCore, DelayedPreResetRpmCannotPublish)
   EXPECT_FALSE(core.receive_rpm(10.0, 10.0, 1));
 }
 
-TEST(WheelOdometryCore, GroupOffsetsMapExactSlots)
+TEST(ArduPilotLegacyEquivalence, GroupOffsetsMapExactSlots)
 {
   WheelOdometryCore core(WheelGeometry{4, 8, 0.1, 0.1, 0.5});
   core.receive_esc_counts(4, {10, 0, 0, 0});

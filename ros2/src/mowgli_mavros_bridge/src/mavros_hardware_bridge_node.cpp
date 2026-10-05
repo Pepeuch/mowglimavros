@@ -39,6 +39,44 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   readiness_ = ReadinessState(readiness_timeout_s, gnss_required_, wheel_odometry_required_);
   esc_observation_timeout_s_ = declare_parameter<double>("esc_observation_timeout_s", 3.0);
   esc_tracker_ = EscTelemetryTracker(esc_observation_timeout_s_);
+  right_esc_slot_ = declare_parameter<int64_t>("right_esc_slot", 0);
+  left_esc_slot_ = declare_parameter<int64_t>("left_esc_slot", 1);
+  blade_esc_slot_ = declare_parameter<int64_t>("blade_esc_slot", 2);
+  auto roles_valid = [](int64_t right, int64_t left, int64_t blade) {
+    const int64_t roles[] = {right, left, blade};
+    for (int64_t role : roles) {if (role < -1 || role >= 64) {return false;}}
+    return (right < 0 || left < 0 || right != left) &&
+      (right < 0 || blade < 0 || right != blade) && (left < 0 || blade < 0 || left != blade);
+  };
+  if (!roles_valid(right_esc_slot_, left_esc_slot_, blade_esc_slot_)) {
+    throw std::invalid_argument("ESC role mappings must be distinct indexes in [0,63], or -1 disabled");
+  }
+  esc_mapping_callback_ = add_on_set_parameters_callback(
+    [this, roles_valid](const std::vector<rclcpp::Parameter> & parameters) {
+      std::lock_guard<std::mutex> lock(mutex_);
+      int64_t right = right_esc_slot_, left = left_esc_slot_, blade = blade_esc_slot_;
+      rcl_interfaces::msg::SetParametersResult result; result.successful = false;
+      try {
+        for (const auto & parameter : parameters) {
+          if (parameter.get_name() == "right_esc_slot") {right = parameter.as_int();}
+          if (parameter.get_name() == "left_esc_slot") {left = parameter.as_int();}
+          if (parameter.get_name() == "blade_esc_slot") {blade = parameter.as_int();}
+        }
+        if (!roles_valid(right, left, blade)) {result.reason = "invalid or overlapping ESC role mapping"; return result;}
+        result.successful = true;
+      } catch (const std::exception & error) {result.reason = error.what();}
+      return result;
+    });
+  esc_mapping_apply_ = add_post_set_parameters_callback(
+    [this](const std::vector<rclcpp::Parameter> & parameters) {
+      std::lock_guard<std::mutex> lock(mutex_); bool changed = false;
+      for (const auto & p : parameters) {
+        if (p.get_name() == "right_esc_slot") {right_esc_slot_ = p.as_int(); changed = true;}
+        if (p.get_name() == "left_esc_slot") {left_esc_slot_ = p.as_int(); changed = true;}
+        if (p.get_name() == "blade_esc_slot") {blade_esc_slot_ = p.as_int(); changed = true;}
+      }
+      if (changed) {esc_tracker_.reset();}
+    });
   const auto emergency_defaults = firmware_provider_->default_emergency_policy();
   emergency_mode_ = declare_parameter<std::string>("emergency_mode", emergency_defaults.mode);
   emergency_disarm_ = declare_parameter<bool>("emergency_disarm", emergency_defaults.disarm);
@@ -105,8 +143,8 @@ void MavrosHardwareBridgeNode::create_subscriptions()
   sub_power_ = create_subscription<mowgli_interfaces::msg::Power>(
       "/hardware_bridge/power", sensor_qos,
       std::bind(&MavrosHardwareBridgeNode::on_power, this, std::placeholders::_1));
-  sub_esc_telemetry_ = create_subscription<mavros_msgs::msg::ESCTelemetry>(
-      "/mavros/esc_telemetry/telemetry", sensor_qos,
+  sub_esc_telemetry_ = create_subscription<mavros_esc_wheel_odometry::msg::EscObservation>(
+      "/mavros/esc_wheel_odometry/esc_observation", rclcpp::SensorDataQoS().keep_last(64),
       std::bind(&MavrosHardwareBridgeNode::on_esc_telemetry, this, std::placeholders::_1));
   sub_gnss_status_ = create_subscription<mowgli_interfaces::msg::GnssStatus>(
       "/gps/status", sensor_qos,
@@ -219,22 +257,11 @@ void MavrosHardwareBridgeNode::on_power(
 }
 
 void MavrosHardwareBridgeNode::on_esc_telemetry(
-    const mavros_msgs::msg::ESCTelemetry::SharedPtr msg)
+    const mavros_esc_wheel_odometry::msg::EscObservation::SharedPtr msg)
 {
   const auto receipt_ns = now().nanoseconds();
   std::lock_guard<std::mutex> lock(mutex_);
-  if (!mavros_state_.connected)
-  {
-    return;
-  }
-  for (size_t index = 0; index < std::min<size_t>(3, msg->esc_telemetry.size()); ++index)
-  {
-    const auto& item = msg->esc_telemetry[index];
-    esc_tracker_.observe(index,
-                         EscSample{item.rpm, item.voltage, item.current,
-                                   item.totalcurrent, item.temperature, item.count},
-                         receipt_ns);
-  }
+  if (mavros_state_.connected) {esc_tracker_.observe(*msg, receipt_ns);}
 }
 
 void MavrosHardwareBridgeNode::on_gnss_status(const mowgli_interfaces::msg::GnssStatus::SharedPtr msg)
@@ -365,22 +392,20 @@ void MavrosHardwareBridgeNode::publish_status()
     // ArduPilot armed state is not a mower-controller health report.
     msg.mower_status = mowgli_interfaces::msg::Status::MOWER_STATUS_INITIALIZING;
 
-    const auto mower = esc_tracker_.project(2, now().nanoseconds());
-    const auto blade = blade_telemetry_from_esc2(mower);
+    const auto mower = esc_tracker_.project(static_cast<unsigned>(blade_esc_slot_), now().nanoseconds());
+    const auto blade = blade_telemetry_from_esc(mower);
     msg.mower_esc_status = blade.status;
+    msg.mower_esc_temperature = blade.temperature;
     if (blade.available)
     {
-      msg.mower_esc_temperature = blade.temperature;
       msg.mower_esc_current = blade.current;
       msg.mower_motor_rpm = blade.rpm;
       msg.blade_status_stamp.sec = static_cast<int32_t>(blade.stamp_ns / 1000000000LL);
       msg.blade_status_stamp.nanosec =
           static_cast<uint32_t>(blade.stamp_ns % 1000000000LL);
     }
-    // ESC2 is the blade controller. ESC0/right and ESC1/left stay diagnostics-only
-    // here; their unsigned ESC_TELEMETRY RPM must never be used for wheel direction
-    // or odometry. Motor winding temperature and hardware E-stop are not available
-    // through ESC_TELEMETRY, so those fields remain unset.
+    // Configured blade role only. Wheel roles remain diagnostics-only here;
+    // motor winding temperature and hardware E-stop remain unavailable.
     msg.esc_power = blade.available;
   }
 
@@ -411,6 +436,7 @@ void MavrosHardwareBridgeNode::publish_readiness()
   mowgli_interfaces::msg::Power power{};
   bool power_fresh = false;
   std::array<EscState, 3> esc{};
+  std::array<int64_t, 3> esc_slots{};
   mavros_msgs::msg::State fcu{};
   {
     std::lock_guard<std::mutex> lock(mutex_);
@@ -418,9 +444,10 @@ void MavrosHardwareBridgeNode::publish_readiness()
     power = last_power_;
     power_fresh = last_power_receipt_ns_ > 0 && now_ns >= last_power_receipt_ns_ &&
       now_ns - last_power_receipt_ns_ <= static_cast<int64_t>(battery_observation_timeout_s_ * 1e9);
+    esc_slots = {right_esc_slot_, left_esc_slot_, blade_esc_slot_};
     for (unsigned i = 0; i < esc.size(); ++i)
     {
-      esc[i] = esc_tracker_.project(i, now_ns);
+      esc[i] = esc_tracker_.project(static_cast<unsigned>(esc_slots[i]), now_ns);
     }
     fcu = mavros_state_;
   }
@@ -481,19 +508,29 @@ void MavrosHardwareBridgeNode::publish_readiness()
     status.name = std::string("mowgli_mavros_bridge/vesc_") + kEscNames[i];
     status.level = esc[i].online ? diagnostic_msgs::msg::DiagnosticStatus::OK :
         diagnostic_msgs::msg::DiagnosticStatus::STALE;
-    status.message = esc[i].online ? "online" : (esc[i].stale ? "stale" : "absent");
-    add_value(status, "esc_index", std::to_string(i));
+    const bool failure = esc[i].sample.failure_flags_valid && esc[i].sample.failure_flags != 0;
+    if (esc[i].online && failure) {status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;}
+    status.message = esc[i].online ? (failure ? "esc_failure_flags" : "online") : (esc[i].stale ? "stale" : "absent");
+    add_value(status, "esc_index", std::to_string(esc_slots[i]));
+    add_value(status, "source", std::to_string(esc[i].sample.source));
     add_value(status, "online", esc[i].online ? "true" : "false");
     add_value(status, "stale", esc[i].stale ? "true" : "false");
     add_value(status, "age_ms", std::to_string(esc[i].age_ms));
     if (esc[i].observed)
     {
-      add_value(status, "rpm_abs", std::to_string(std::abs(esc[i].sample.rpm)));
-      add_value(status, "voltage_v", format_value(esc[i].sample.voltage));
-      add_value(status, "current_a", format_value(esc[i].sample.current));
-      add_value(status, "totalcurrent_ah", format_value(esc[i].sample.totalcurrent));
-      add_value(status, "temperature_c", format_value(esc[i].sample.temperature));
-      add_value(status, "count", std::to_string(esc[i].sample.count));
+      add_value(status, "rpm_abs", esc[i].sample.rpm_valid ? std::to_string(
+        std::abs(static_cast<int64_t>(esc[i].sample.rpm))) : "unavailable");
+      add_value(status, "voltage_v", esc[i].sample.voltage_valid ? format_value(esc[i].sample.voltage) : "unavailable");
+      add_value(status, "current_a", esc[i].sample.current_valid ? format_value(esc[i].sample.current) : "unavailable");
+      add_value(status, "totalcurrent_ah", esc[i].sample.totalcurrent_valid ? format_value(esc[i].sample.totalcurrent) : "unavailable");
+      add_value(status, "temperature_c", esc[i].sample.temperature_valid ? format_value(esc[i].sample.temperature) : "unavailable");
+      add_value(status, "count", esc[i].sample.count_valid ? std::to_string(esc[i].sample.count) : "unavailable");
+      add_value(status, "rpm_valid", esc[i].sample.rpm_valid ? "true" : "false");
+      add_value(status, "temperature_valid", esc[i].sample.temperature_valid ? "true" : "false");
+      add_value(status, "failure_flags_valid", esc[i].sample.failure_flags_valid ? "true" : "false");
+      add_value(status, "failure_flags", esc[i].sample.failure_flags_valid ? std::to_string(esc[i].sample.failure_flags) : "unavailable");
+      add_value(status, "error_count_valid", esc[i].sample.error_count_valid ? "true" : "false");
+      add_value(status, "error_count", esc[i].sample.error_count_valid ? std::to_string(esc[i].sample.error_count) : "unavailable");
     }
     output.status.push_back(std::move(status));
   }

@@ -44,3 +44,20 @@ and capabilities, and real-bridge tests using mock MAVROS services in isolated
 ROS domains. Those tests use no FCU or serial transport. The earlier
 [Rock bootstrap evidence](../../../.agent/shared/checkpoints/retained/MM-FIRMWARE-ROCK5B-20261005.md)
 refers to the preceding build; it is not new physical validation of this layer.
+
+ESC acquisition is normalized exclusively by the external
+[ESC/wheel plugin](../mavros_esc_wheel_odometry/README.md). The bridge subscribes
+to its internal `EscObservation` topic; it no longer interprets legacy MAVLink
+telemetry counters or wire formats. Role parameters retain `right_esc_slot=0`,
+`left_esc_slot=1`, `blade_esc_slot=2` defaults and permit other distinct slots,
+including atomic runtime updates. Wheel geometry is provided to the plugin.
+These are installation inputs, not firmware-provider constants. Public blade
+RPM/current freshness remains valid when temperature is unknown; public Status
+uses NaN for that temperature while internal validity remains explicit.
+
+The plugin enforces a single COMMON component owner acquired/renewed by STATUS,
+with INFO only enriching that owner, and a separate encoder owner. Pre-STATUS INFO
+is a metadata candidate and never blocks STATUS from another component. Source clock resets preserve independent observations;
+wheel COMMON pairing uses the dedicated 0.25-second skew default. See the plugin
+README for `esc_component_id`, `common_pair_max_skew_s` and dynamic validation.
+Cross-node mapping/geometry coherence remains the installation owner's responsibility.
