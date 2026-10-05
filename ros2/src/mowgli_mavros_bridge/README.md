@@ -50,7 +50,9 @@ ESC acquisition is normalized exclusively by the external
 to its internal `EscObservation` topic; it no longer interprets legacy MAVLink
 telemetry counters or wire formats. Role parameters retain `right_esc_slot=0`,
 `left_esc_slot=1`, `blade_esc_slot=2` defaults and permit other distinct slots,
-including atomic runtime updates. Wheel geometry is provided to the plugin.
+including atomic runtime updates. Raw motor RPM accumulation and ticks_per_meter calibration belong to the plugin.
+No wheel radius or motor-to-wheel gear ratio is assumed. Track width remains an
+uncalibrated installation input.
 These are installation inputs, not firmware-provider constants. Public blade
 RPM/current freshness remains valid when temperature is unknown; public Status
 uses NaN for that temperature while internal validity remains explicit.
@@ -60,4 +62,5 @@ with INFO only enriching that owner, and a separate encoder owner. Pre-STATUS IN
 is a metadata candidate and never blocks STATUS from another component. Source clock resets preserve independent observations;
 wheel COMMON pairing uses the dedicated 0.25-second skew default. See the plugin
 README for `esc_component_id`, `common_pair_max_skew_s` and dynamic validation.
-Cross-node mapping/geometry coherence remains the installation owner's responsibility.
+Mowgli wheel PID/feed-forward is not used by the MAVROS command path.
+Cross-node mapping/calibration coherence remains the installation owner's responsibility.

@@ -11,9 +11,8 @@ struct WheelGeometry
 {
   int left_esc_slot{-1};
   int right_esc_slot{-1};
-  double left_radius_m{0.0};
-  double right_radius_m{0.0};
   double track_width_m{0.0};
+  double ticks_per_meter{0.0};
 };
 
 struct WheelMotionObservation
@@ -48,6 +47,4 @@ private:
   int64_t last_sample_ns_{0}, last_receipt_ns_{0};
 };
 
-// Shared unit conversion, not a second odometry equation.
-double rpm_to_mps(double rpm, double radius_m);
 }  // namespace mavros_esc_wheel_odometry

@@ -33,7 +33,7 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 
 add_library(wheel_odometry_core STATIC
-  src/wheel_odometry_core.cpp src/legacy_wheel_adapter.cpp src/observation_engine.cpp)
+  src/wheel_odometry_core.cpp src/motor_tick_integrator.cpp src/legacy_wheel_adapter.cpp src/observation_engine.cpp)
 set_target_properties(wheel_odometry_core PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(wheel_odometry_core PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -77,6 +77,8 @@ install(FILES mavros_plugins.xml DESTINATION share/${PROJECT_NAME})
 install(DIRECTORY config DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
+  ament_add_gtest(test_motor_tick_integrator test/test_motor_tick_integrator.cpp)
+  target_link_libraries(test_motor_tick_integrator wheel_odometry_core)
   ament_add_gtest(test_observation_engine test/test_observation_engine.cpp)
   target_link_libraries(test_observation_engine wheel_odometry_core)
   ament_add_gtest(test_wheel_odometry_core test/test_wheel_odometry_core.cpp)

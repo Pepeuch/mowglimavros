@@ -3,6 +3,9 @@
 #include <cmath>
 #include <cstdint>
 #include <memory>
+#include <iomanip>
+#include <limits>
+#include <sstream>
 #include <mutex>
 #include <string>
 #include <stdexcept>
@@ -27,21 +30,16 @@ public:
   {
     ObservationConfig config;
     config.geometry = WheelGeometry{
-      declare_index("left_esc_slot", -1, 63),
-      declare_index("right_esc_slot", -1, 63),
-      node->declare_parameter<double>("left_wheel_radius_m", 0.0),
-      node->declare_parameter<double>("right_wheel_radius_m", 0.0),
-      node->declare_parameter<double>("track_width_m", 0.0)};
-    left_rpm_instance_ = declare_index("left_rpm_instance", -1, 2);
-    right_rpm_instance_ = declare_index("right_rpm_instance", -1, 2);
-    const int offset = declare_index("expected_esc_telem_mav_offset", -1, 255);
+      declare_index("left_esc_slot", 1, 63),
+      declare_index("right_esc_slot", 0, 63),
+      node->declare_parameter<double>("track_width_m", 0.0),
+      node->declare_parameter<double>("ticks_per_meter", 0.0)};
+    left_rpm_instance_ = declare_index("left_rpm_instance", 2, 2);
+    right_rpm_instance_ = declare_index("right_rpm_instance", 1, 2);
+    const int offset = declare_index("expected_esc_telem_mav_offset", 0, 255);
     config.legacy_enabled = offset == 0 && (left_rpm_instance_ == 1 || left_rpm_instance_ == 2) &&
       (right_rpm_instance_ == 1 || right_rpm_instance_ == 2) &&
       left_rpm_instance_ != right_rpm_instance_;
-    config.left_esc_rpm_to_wheel_ratio =
-      node->declare_parameter<double>("left_esc_rpm_to_wheel_ratio", 1.0);
-    config.right_esc_rpm_to_wheel_ratio =
-      node->declare_parameter<double>("right_esc_rpm_to_wheel_ratio", 1.0);
     config.esc_component_id = declare_index("esc_component_id", -1, 255);
     config.common_pair_max_skew_s = node->declare_parameter<double>("common_pair_max_skew_s", 0.25);
     config.source = node->declare_parameter<std::string>("source", "auto");
@@ -105,10 +103,13 @@ public:
       [this](const std::vector<rclcpp::Parameter> &) {
         std::lock_guard<std::mutex> lock(mutex_);
         if (!pending_) {return;}
+        const bool same_legacy_mapping = left_rpm_instance_ == pending_->left_rpm &&
+        right_rpm_instance_ == pending_->right_rpm && expected_offset_ == pending_->offset;
         config_ = pending_->config; frame_id_ = pending_->frame; child_frame_id_ = pending_->child;
         velocity_stddev_ = pending_->stddev; left_rpm_instance_ = pending_->left_rpm;
         right_rpm_instance_ = pending_->right_rpm; expected_offset_ = pending_->offset;
-        pending_->engine->retain_esc_observations(*engine_, node->now().nanoseconds());
+        pending_->engine->retain_esc_observations(*engine_, node->now().nanoseconds(),
+          same_legacy_mapping);
         engine_ = std::move(pending_->engine); pending_.reset();
         if (engine_->wheel_configured()) {
           if (!odom_pub_) {
@@ -164,14 +165,8 @@ private:
       g.left_esc_slot = checked_index(p.as_int(), 63);
     } else if (name == "right_esc_slot") {
       g.right_esc_slot = checked_index(p.as_int(), 63);
-    } else if (name == "left_wheel_radius_m") {
-      g.left_radius_m = p.as_double();
-    } else if (name == "right_wheel_radius_m") {
-      g.right_radius_m = p.as_double();
-    } else if (name == "left_esc_rpm_to_wheel_ratio") {
-      next.config.left_esc_rpm_to_wheel_ratio = p.as_double();
-    } else if (name == "right_esc_rpm_to_wheel_ratio") {
-      next.config.right_esc_rpm_to_wheel_ratio = p.as_double();
+    } else if (name == "ticks_per_meter") {
+      g.ticks_per_meter = p.as_double();
     } else if (name == "track_width_m") {
       g.track_width_m = p.as_double();
     } else if (name == "left_wheel_index") {
@@ -228,6 +223,12 @@ private:
       esc_pub_->publish(out);
     }
   }
+  static std::string precise(double value)
+  {
+    std::ostringstream out;
+    out << std::setprecision(std::numeric_limits<double>::max_digits10) << value;
+    return out.str();
+  }
   void publish_diagnostics()
   {
     diagnostic_msgs::msg::DiagnosticArray out;
@@ -238,6 +239,39 @@ private:
     status.message = source_name(engine_->active_source());
     diagnostic_msgs::msg::KeyValue key;
     key.key = "active_source"; key.value = status.message; status.values.push_back(key);
+    auto add = [&status](const std::string & name, const std::string & value) {
+        diagnostic_msgs::msg::KeyValue item; item.key = name; item.value = value;
+        status.values.push_back(item);
+      };
+    add("ticks_unit", "motor_revolution");
+    add("ticks_per_meter", precise(config_.geometry.ticks_per_meter));
+    add("rpm_metric_calibrated", config_.geometry.ticks_per_meter > 0 ? "true" : "false");
+    const auto now = node->now().nanoseconds();
+    for (auto source : {WheelSource::EscStatus, WheelSource::ArduPilotLegacy}) {
+      const auto ticks = engine_->motor_ticks(source, now);
+      const std::string prefix = std::string(source_name(source)) + "/";
+      add(prefix + "epoch", std::to_string(ticks.epoch));
+      add(prefix + "left_segment", std::to_string(ticks.left_segment));
+      add(prefix + "right_segment", std::to_string(ticks.right_segment));
+      add(prefix + "left_raw_ticks", precise(ticks.left_ticks));
+      add(prefix + "right_raw_ticks", precise(ticks.right_ticks));
+      add(prefix + "left_valid", ticks.left_valid ? "true" : "false");
+      add(prefix + "right_valid", ticks.right_valid ? "true" : "false");
+      add(prefix + "left_sample_stamp_ns", std::to_string(ticks.left_sample_ns));
+      add(prefix + "right_sample_stamp_ns", std::to_string(ticks.right_sample_ns));
+      add(prefix + "left_receipt_stamp_ns", std::to_string(ticks.left_receipt_ns));
+      add(prefix + "right_receipt_stamp_ns", std::to_string(ticks.right_receipt_ns));
+      if (config_.geometry.ticks_per_meter > 0) {
+        const double left = ticks.left_ticks / config_.geometry.ticks_per_meter;
+        const double right = ticks.right_ticks / config_.geometry.ticks_per_meter;
+        add(prefix + "left_distance_valid",
+            ticks.left_valid && std::isfinite(left) ? "true" : "false");
+        add(prefix + "right_distance_valid",
+            ticks.right_valid && std::isfinite(right) ? "true" : "false");
+        if (std::isfinite(left)) {add(prefix + "left_distance_m", precise(left));}
+        if (std::isfinite(right)) {add(prefix + "right_distance_m", precise(right));}
+      }
+    }
     out.status.push_back(status); diagnostics_pub_->publish(out);
   }
   void publish_wheel(const std::optional<WheelObservation> & observation)

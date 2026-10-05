@@ -11,9 +11,7 @@ bool LegacyWheelAdapter::valid() const
   return geometry_.left_esc_slot >= 0 && geometry_.left_esc_slot < 12 &&
          geometry_.right_esc_slot >= 0 && geometry_.right_esc_slot < 12 &&
          geometry_.left_esc_slot != geometry_.right_esc_slot &&
-         std::isfinite(geometry_.left_radius_m) && geometry_.left_radius_m > 0 &&
-         std::isfinite(geometry_.right_radius_m) && geometry_.right_radius_m > 0 &&
-         WheelOdometryCore(geometry_).valid() && timeout_ns_ > 0;
+         timeout_ns_ > 0;
 }
 void LegacyWheelAdapter::reset() {counts_ = {}; advanced_ = {}; stamps_ = {};}
 void LegacyWheelAdapter::receive_esc_counts(
@@ -33,7 +31,7 @@ void LegacyWheelAdapter::receive_esc_counts(
     }
   }
 }
-std::optional<WheelMotionObservation> LegacyWheelAdapter::receive_rpm(
+std::optional<MotorRpmObservation> LegacyWheelAdapter::receive_rpm(
   double left, double right, int64_t receipt_ns)
 {
   if (!valid() || !advanced_[0] || !advanced_[1] || receipt_ns <= 0 ||
@@ -44,8 +42,6 @@ std::optional<WheelMotionObservation> LegacyWheelAdapter::receive_rpm(
     }
   }
   advanced_ = {};
-  return WheelMotionObservation{rpm_to_mps(left, geometry_.left_radius_m),
-    rpm_to_mps(right, geometry_.right_radius_m), receipt_ns, receipt_ns,
-    WheelSource::ArduPilotLegacy, true};
+  return MotorRpmObservation{left, right, receipt_ns, receipt_ns};
 }
 }  // namespace mavros_esc_wheel_odometry

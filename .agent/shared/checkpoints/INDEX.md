@@ -4,7 +4,7 @@ Navigation only. Not the project backlog.
 
 ## Active
 
-- `MM-ESC-ODOMETRY-20261005` — COMMON/legacy ESC and configurable wheel sources; review A/B/C and STATUS-authoritative ownership fixes, 64 wheel/source cases and full bridge matrix pass; physical acceptance pending.
+- `MM-ESC-ODOMETRY-20261005` — COMMON/legacy ESC and configurable wheel sources; review A/B/C and STATUS-authoritative ownership fixes, raw motor ticks/ticks_per_meter refactor validated (76 wheel/source cases, all10 bridge suites, power/contracts/build pass); bench signed feedback/short powered F-R pairing verified, RTK metric calibration/odometry acceptance pending.
 
 
 - `MM-GNSS-CANONICAL-ADAPTER-20261003` — dedicated MAVROS GNSS owner, Lyrical software/graph evidence; ARM64 target acceptance pending.

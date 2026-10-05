@@ -102,7 +102,7 @@ def main():
                 'source': 'auto', 'left_esc_slot': 1, 'right_esc_slot': 0,
                 'left_rpm_instance': 1, 'right_rpm_instance': 2,
                 'expected_esc_telem_mav_offset': 0,
-                'left_wheel_radius_m': 0.1, 'right_wheel_radius_m': 0.1, 'track_width_m': 0.5,
+                'ticks_per_meter': 1.0 / (0.2 * math.pi), 'track_width_m': 0.5,
                 'left_wheel_index': 0, 'right_wheel_index': 1,
             }},
         }))
@@ -202,6 +202,36 @@ def main():
             assert normal.voltage == 26 and normal.current == 2 and normal.temperature == 41
             assert normal.totalcurrent == 2 and normal.count == 11
             assert normal.totalcurrent_valid and normal.count_valid
+
+            # RTK calibration path: raw ticks survive metric disable/enable, no gear ratio.
+            def tick_diagnostics():
+                sources = [s for d in diagnostics for s in d.status
+                           if s.name == 'mavros_esc_wheel_odometry/source']
+                return {v.key: v.value for v in sources[-1].values} if sources else {}
+            assert not configure(wheel_parameters, {'ticks_per_meter': -1.0})
+            assert configure(wheel_parameters, {'ticks_per_meter': 0.0})
+            wait(lambda: node.count_publishers('/wheel_odom') == 0)
+            before = len(odom)
+            send(telemetry(12)); send(telemetry(13))
+            send(frame(226, struct.pack('<ff', -60, -120)))
+            send(telemetry(14)); send(frame(226, struct.pack('<ff', -60, -120)))
+            wait(lambda: tick_diagnostics().get('rpm_metric_calibrated') == 'false'
+                 and float(tick_diagnostics().get('ardupilot_legacy/left_raw_ticks', '0')) < 0)
+            values = tick_diagnostics()
+            left_ticks = float(values['ardupilot_legacy/left_raw_ticks'])
+            right_ticks = float(values['ardupilot_legacy/right_raw_ticks'])
+            assert right_ticks < left_ticks < 0
+            assert values['ticks_unit'] == 'motor_revolution'
+            assert len(odom) == before
+            assert configure(wheel_parameters, {'ticks_per_meter': 2.0})
+            wait(lambda: node.count_publishers('/wheel_odom') == 1
+                 and float(tick_diagnostics().get('ticks_per_meter', '0')) == 2.0)
+            assert float(tick_diagnostics()['ardupilot_legacy/left_raw_ticks']) == left_ticks
+            assert float(tick_diagnostics()['ardupilot_legacy/right_raw_ticks']) == right_ticks
+            send(telemetry(15)); send(telemetry(16))
+            send(frame(226, struct.pack('<ff', -60, -120)))
+            wait(lambda: len(odom) == before + 1)
+            assert math.isclose(odom[-1].twist.twist.linear.x, -0.75)
 
             # Timer selects stale -> none; canonical flags expire without fake refresh.
             spin(3.6)

@@ -3,11 +3,6 @@
 
 namespace mavros_esc_wheel_odometry
 {
-double rpm_to_mps(double rpm, double radius_m)
-{
-  constexpr double kTwoPi = 6.28318530717958647692;
-  return rpm * kTwoPi * radius_m / 60.0;
-}
 WheelOdometryCore::WheelOdometryCore(WheelGeometry geometry)
 : geometry_(geometry) {}
 bool WheelOdometryCore::valid() const

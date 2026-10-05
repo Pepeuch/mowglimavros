@@ -2,7 +2,7 @@
 #include <array>
 #include <cstdint>
 #include <optional>
-#include "mavros_esc_wheel_odometry/wheel_odometry_core.hpp"
+#include "mavros_esc_wheel_odometry/motor_tick_integrator.hpp"
 
 namespace mavros_esc_wheel_odometry
 {
@@ -17,7 +17,7 @@ public:
   void receive_esc_counts(
     int group_offset, const std::array<uint16_t, 4> & counts,
     int64_t receipt_ns);
-  std::optional<WheelMotionObservation> receive_rpm(
+  std::optional<MotorRpmObservation> receive_rpm(
     double left_rpm, double right_rpm,
     int64_t receipt_ns);
 

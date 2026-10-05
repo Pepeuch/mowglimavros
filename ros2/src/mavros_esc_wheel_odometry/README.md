@@ -15,6 +15,40 @@ frames, covariance and twist-only output. Pose remains unknown; WHEEL_DISTANCE
 does not introduce pose integration. Blade RPM uses magnitude. Legacy unsigned
 ESC telemetry RPM never supplies wheel direction.
 
+## Motor ticks and RTK calibration
+
+RPM226 and signed COMMON RPM are raw motor RPM, never wheel RPM. FCU
+RPM1_SCALING/RPM2_SCALING remain 1.0. One fractional canonical MAVROS tick is one
+motor revolution; no integer quantization, wheel circumference or theoretical
+gear ratio is used. Each motor is integrated separately using the trapezoidal
+integral of signed RPM/60 over its measurement intervals. Current speed is
+`(RPM/60)/ticks_per_meter`; accumulated distance is `raw_ticks/ticks_per_meter`.
+
+`ticks_per_meter=0` is intentionally uncalibrated. Raw motor accumulation and ESC
+reports continue, but RPM-derived metric odometry requires a finite positive
+calibration and positive track width. A first sample establishes a reference with
+zero travelled ticks; it can supply current velocity once calibrated. Duplicate,
+regressing and nonfinite samples do not invent travel. An expired sampling gap
+starts a new segment without integrating its unknown duration. Source-specific
+resets clear only their motor counters and advance their epoch. Separate COMMON
+and legacy accumulators never double-count two reports into one total.
+
+The existing source diagnostic exposes each source's `left_raw_ticks`,
+`right_raw_ticks`, field validity, separate measurement/reception stamps, epoch
+and per-wheel segment. COMMON measurement stamps may be boot-relative; reception
+stamps use ROS time for pairing with RTK observations.
+Compatible calibration changes preserve raw counts and their timing references;
+changing wheel/instance mapping starts new counters. Calibration must use one
+continuous segment/epoch with valid feedback throughout. For a known straight
+RTK distance D, fit `ticks_per_meter=delta_motor_ticks/D`, checking left/right
+separately before choosing the common calibration. A disagreement is evidence
+to investigate, not a theoretical gear-ratio correction. No RTK fitting controller
+or cross-node configuration infrastructure is added in this patch.
+
+WHEEL_DISTANCE already reports metres and keeps its direct distance/dt path;
+its producer owns encoder calibration. The RPM tick conversion is not imposed
+on those measurements. Public /wheel_odom remains twist-only as before.
+
 ## Sources and clocks
 
 `source` accepts `auto` (default), `wheel_distance`, `esc_status`, or
@@ -71,13 +105,12 @@ MowgliNext or synchronize parameters between its nodes automatically.
 
 | Plugin parameter | Default | Meaning |
 | --- | --- | --- |
-| `left_esc_slot`, `right_esc_slot` | -1, -1 | Configured ESC wheel slots, 0..63; -1 disables |
+| `left_esc_slot`, `right_esc_slot` | 1, 0 | Configured ESC wheel slots, 0..63; -1 disables |
 | `left_wheel_index`, `right_wheel_index` | -1, -1 | WHEEL_DISTANCE indices, 0..15; -1 disables |
-| `left_wheel_radius_m`, `right_wheel_radius_m` | 0, 0 | Physical radii; positive for RPM sources |
+| `ticks_per_meter` | 0 | Canonical motor ticks per metre; calibrate against a known RTK distance |
 | `track_width_m` | 0 | Positive width required for every wheel source |
-| `left_esc_rpm_to_wheel_ratio`, `right_esc_rpm_to_wheel_ratio` | 1, 1 | COMMON motor-to-wheel factor, finite and nonzero; negative for configured orientation |
-| `left_rpm_instance`, `right_rpm_instance` | -1, -1 | Distinct RPM #226 fields 1/2 for legacy |
-| `expected_esc_telem_mav_offset` | -1 | Legacy enabled only with validated offset 0 |
+| `left_rpm_instance`, `right_rpm_instance` | 2, 1 | Distinct RPM #226 fields 1/2 for legacy |
+| `expected_esc_telem_mav_offset` | 0 | Legacy enabled only with validated offset 0 |
 | `esc_component_id` | -1 | One live COMMON STATUS/INFO sender; 0..255 restricts both handlers |
 | `common_pair_max_skew_s` | 0.25 | Maximum measurement-time skew of wheel STATUS pairs, <= freshness timeout |
 | `wheel_distance_component_id` | -1 | Any live target-system encoder; 0..255 restricts sender |
@@ -86,12 +119,15 @@ MowgliNext or synchronize parameters between its nodes automatically.
 
 Unconfigured defaults preserve the existing safe-disabled wheel behavior; ESC
 normalization remains active independently. Legacy slots are limited to 0..11.
-Legacy RPM is already wheel-scaled by the FCU: COMMON conversion factors do not
-apply to it. Distinct slot/index mappings, finite nonnegative geometry and valid
+Both COMMON and legacy use the same motor tick/calibration layer. No wheel-radius
+or motor-to-wheel-ratio parameter remains. Proven rightESC0/RPM1 and leftESC1/RPM2
+are configurable installation defaults, with positive-forward/negative-reverse
+feedback observed on this bench. Distinct slot/index mappings, finite nonnegative geometry and valid
 frames/covariance are checked. Zero geometry disables the corresponding source.
 Atomic parameter updates validate the entire candidate before applying it;
 rejection preserves the previous configuration and motion references. Accepted
-updates preserve compatible normalized ESC reports but reset wheel references.
+updates preserve compatible normalized ESC reports and motor counts while resetting
+metric odometry references.
 Changing the COMMON component restriction discards reports from the old excluded
 component. No cross-node configuration service is introduced.
 
@@ -117,3 +153,8 @@ source-isolated clock resets, parameter restrictions, disconnect and reconnect. 
 currently shows legacy RPM/ESC telemetry, without COMMON messages in the observed
 window. Physical mappings, calibration, signs and distance accuracy remain bench
 acceptance items; COMMON ingestion alone does not validate a firmware runtime.
+
+Mowgli wheel PID/feed-forward tuning belongs to HARDWARE_BACKEND=mowgli. The
+MAVROS bridge forwards /cmd_vel through its existing firmware MANUAL_CONTROL
+conversion and gates; no Mowgli wheel PID enters that command chain. Motor tick
+calibration only changes feedback conversion, not commands or FCU scaling.

@@ -21,7 +21,8 @@ const char * source_name(WheelSource source)
   }
 }
 ObservationEngine::ObservationEngine(ObservationConfig config)
-: config_(config), core_(config.geometry), legacy_(config.geometry, config.timeout_ns)
+: config_(config), core_(config.geometry), legacy_(config.geometry, config.timeout_ns),
+  common_motor_ticks_(config.timeout_ns), legacy_motor_ticks_(config.timeout_ns)
 {
   if (config.source != "auto" && config.source != "wheel_distance" &&
     config.source != "esc_status" && config.source != "ardupilot_legacy")
@@ -33,20 +34,12 @@ ObservationEngine::ObservationEngine(ObservationConfig config)
   if (g.left_esc_slot < -1 || g.left_esc_slot >= 64 || g.right_esc_slot < -1 ||
     g.right_esc_slot >= 64 ||
     (g.left_esc_slot >= 0 && g.left_esc_slot == g.right_esc_slot) ||
-    !std::isfinite(g.left_radius_m) || g.left_radius_m < 0 ||
-    !std::isfinite(g.right_radius_m) || g.right_radius_m < 0 ||
+    !std::isfinite(g.ticks_per_meter) || g.ticks_per_meter < 0 ||
     !std::isfinite(g.track_width_m) || g.track_width_m < 0 ||
     config.left_wheel_index < -1 || config.left_wheel_index >= 16 ||
     config.right_wheel_index < -1 || config.right_wheel_index >= 16 ||
     (config.left_wheel_index >= 0 && config.left_wheel_index == config.right_wheel_index))
   {throw std::invalid_argument("invalid wheel mapping or geometry");}
-  if (!std::isfinite(config.left_esc_rpm_to_wheel_ratio) ||
-    config.left_esc_rpm_to_wheel_ratio == 0 ||
-    !std::isfinite(config.right_esc_rpm_to_wheel_ratio) || config.right_esc_rpm_to_wheel_ratio == 0)
-  {
-    throw std::invalid_argument(
-        "COMMON signed motor-to-wheel RPM ratios must be finite and nonzero");
-  }
   if (config.wheel_distance_component_id < -1 || config.wheel_distance_component_id > 255)
   {throw std::invalid_argument("wheel_distance_component_id must be -1 or a MAVLink component id");}
   if (config.esc_component_id < -1 || config.esc_component_id > 255) {
@@ -71,9 +64,7 @@ bool ObservationEngine::common_mapping() const
 {
   const auto & g = config_.geometry;
   return g.left_esc_slot >= 0 && g.left_esc_slot < 64 && g.right_esc_slot >= 0 &&
-         g.right_esc_slot < 64 && g.left_esc_slot != g.right_esc_slot &&
-         std::isfinite(g.left_radius_m) && g.left_radius_m > 0 &&
-         std::isfinite(g.right_radius_m) && g.right_radius_m > 0;
+         g.right_esc_slot < 64 && g.left_esc_slot != g.right_esc_slot;
 }
 bool ObservationEngine::distance_mapping(unsigned count) const
 {
@@ -87,13 +78,15 @@ bool ObservationEngine::wheel_configured() const
   if (!core_.valid()) {return false;}
   const bool auto_mode = config_.source == "auto";
   return ((auto_mode || config_.source == "wheel_distance") && distance_mapping(16)) ||
-         ((auto_mode || config_.source == "esc_status") && common_mapping()) ||
+         ((auto_mode || config_.source == "esc_status") && common_mapping() &&
+         config_.geometry.ticks_per_meter > 0) ||
          ((auto_mode || config_.source == "ardupilot_legacy") && config_.legacy_enabled &&
-         legacy_.valid());
+         legacy_.valid() && config_.geometry.ticks_per_meter > 0);
 }
 void ObservationEngine::reset_common()
 {
   status_ = {}; info_ = {}; common_count_.reset(); common_component_.reset();
+  common_motor_ticks_.reset();
   common_owner_stamp_ns_ = 0; common_status_owner_ = false;
   published_left_ = published_right_ = 0;
   common_epoch_baseline_needed_ = false; common_configuration_ns_ = 0;
@@ -107,7 +100,8 @@ void ObservationEngine::reset_distance()
 void ObservationEngine::reset()
 {
   reset_common(); reset_distance(); core_.reset(); legacy_.reset(); legacy_esc_ = {};
-  legacy_motion_.reset(); active_ = WheelSource::None; last_receipt_ns_ = 0;
+  legacy_motion_.reset(); legacy_motor_ticks_.reset(); active_ = WheelSource::None;
+  last_receipt_ns_ = 0;
 }
 void ObservationEngine::receive_clock(int64_t receipt)
 {
@@ -141,7 +135,7 @@ void ObservationEngine::connection(bool connected)
 {reset(); connected_ = connected;}
 void ObservationEngine::retain_esc_observations(
   const ObservationEngine & previous,
-  int64_t configuration_ns)
+  int64_t configuration_ns, bool retain_legacy_ticks)
 {
   connected_ = previous.connected_;
   status_ = previous.status_; info_ = previous.info_;
@@ -155,6 +149,15 @@ void ObservationEngine::retain_esc_observations(
     common_status_owner_ = previous.common_status_owner_;
   } else {status_ = {}; info_ = {};}
 
+  const bool same_slots = config_.geometry.left_esc_slot ==
+    previous.config_.geometry.left_esc_slot &&
+    config_.geometry.right_esc_slot == previous.config_.geometry.right_esc_slot;
+  if (same_slots && common_component_ == previous.common_component_) {
+    common_motor_ticks_.retain_counts(previous.common_motor_ticks_);
+  }
+  if (same_slots && retain_legacy_ticks) {
+    legacy_motor_ticks_.retain_counts(previous.legacy_motor_ticks_);
+  }
   common_configuration_ns_ = configuration_ns;
 }
 bool ObservationEngine::common_available(int64_t now) const
@@ -243,7 +246,16 @@ std::optional<WheelObservation> ObservationEngine::common_status(
       if (state.data.rpm != packet.rpm[i] || state.data.voltage_valid != voltage_valid ||
         state.data.current_valid != current_valid ||
         (voltage_valid && state.data.voltage != packet.voltage[i]) ||
-        (current_valid && state.data.current != packet.current[i])) {state.data.valid = false;}
+        (current_valid && state.data.current != packet.current[i]))
+      {
+        state.data.valid = false;
+        if (static_cast<int>(slot) == config_.geometry.left_esc_slot) {
+          common_motor_ticks_.invalidate(0);
+        }
+        if (static_cast<int>(slot) == config_.geometry.right_esc_slot) {
+          common_motor_ticks_.invalidate(1);
+        }
+      }
       continue;
     }
     state.seen = true; state.time_us = packet.time_us;
@@ -255,6 +267,12 @@ std::optional<WheelObservation> ObservationEngine::common_status(
     d.current_valid = std::isfinite(packet.current[i]);
     d.voltage = d.voltage_valid ? packet.voltage[i] : 0.0F;
     d.current = d.current_valid ? packet.current[i] : 0.0F;
+    if (static_cast<int>(slot) == config_.geometry.left_esc_slot) {
+      common_motor_ticks_.observe(0, d.rpm, static_cast<int64_t>(packet.time_us * 1000), receipt);
+    }
+    if (static_cast<int>(slot) == config_.geometry.right_esc_slot) {
+      common_motor_ticks_.observe(1, d.rpm, static_cast<int64_t>(packet.time_us * 1000), receipt);
+    }
   }
   select(receipt, true, previous_left, previous_right);
   if (active_ != WheelSource::EscStatus || !common_available(receipt)) {return std::nullopt;}
@@ -273,12 +291,9 @@ std::optional<WheelObservation> ObservationEngine::common_status(
   if (left_state.time_us <= published_left_ || right_state.time_us <= published_right_) {
     return std::nullopt;
   }
-  auto observation = core_.receive_motion(WheelMotionObservation{
-      rpm_to_mps(l.rpm * config_.left_esc_rpm_to_wheel_ratio, config_.geometry.left_radius_m),
-      rpm_to_mps(r.rpm * config_.right_esc_rpm_to_wheel_ratio, config_.geometry.right_radius_m),
-      static_cast<int64_t>(std::max(status_[config_.geometry.left_esc_slot].time_us,
-      status_[config_.geometry.right_esc_slot].time_us) * 1000),
-      std::max(l.stamp_ns, r.stamp_ns), WheelSource::EscStatus, true});
+  auto motion = common_motor_ticks_.motion(config_.geometry.ticks_per_meter,
+      WheelSource::EscStatus);
+  auto observation = motion ? core_.receive_motion(*motion) : std::nullopt;
   if (observation) {published_left_ = left_state.time_us; published_right_ = right_state.time_us;}
   return observation;
 }
@@ -359,10 +374,22 @@ std::optional<WheelObservation> ObservationEngine::legacy_rpm(
   if (!connected_ || receipt <= 0) {return std::nullopt;}
   receive_clock(receipt);
   if (!std::isfinite(left) || !std::isfinite(right)) {
-    legacy_motion_.reset(); select(receipt); return std::nullopt;
+    legacy_motion_.reset(); legacy_motor_ticks_.reset_references();
+    select(receipt); return std::nullopt;
   }
-  const auto motion = legacy_.receive_rpm(left, right, receipt);
-  if (motion && config_.legacy_enabled) {legacy_motion_ = motion;}
+  const auto raw = legacy_.receive_rpm(left, right, receipt);
+  std::optional<WheelMotionObservation> motion;
+  if (raw && config_.legacy_enabled) {
+    const bool left_ok = legacy_motor_ticks_.observe(0, raw->left_rpm, raw->sample_stamp_ns,
+        raw->receipt_stamp_ns);
+    const bool right_ok = legacy_motor_ticks_.observe(1, raw->right_rpm, raw->sample_stamp_ns,
+        raw->receipt_stamp_ns);
+    if (left_ok && right_ok) {
+      motion = legacy_motor_ticks_.motion(config_.geometry.ticks_per_meter,
+          WheelSource::ArduPilotLegacy);
+    }
+  }
+  if (motion) {legacy_motion_ = motion;}
   select(receipt);
   if (active_ == WheelSource::ArduPilotLegacy && motion) {return core_.receive_motion(*motion);}
   return std::nullopt;
@@ -422,6 +449,23 @@ std::optional<WheelObservation> ObservationEngine::wheel_distance(
   }
   return core_.receive_motion(WheelMotionObservation{left, right,
              static_cast<int64_t>(next.time_us * 1000), receipt, WheelSource::WheelDistance, true});
+}
+MotorTickState ObservationEngine::motor_ticks(WheelSource source, int64_t now) const
+{
+  MotorTickState out;
+  if (source == WheelSource::EscStatus) {
+    out = common_motor_ticks_.state();
+    const auto & g = config_.geometry;
+    if (!common_mapping()) {out.left_valid = out.right_valid = false;} else {
+      out.left_valid = out.left_valid && status_[g.left_esc_slot].data.valid &&
+        (!common_count_ || static_cast<unsigned>(g.left_esc_slot) < *common_count_);
+      out.right_valid = out.right_valid && status_[g.right_esc_slot].data.valid &&
+        (!common_count_ || static_cast<unsigned>(g.right_esc_slot) < *common_count_);
+    }
+  } else if (source == WheelSource::ArduPilotLegacy) {out = legacy_motor_ticks_.state();}
+  out.left_valid = out.left_valid && connected_ && fresh(out.left_receipt_ns, now);
+  out.right_valid = out.right_valid && connected_ && fresh(out.right_receipt_ns, now);
+  return out;
 }
 bool ObservationEngine::touched(unsigned index) const
 {

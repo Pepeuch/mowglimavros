@@ -62,9 +62,6 @@ struct ObservationConfig
   int left_wheel_index{-1}, right_wheel_index{-1};
   int64_t timeout_ns{3000000000LL};
   bool legacy_enabled{false};
-  // COMMON raw motor RPM stays signed. The configured wheel conversion factor
-  // may encode gearing/orientation; +1 is only a compatibility default.
-  double left_esc_rpm_to_wheel_ratio{1.0}, right_esc_rpm_to_wheel_ratio{1.0};
   int wheel_distance_component_id{-1};
   int esc_component_id{-1};
   double common_pair_max_skew_s{0.25};
@@ -80,9 +77,12 @@ public:
   explicit ObservationEngine(ObservationConfig config);
   void connection(bool connected);
   // Wheel reconfiguration resets motion only; do not disrupt raw ESC reporting.
-  void retain_esc_observations(const ObservationEngine & previous, int64_t configuration_ns);
+  void retain_esc_observations(
+    const ObservationEngine & previous, int64_t configuration_ns,
+    bool retain_legacy_ticks = true);
   void poll(int64_t now_ns);
   bool wheel_configured() const;
+  MotorTickState motor_ticks(WheelSource source, int64_t now_ns) const;
   WheelSource active_source() const {return active_;}
   std::optional<WheelObservation> common_status(const CommonStatusPacket &, int64_t receipt_ns);
   void common_info(const CommonInfoPacket &, int64_t receipt_ns);
@@ -136,6 +136,7 @@ private:
   ObservationConfig config_;
   WheelOdometryCore core_;
   LegacyWheelAdapter legacy_;
+  MotorTickIntegrator common_motor_ticks_, legacy_motor_ticks_;
   bool connected_{false};
   std::array<Status, 64> status_{};
   std::array<Info, 64> info_{};

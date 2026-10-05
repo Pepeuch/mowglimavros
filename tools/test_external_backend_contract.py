@@ -277,13 +277,12 @@ class ExternalBackendContractTest(unittest.TestCase):
         )
 
         for setting in (
-            "left_esc_slot: -1",
-            "right_esc_slot: -1",
-            "left_rpm_instance: -1",
-            "right_rpm_instance: -1",
-            "expected_esc_telem_mav_offset: -1",
-            "left_wheel_radius_m: 0.0",
-            "right_wheel_radius_m: 0.0",
+            "left_esc_slot: 1",
+            "right_esc_slot: 0",
+            "left_rpm_instance: 2",
+            "right_rpm_instance: 1",
+            "expected_esc_telem_mav_offset: 0",
+            "ticks_per_meter: 0.0",
             "track_width_m: 0.0",
         ):
             self.assertIn(setting, wheel)

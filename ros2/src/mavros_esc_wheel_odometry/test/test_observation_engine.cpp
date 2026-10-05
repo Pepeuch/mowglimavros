@@ -9,7 +9,7 @@ namespace
 constexpr int64_t S = 1000000000LL;
 ObservationConfig config(std::string source = "auto")
 {
-  ObservationConfig c; c.geometry = {0, 1, 0.1, 0.1, 0.5};
+  ObservationConfig c; c.geometry = {0, 1, 0.5, 1.0 / (0.2 * M_PI)};
   c.left_wheel_index = 0; c.right_wheel_index = 1; c.legacy_enabled = true; c.source = source;
   return c;
 }
@@ -218,7 +218,7 @@ TEST(Sources, PhysicallyEquivalentInputsProduceSameDifferentialResult)
   l.legacy_esc(legacy(1, 1), S); l.legacy_esc(legacy(2, 2), 2 * S);
   auto lo = l.legacy_rpm(-60, 120, 2 * S);
       auto co = c.common_status(status(2000000, -60, 120), 2 * S);
-  const double left = rpm_to_mps(-60, 0.1), right = rpm_to_mps(120, 0.1);
+  const double left = -0.2 * M_PI, right = 0.4 * M_PI;
   d.wheel_distance(distance(1000000, 0, 0), S);
       auto od = d.wheel_distance(distance(2000000, left, right), 2 * S);
   ASSERT_TRUE(lo); ASSERT_TRUE(co); ASSERT_TRUE(od);
@@ -235,9 +235,9 @@ TEST(Config, RejectsUnsafeMappingsAndAcceptsDistanceWithoutRadii)
       EXPECT_THROW((void)ObservationEngine(c), std::invalid_argument);
   c = config(); c.geometry.track_width_m = std::numeric_limits<double>::infinity();
       EXPECT_THROW((void)ObservationEngine(c), std::invalid_argument);
-  c = config(); c.geometry.left_radius_m = std::numeric_limits<double>::quiet_NaN();
+  c = config(); c.geometry.ticks_per_meter = std::numeric_limits<double>::quiet_NaN();
       EXPECT_THROW((void)ObservationEngine(c), std::invalid_argument);
-  c = config("wheel_distance"); c.geometry.left_radius_m = c.geometry.right_radius_m = 0;
+  c = config("wheel_distance"); c.geometry.ticks_per_meter = 0;
   ObservationEngine e(c); e.connection(true); EXPECT_TRUE(e.wheel_configured());
   e.wheel_distance(distance(1000000, 0, 0), S);
       EXPECT_TRUE(e.wheel_distance(distance(2000000, 1, 1), 2 * S));
@@ -251,17 +251,17 @@ TEST(Core, MeasurementMonotonicityIsIndependentFromReceiptTime)
   EXPECT_TRUE(core.receive_motion({1, 1, 2 * S, 12 * S, WheelSource::WheelDistance, true}));
   EXPECT_FALSE(core.receive_motion({1, 1, 3 * S, 11 * S, WheelSource::WheelDistance, true}));
 }
-TEST(CommonEsc, MotorGearingIsConfiguredWithoutChangingSignedRawObservationOrLegacy)
+TEST(CommonEsc, TicksCalibrationAppliesToCommonAndLegacyWithoutChangingRawRpm)
 {
   auto c = config("esc_status");
-      c.left_esc_rpm_to_wheel_ratio = c.right_esc_rpm_to_wheel_ratio = 0.5;
+      c.geometry.ticks_per_meter *= 2.0;
   ObservationEngine e(c); e.connection(true);
       auto out = e.common_status(status(1000000, -120, -120), S);
   ASSERT_TRUE(out); EXPECT_NEAR(out->linear_x_mps, -0.2 * M_PI, 1e-12);
   EXPECT_EQ(e.esc(0, S).rpm, -120); EXPECT_TRUE(e.esc(0, S).rpm_direction_valid);
   c.source = "ardupilot_legacy"; ObservationEngine l(c); l.connection(true);
   l.legacy_esc(legacy(1, 1), S); l.legacy_esc(legacy(2, 2), 2 * S);
-  auto lo = l.legacy_rpm(-60, -60, 2 * S); ASSERT_TRUE(lo);
+  auto lo = l.legacy_rpm(-120, -120, 2 * S); ASSERT_TRUE(lo);
   EXPECT_DOUBLE_EQ(lo->linear_x_mps, out->linear_x_mps);
 }
 TEST(CommonEsc, ContradictoryInfoInvalidatesMetadataNotStatus)
@@ -278,24 +278,22 @@ TEST(CommonEsc, ContradictoryInfoInvalidatesMetadataNotStatus)
 TEST(Config, GeometryChangesRetainEscReportsButRequireFreshWheelSamples)
 {
   auto old = engine("esc_status"); ASSERT_TRUE(old.common_status(status(1000000), S));
-  auto c = config("esc_status"); c.geometry.left_radius_m = c.geometry.right_radius_m = 0.2;
+  auto c = config("esc_status"); c.geometry.ticks_per_meter = 1.0 / (0.4 * M_PI);
   ObservationEngine updated(c); updated.retain_esc_observations(old, S + 1);
   EXPECT_EQ(updated.esc(0, S + 1).rpm, 60); EXPECT_TRUE(updated.esc(0, S + 1).valid);
   EXPECT_FALSE(updated.common_status(status(1000000), S + 2));
   auto out = updated.common_status(status(2000000), 2 * S); ASSERT_TRUE(out);
   EXPECT_NEAR(out->linear_x_mps, 0.4 * M_PI, 1e-12);
 }
-TEST(CommonEsc, ConfiguredOrientationNeverChangesRawSignedRpm)
+TEST(CommonEsc, CalibrationNeverChangesRawSignedRpm)
 {
-  auto c = config("esc_status");
-      c.left_esc_rpm_to_wheel_ratio = c.right_esc_rpm_to_wheel_ratio = -0.5;
+  auto c = config("esc_status"); c.geometry.ticks_per_meter = 2.0;
   ObservationEngine e(c); e.connection(true);
-      auto out = e.common_status(status(1000000, -120, -120), S);
-  ASSERT_TRUE(out); EXPECT_GT(out->linear_x_mps, 0); EXPECT_EQ(e.esc(0, S).rpm, -120);
-  EXPECT_TRUE(e.esc(0, S).rpm_direction_valid);
-  c.left_esc_rpm_to_wheel_ratio = 0;
-      EXPECT_THROW((void)ObservationEngine(c), std::invalid_argument);
+  auto out = e.common_status(status(1000000, -120, -120), S);
+  ASSERT_TRUE(out); EXPECT_DOUBLE_EQ(out->linear_x_mps, -1.0);
+  EXPECT_EQ(e.esc(0, S).rpm, -120); EXPECT_TRUE(e.esc(0, S).rpm_direction_valid);
 }
+
 }  // namespace
 
 TEST(Distance, EqualReceiptTimeStillUsesAdvancingMeasurementTime)
@@ -561,4 +559,67 @@ TEST(CommonOwner, InfoCannotRenewStatusOwnershipOrTakeItOver)
   ASSERT_TRUE(out);
   EXPECT_EQ(e.esc(0, 4 * S + 2).rpm, -60);
   EXPECT_FALSE(e.esc(0, 4 * S + 2).temperature_valid);
+}
+
+TEST(MotorCalibration, LegacyRawTicksRemainAvailableWithoutGeometryOrCalibration)
+{
+  auto c = config("ardupilot_legacy"); c.geometry.ticks_per_meter = 0; c.geometry.track_width_m = 0;
+  ObservationEngine e(c); e.connection(true);
+  e.legacy_esc(legacy(1, 1), S); e.legacy_esc(legacy(2, 2), 2 * S);
+  EXPECT_FALSE(e.legacy_rpm(60, -120, 2 * S));
+  e.legacy_esc(legacy(3, 3), 3 * S); EXPECT_FALSE(e.legacy_rpm(60, -120, 3 * S));
+  auto t = e.motor_ticks(WheelSource::ArduPilotLegacy, 3 * S);
+  EXPECT_TRUE(t.left_valid); EXPECT_TRUE(t.right_valid);
+  EXPECT_DOUBLE_EQ(t.left_ticks, 1); EXPECT_DOUBLE_EQ(t.right_ticks, -2);
+  EXPECT_EQ(e.active_source(), WheelSource::None);
+}
+TEST(MotorCalibration, CommonRawCountsStayIndependentAndSurviveCalibrationUpdate)
+{
+  auto c = config("esc_status"); c.geometry.ticks_per_meter = 0;
+  ObservationEngine old(c); old.connection(true);
+  EXPECT_FALSE(old.common_status(status(1000000, 60, -120), S));
+  EXPECT_FALSE(old.common_status(status(2000000, 60, -120), 2 * S));
+  auto ticks = old.motor_ticks(WheelSource::EscStatus, 2 * S);
+  EXPECT_DOUBLE_EQ(ticks.left_ticks, 1); EXPECT_DOUBLE_EQ(ticks.right_ticks, -2);
+  c.geometry.ticks_per_meter = 10;
+  ObservationEngine next(c); next.retain_esc_observations(old, 2 * S + 1);
+  auto out = next.common_status(status(3000000, 60, -120), 3 * S); ASSERT_TRUE(out);
+  EXPECT_DOUBLE_EQ(next.motor_ticks(WheelSource::EscStatus, 3 * S).left_ticks, 2);
+  EXPECT_DOUBLE_EQ(next.motor_ticks(WheelSource::EscStatus, 3 * S).right_ticks, -4);
+  EXPECT_DOUBLE_EQ(out->linear_x_mps, -0.05);
+  EXPECT_EQ(next.esc(0, 3 * S).rpm, 60);
+}
+TEST(MotorCalibration, DistanceClockResetCannotEraseCommonMotorAccumulation)
+{
+  auto e = engine(); e.common_status(status(1000000), S); e.common_status(status(2000000), 2 * S);
+  e.wheel_distance(distance(2000000, 0, 0), 2 * S + 1);
+  e.wheel_distance(distance(100, 0, 0), 2 * S + 2);
+  EXPECT_DOUBLE_EQ(e.motor_ticks(WheelSource::EscStatus, 2 * S + 2).left_ticks, 1);
+}
+
+TEST(MotorCalibration, MappingChangeStartsNewRawCountersAndInvalidatesOldAssociation)
+{
+  auto old = engine("esc_status");
+  old.common_status(status(1000000, 60, 120), S);
+  old.common_status(status(2000000, 60, 120), 2 * S);
+  EXPECT_DOUBLE_EQ(old.motor_ticks(WheelSource::EscStatus, 2 * S).left_ticks, 1);
+  auto c = config("esc_status"); c.geometry.left_esc_slot = 1; c.geometry.right_esc_slot = 0;
+  ObservationEngine next(c); next.retain_esc_observations(old, 2 * S + 1);
+  EXPECT_FALSE(next.motor_ticks(WheelSource::EscStatus, 2 * S + 1).left_valid);
+  EXPECT_DOUBLE_EQ(next.motor_ticks(WheelSource::EscStatus, 2 * S + 1).left_ticks, 0);
+  next.common_status(status(3000000, 60, 120), 3 * S);
+  next.common_status(status(4000000, 60, 120), 4 * S);
+  EXPECT_DOUBLE_EQ(next.motor_ticks(WheelSource::EscStatus, 4 * S).left_ticks, 2);
+  EXPECT_DOUBLE_EQ(next.motor_ticks(WheelSource::EscStatus, 4 * S).right_ticks, 1);
+}
+TEST(MotorCalibration, ContradictoryCommonSampleCannotContinueAnUncertainIntegral)
+{
+  auto e = engine("esc_status");
+  e.common_status(status(1000000, 60, 60), S);e.common_status(status(2000000, 60, 60), 2 * S);
+  e.common_status(status(2000000, -60, 60), 2 * S + 1);
+  EXPECT_FALSE(e.motor_ticks(WheelSource::EscStatus, 2 * S + 1).left_valid);
+  e.common_status(status(3000000, 60, 60), 3 * S);
+  EXPECT_DOUBLE_EQ(e.motor_ticks(WheelSource::EscStatus, 3 * S).left_ticks, 1);
+  EXPECT_DOUBLE_EQ(e.motor_ticks(WheelSource::EscStatus, 3 * S).right_ticks, 2);
+  EXPECT_EQ(e.motor_ticks(WheelSource::EscStatus, 3 * S).left_segment, 2U);
 }
