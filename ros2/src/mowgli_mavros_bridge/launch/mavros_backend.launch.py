@@ -1,9 +1,11 @@
 import os
+import subprocess
 import warnings
 
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_prefix, get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import OpaqueFunction
+from launch.logging import get_logger
 from launch.substitutions import EnvironmentVariable
 from launch_ros.actions import Node
 
@@ -12,10 +14,57 @@ def _as_bool(value):
     return value.strip().lower() in ("1", "true", "yes")
 
 
+# Public firmware names are distinct from MAVROS's internal profile names.
+_MAVROS_PROFILES = {
+    "ardupilot": "apm",
+    "px4": "px4",
+    "betaflight": None,
+    "inav": None,
+    "mowgli": None,
+    "auto": None,
+}
+
+
+def resolve_mavros_profile(firmware, fcu_url=None, tgt_system=1, tgt_component=1):
+    """Resolve the selected/detected firmware without aliases or fallback."""
+    firmware = firmware.lower()
+    if firmware not in _MAVROS_PROFILES:
+        raise RuntimeError(
+            "MAVROS_FIRMWARE must be " + ", ".join(_MAVROS_PROFILES)
+        )
+    if firmware == "auto":
+        executable = os.path.join(
+            get_package_prefix("mowgli_mavros_bridge"),
+            "lib", "mowgli_mavros_bridge", "detect_mavros_firmware",
+        )
+        try:
+            result = subprocess.run(
+                [executable, fcu_url, str(tgt_system), str(tgt_component)],
+                capture_output=True, text=True, timeout=12, check=True,
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            detail = getattr(error, "stderr", None) or str(error)
+            raise RuntimeError(
+                f"MAVROS_FIRMWARE=auto: detection failed: {detail}"
+            ) from error
+        firmware = result.stdout.strip()
+        if firmware not in ("ardupilot", "px4"):
+            raise RuntimeError("MAVROS_FIRMWARE=auto: unrecognized detection result")
+        get_logger(__name__).info(
+            f"Target HEARTBEAT firmware: {firmware}; detection probe exited cleanly"
+        )
+    profile = _MAVROS_PROFILES[firmware]
+    if profile is None:
+        raise NotImplementedError(
+            f"MAVROS_FIRMWARE={firmware}: not implemented"
+        )
+    return profile
+
+
 def _mavros_node(
     context,
     mavros_share,
-    autopilot,
+    firmware,
     fcu_url,
     gcs_url,
     system_id,
@@ -32,15 +81,15 @@ def _mavros_node(
     if source not in ("gps1", "gps2"):
         raise RuntimeError("GNSS_MAVROS_SOURCE must be gps1 or gps2")
 
-    autopilot_value = autopilot.perform(context).lower()
-    if autopilot_value in ("ardupilot", "apm"):
-        plugin_list = "apm_pluginlists.yaml"
-        config = "apm_config.yaml"
-    elif autopilot_value == "px4":
-        plugin_list = "px4_pluginlists.yaml"
-        config = "px4_config.yaml"
-    else:
-        raise RuntimeError("MAVROS_AUTOPILOT must be ardupilot, apm, or px4")
+    profile = resolve_mavros_profile(
+        firmware.perform(context), fcu_url.perform(context),
+        tgt_system.perform(context), tgt_component.perform(context),
+    )
+    get_logger(__name__).info(
+        f"MAVROS_FIRMWARE={firmware.perform(context)}: selected MAVROS profile {profile}"
+    )
+    plugin_list = f"{profile}_pluginlists.yaml"
+    config = f"{profile}_config.yaml"
 
     plugin_xml = os.path.join(
         get_package_share_directory("universal_gnss_mavros"),
@@ -137,9 +186,9 @@ def generate_launch_description():
         ("~/cmd_vel", "/cmd_vel"),
     ]
 
-    mavros_autopilot = EnvironmentVariable(
-        "MAVROS_AUTOPILOT",
-        default_value="ardupilot",
+    mavros_firmware = EnvironmentVariable(
+        "MAVROS_FIRMWARE",
+        default_value="auto",
     )
     mavros_fcu_url = EnvironmentVariable(
         "MAVROS_FCU_URL",
@@ -215,7 +264,7 @@ def generate_launch_description():
                 function=_mavros_node,
                 args=[
                     mavros_share,
-                    mavros_autopilot,
+                    mavros_firmware,
                     mavros_fcu_url,
                     mavros_gcs_url,
                     mavros_system_id,

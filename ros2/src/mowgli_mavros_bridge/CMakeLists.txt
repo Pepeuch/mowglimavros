@@ -18,6 +18,16 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(mowgli_interfaces REQUIRED)
 find_package(mavros_msgs REQUIRED)
 find_package(mavros REQUIRED)
+find_package(libmavconn REQUIRED)
+find_package(mavlink REQUIRED)
+
+add_executable(detect_mavros_firmware src/detect_mavros_firmware.cpp)
+# libmavconn 2.16 exports include/library variables, not an imported target.
+target_include_directories(detect_mavros_firmware SYSTEM PRIVATE
+  ${libmavconn_INCLUDE_DIRS}
+  ${mavlink_INCLUDE_DIRS}
+)
+target_link_libraries(detect_mavros_firmware PRIVATE ${libmavconn_LIBRARIES})
 
 add_executable(mavros_hardware_bridge_node
   src/mavros_hardware_bridge_node.cpp
@@ -50,6 +60,12 @@ if(BUILD_TESTING)
   find_package(mavros_gnss_adapter REQUIRED)
   ament_add_test(test_gnss_launch
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_gnss_launch.py"
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
+  ament_add_test(test_firmware_detection
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_firmware_detection.py"
+      $<TARGET_FILE:detect_mavros_firmware>
+    TIMEOUT 30
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
   )
   ament_add_test(test_gnss_graph
@@ -85,7 +101,7 @@ install(
 )
 
 install(
-  TARGETS mavros_hardware_bridge_node
+  TARGETS mavros_hardware_bridge_node detect_mavros_firmware
   DESTINATION lib/${PROJECT_NAME}
 )
 

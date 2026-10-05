@@ -51,3 +51,24 @@ It does not carry MowgliNext bringup, GUI, Nav2, simulation, FusionCore, or the
 main-stack installer. The sidecar is intended to run alongside MowgliNext over
 ROS 2/DDS, with backend and GNSS ownership selected by the MowgliNext deployment
 configuration.
+
+
+Firmware selection uses `MAVROS_FIRMWARE` (default: `auto`). The only public
+values are `ardupilot`, `px4`, `betaflight`, `inav`, `mowgli`, and `auto`.
+Explicit `ardupilot` and `px4` selections override detection and retain their
+existing MAVROS profiles and launch settings.
+`betaflight`, `inav`, and `mowgli` are recognized but fail with `not implemented`.
+Legacy firmware selection variables and the public alias `apm` are unsupported;
+`apm_*` remains the upstream MAVROS profile filename for ArduPilot.
+
+`auto` passively reads a valid MAVLink HEARTBEAT on `MAVROS_FCU_URL` from
+`MAVROS_TGT_SYSTEM` / `MAVROS_TGT_COMPONENT` (both default to `1`). It recognizes
+ArduPilot or PX4, releases the transport, then starts MAVROS with that profile.
+The probe sends no MAVLink messages and waits up to ten seconds for the target
+heartbeat. Unknown firmware, unavailable transport, or missing heartbeat stops
+startup with an explicit error; there is no default-profile fallback.
+Automatic detection is covered by MAVLink v1/v2 loopback UDP tests and a passive
+serial bootstrap test on Rock 5B / Pixhawk5X (ArduRover 4.7.1). The probe-to-MAVROS
+handover and explicit ArduPilot override both connect on that setup. TCP startup,
+other hardware and recovery after USB loss still require validation. See the
+[physical evidence](.agent/shared/checkpoints/retained/MM-FIRMWARE-ROCK5B-20261005.md).
