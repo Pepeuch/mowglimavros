@@ -1,5 +1,6 @@
 #pragma once
 
+#include <memory>
 #include <mutex>
 #include <string>
 
@@ -21,6 +22,7 @@
 #include <mowgli_interfaces/msg/status.hpp>
 #include <mowgli_interfaces/srv/emergency_stop.hpp>
 #include <mowgli_interfaces/srv/mower_control.hpp>
+#include "mowgli_mavros_bridge/firmware_provider.hpp"
 #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
 #include "mowgli_mavros_bridge/readiness_state.hpp"
 
@@ -66,6 +68,7 @@ private:
 
 private:
   std::mutex mutex_;
+  std::unique_ptr<FirmwareProvider> firmware_provider_;
 
   double status_publish_rate_hz_{10.0};
   double manual_control_linear_scale_{1000.0};
@@ -77,8 +80,8 @@ private:
   double esc_observation_timeout_s_{3.0};
   bool gnss_required_{true};
   bool wheel_odometry_required_{false};
-  bool emergency_disarm_{true};
-  std::string emergency_mode_{"HOLD"};
+  bool emergency_disarm_{};
+  std::string emergency_mode_;
   bool rain_detected_{false};
   bool esc_power_{true};
   bool raspberry_pi_power_{true};

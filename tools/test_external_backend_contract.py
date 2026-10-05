@@ -225,6 +225,15 @@ class ExternalBackendContractTest(unittest.TestCase):
             entrypoint,
         )
 
+    def test_firmware_entrypoint_exports_the_selection(self):
+        entrypoint = read("ros2_entrypoint.sh")
+        self.assertIn(': "${MAVROS_FIRMWARE:=auto}"', entrypoint)
+        self.assertIn("export MAVROS_FIRMWARE", entrypoint)
+        legacy_variable = "MAVROS_" + "AUTOPILOT"
+        self.assertNotIn(legacy_variable, entrypoint)
+        self.assertNotIn(legacy_variable, read(
+            "ros2/src/mowgli_mavros_bridge/launch/mavros_backend.launch.py"))
+
     def test_plugin_descriptors_and_exports(self):
         descriptors = {
             "mowgli_gnss": SRC / "mavros_gnss_adapter/mavros_plugins.xml",

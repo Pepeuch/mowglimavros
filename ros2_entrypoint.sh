@@ -25,12 +25,13 @@ export RMW_IMPLEMENTATION
 : "${MAVROS_SYSTEM_ID:=255}"
 : "${MAVROS_TGT_SYSTEM:=1}"
 : "${MAVROS_TGT_COMPONENT:=1}"
-: "${MAVROS_AUTOPILOT:=ardupilot}"
+: "${MAVROS_FIRMWARE:=auto}"
 : "${GNSS_SOURCE:=mavros}"
 : "${GNSS_MAVROS_SOURCE:=gps1}"
 
 MAVROS_FCU_URL="serial://${MAVROS_PORT}:${MAVROS_BAUD}"
 export MAVROS_FCU_URL
+export MAVROS_FIRMWARE
 export GNSS_SOURCE
 export GNSS_MAVROS_SOURCE
 exec ros2 launch mowgli_mavros_bridge mavros_backend.launch.py

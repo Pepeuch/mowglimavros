@@ -1,21 +1,63 @@
 import os
+import subprocess
 import warnings
 
-from ament_index_python.packages import get_package_share_directory
+from ament_index_python.packages import get_package_prefix, get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import OpaqueFunction
+from launch.logging import get_logger
 from launch.substitutions import EnvironmentVariable
 from launch_ros.actions import Node
+from mowgli_mavros_bridge.firmware_provider import PUBLIC_FIRMWARES, get_firmware_provider
 
 
 def _as_bool(value):
     return value.strip().lower() in ("1", "true", "yes")
 
 
-def _mavros_node(
+def resolve_firmware_provider(firmware, fcu_url=None, tgt_system=1, tgt_component=1):
+    """Resolve the selected/detected firmware without aliases or fallback."""
+    firmware = firmware.lower()
+    if firmware not in PUBLIC_FIRMWARES:
+        raise RuntimeError(
+            "MAVROS_FIRMWARE must be " + ", ".join(PUBLIC_FIRMWARES)
+        )
+    if firmware == "auto":
+        executable = os.path.join(
+            get_package_prefix("mowgli_mavros_bridge"),
+            "lib", "mowgli_mavros_bridge", "detect_mavros_firmware",
+        )
+        try:
+            result = subprocess.run(
+                [executable, fcu_url, str(tgt_system), str(tgt_component)],
+                capture_output=True, text=True, timeout=12, check=True,
+            )
+        except (OSError, subprocess.SubprocessError) as error:
+            detail = getattr(error, "stderr", None) or str(error)
+            raise RuntimeError(
+                f"MAVROS_FIRMWARE=auto: detection failed: {detail}"
+            ) from error
+        firmware = result.stdout.strip()
+        if firmware not in PUBLIC_FIRMWARES or firmware == "auto" or not (
+            get_firmware_provider(firmware).capabilities.heartbeat_autodetection
+        ):
+            raise RuntimeError("MAVROS_FIRMWARE=auto: unrecognized detection result")
+        get_logger(__name__).info(
+            f"Target HEARTBEAT firmware: {firmware}; detection probe exited cleanly"
+        )
+    return get_firmware_provider(firmware).require_bootstrap()
+
+
+def resolve_mavros_profile(firmware, fcu_url=None, tgt_system=1, tgt_component=1):
+    return resolve_firmware_provider(
+        firmware, fcu_url, tgt_system, tgt_component
+    ).mavros_profile
+
+
+def _backend_nodes(
     context,
     mavros_share,
-    autopilot,
+    firmware,
     fcu_url,
     gcs_url,
     system_id,
@@ -23,6 +65,8 @@ def _mavros_node(
     tgt_component,
     gnss_source_mode,
     gnss_mavros_source,
+    bridge_params,
+    hardware_bridge_remappings,
 ):
     source_mode = gnss_source_mode.perform(context).strip().lower()
     if source_mode not in ("direct", "mavros"):
@@ -32,15 +76,15 @@ def _mavros_node(
     if source not in ("gps1", "gps2"):
         raise RuntimeError("GNSS_MAVROS_SOURCE must be gps1 or gps2")
 
-    autopilot_value = autopilot.perform(context).lower()
-    if autopilot_value in ("ardupilot", "apm"):
-        plugin_list = "apm_pluginlists.yaml"
-        config = "apm_config.yaml"
-    elif autopilot_value == "px4":
-        plugin_list = "px4_pluginlists.yaml"
-        config = "px4_config.yaml"
-    else:
-        raise RuntimeError("MAVROS_AUTOPILOT must be ardupilot, apm, or px4")
+    provider = resolve_firmware_provider(
+        firmware.perform(context), fcu_url.perform(context),
+        tgt_system.perform(context), tgt_component.perform(context),
+    )
+    profile = provider.mavros_profile
+    get_logger(__name__).info(
+        f"MAVROS_FIRMWARE={firmware.perform(context)}: selected MAVROS profile {profile}"
+    )
+    plugin_list, config = provider.parameter_files
 
     plugin_xml = os.path.join(
         get_package_share_directory("universal_gnss_mavros"),
@@ -116,7 +160,23 @@ def _mavros_node(
             remappings=[
                 ("/rtcm", rtcm_input),
             ],
-        )
+        ),
+        Node(
+            package="mowgli_mavros_bridge",
+            executable="mavros_hardware_bridge_node",
+            name="hardware_bridge",
+            output="screen",
+            additional_env={"MAVROS_RESOLVED_FIRMWARE": provider.name},
+            parameters=[
+                bridge_params,
+                {
+                    "neutral_manual_control_enabled": _as_bool(
+                        os.environ.get("MAVROS_NEUTRAL_TEST", "false")
+                    ),
+                },
+            ],
+            remappings=hardware_bridge_remappings,
+        ),
     ]
 
 
@@ -137,9 +197,9 @@ def generate_launch_description():
         ("~/cmd_vel", "/cmd_vel"),
     ]
 
-    mavros_autopilot = EnvironmentVariable(
-        "MAVROS_AUTOPILOT",
-        default_value="ardupilot",
+    mavros_firmware = EnvironmentVariable(
+        "MAVROS_FIRMWARE",
+        default_value="auto",
     )
     mavros_fcu_url = EnvironmentVariable(
         "MAVROS_FCU_URL",
@@ -212,10 +272,10 @@ def generate_launch_description():
     return LaunchDescription(
         [
             OpaqueFunction(
-                function=_mavros_node,
+                function=_backend_nodes,
                 args=[
                     mavros_share,
-                    mavros_autopilot,
+                    mavros_firmware,
                     mavros_fcu_url,
                     mavros_gcs_url,
                     mavros_system_id,
@@ -223,25 +283,9 @@ def generate_launch_description():
                     mavros_tgt_component,
                     gnss_source_mode,
                     gnss_mavros_source,
-                ],
-            ),
-            Node(
-                package="mowgli_mavros_bridge",
-                executable="mavros_hardware_bridge_node",
-                name="hardware_bridge",
-                output="screen",
-                parameters=[
                     bridge_params,
-                    {
-                        "neutral_manual_control_enabled": _as_bool(
-                            os.environ.get(
-                                "MAVROS_NEUTRAL_TEST",
-                                "false",
-                            )
-                        ),
-                    },
+                    hardware_bridge_remappings,
                 ],
-                remappings=hardware_bridge_remappings,
             ),
         ]
     )

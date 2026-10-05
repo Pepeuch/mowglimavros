@@ -51,7 +51,7 @@ Acceptance:
 Related finding: `MM-AUD-001`
 Status: DONE (validated on Kilted amd64 workstation, 2026-09-08)
 
-Current problem:
+Historical problem (resolved):
 
 - local integration requests `apm.launch.py` / `px4.launch.py`;
 - MAVROS 2.15.1 installs `apm.launch` / `px4.launch`.
@@ -68,6 +68,34 @@ Acceptance:
 
 - MAVROS launch resolution succeeds.
 - No duplicate or unintended namespace is introduced.
+
+### Firmware selection update — 2026-10-05
+
+- Selection now uses only `MAVROS_FIRMWARE` (default: `auto`); the public `apm`
+  alias is rejected. Explicit ArduPilot/PX4 selections only override detection.
+- A single launch resolver maps ArduPilot/PX4 to their unchanged MAVROS profiles.
+- Betaflight/INAV/Mowgli fail explicitly with `not implemented`.
+- `auto` uses a passive, bounded libmavconn heartbeat probe for the configured FCU
+  target, with no fallback. MAVLink v1/v2 UDP loopback and passive Rock 5B /
+  Pixhawk5X serial bootstrap pass. Explicit ArduPilot also connects; TCP and
+  USB-loss recovery remain pending. Physical observations are retained in
+  `.agent/shared/checkpoints/retained/MM-FIRMWARE-ROCK5B-20261005.md`.
+- Separate follow-up: canonical GNSS briefly reports invalid in the explicit
+  bootstrap capture while its upstream/raw samples are valid; investigate freshness
+  using the retained physical observations. No GNSS change is included here.
+- Evidence: `.agent/shared/checkpoints/retained/MM-FIRMWARE-SELECTION-20261005.md`.
+
+### Firmware provider extraction — 2026-10-05
+
+- Bootstrap metadata/capabilities are centralized in the Python provider registry;
+  one resolution selects both MAVROS profile and C++ provider.
+- Providers own MANUAL_CONTROL conversion, emergency policy and explicit
+  arm/disarm/mode capabilities. ArduPilot/PX4 preserve existing behavior,
+  `HOLD`/disarm defaults and ROS parameter overrides; actuation validation is false.
+- ROS graph/transport, readiness, diagnostics, canonical GNSS, power and ESC
+  handling remain shared. MowgliNext is unchanged.
+- Selection, provider and mock-service regressions accompany the extraction.
+- Evidence: `.agent/shared/checkpoints/retained/MM-FIRMWARE-PROVIDERS-20261005.md`.
 
 ---
 

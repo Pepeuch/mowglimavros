@@ -8,6 +8,7 @@
   <license>GPL-3.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>ament_cmake_python</buildtool_depend>
 
   <depend>rclcpp</depend>
   <depend>geometry_msgs</depend>
@@ -20,6 +21,8 @@
   <depend>tf2_geometry_msgs</depend>
   <depend>mowgli_interfaces</depend>
   <depend>mavros</depend>
+  <depend>libmavconn</depend>
+  <depend>mavlink</depend>
   <depend>mavros_msgs</depend>
 
   <exec_depend>ament_index_python</exec_depend>
