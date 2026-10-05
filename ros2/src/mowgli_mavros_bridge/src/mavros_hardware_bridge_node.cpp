@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <cmath>
 #include <chrono>
+#include <cstdlib>
 #include <functional>
 #include <memory>
 #include <mutex>
@@ -18,6 +19,12 @@ using namespace std::chrono_literals;
 MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& options)
     : rclcpp::Node("hardware_bridge", options)
 {
+  // Set only by the backend launch after its single firmware resolution.
+  // Standalone bridge execution preserves its existing Rover conversion.
+  const char * resolved_firmware = std::getenv("MAVROS_RESOLVED_FIRMWARE");
+  firmware_provider_ = make_firmware_provider(
+      resolved_firmware ? resolved_firmware : "ardupilot");
+
   status_publish_rate_hz_ = declare_parameter<double>("status_publish_rate_hz", 10.0);
   manual_control_enabled_ = declare_parameter<bool>("manual_control_enabled", false);
   neutral_manual_control_enabled_ =
@@ -32,8 +39,9 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   readiness_ = ReadinessState(readiness_timeout_s, gnss_required_, wheel_odometry_required_);
   esc_observation_timeout_s_ = declare_parameter<double>("esc_observation_timeout_s", 3.0);
   esc_tracker_ = EscTelemetryTracker(esc_observation_timeout_s_);
-  emergency_mode_ = declare_parameter<std::string>("emergency_mode", "HOLD");
-  emergency_disarm_ = declare_parameter<bool>("emergency_disarm", true);
+  const auto emergency_defaults = firmware_provider_->default_emergency_policy();
+  emergency_mode_ = declare_parameter<std::string>("emergency_mode", emergency_defaults.mode);
+  emergency_disarm_ = declare_parameter<bool>("emergency_disarm", emergency_defaults.disarm);
   rain_detected_ = declare_parameter<bool>("rain_detected_default", false);
   esc_power_ = declare_parameter<bool>("esc_power_default", false);
   raspberry_pi_power_ = declare_parameter<bool>("raspberry_pi_power_default", true);
@@ -159,7 +167,8 @@ void MavrosHardwareBridgeNode::on_cmd_vel(const geometry_msgs::msg::TwistStamped
 
   // The Rover axes are fixed by ArduPilot; output polarity and scaling still
   // require physical validation before this publisher can be enabled.
-  auto cmd = rover_manual_control_from_twist(*msg, manual_control_linear_scale_, manual_control_yaw_scale_);
+  auto cmd = firmware_provider_->manual_control_from_twist(
+      *msg, manual_control_linear_scale_, manual_control_yaw_scale_);
   cmd.header.stamp = now();
   pub_manual_control_->publish(cmd);
 }
@@ -301,13 +310,14 @@ void MavrosHardwareBridgeNode::on_emergency_stop(
   // This service reports whether the emergency request was accepted locally
   // and forwarded to MAVROS. It does not imply the autopilot has already
   // confirmed or completed the requested state change.
+  const auto policy = firmware_provider_->emergency_policy(emergency_mode_, emergency_disarm_);
   bool request_sent = true;
 
-  if (!emergency_mode_.empty())
+  if (!policy.mode.empty())
   {
-    request_sent = send_mode_command(emergency_mode_) && request_sent;
+    request_sent = send_mode_command(policy.mode) && request_sent;
   }
-  if (emergency_disarm_)
+  if (policy.disarm)
   {
     request_sent = send_arm_command(false) && request_sent;
   }
@@ -319,16 +329,16 @@ void MavrosHardwareBridgeNode::on_emergency_stop(
     RCLCPP_WARN(
         get_logger(),
         "Emergency stop request sent to MAVROS (mode='%s', disarm=%s). Autopilot confirmation will be logged asynchronously.",
-        emergency_mode_.c_str(),
-        emergency_disarm_ ? "true" : "false");
+        policy.mode.c_str(),
+        policy.disarm ? "true" : "false");
   }
   else
   {
     RCLCPP_ERROR(
         get_logger(),
         "Emergency stop request could not be fully sent to MAVROS (mode='%s', disarm=%s).",
-        emergency_mode_.c_str(),
-        emergency_disarm_ ? "true" : "false");
+        policy.mode.c_str(),
+        policy.disarm ? "true" : "false");
   }
 }
 
@@ -496,6 +506,11 @@ void MavrosHardwareBridgeNode::publish_readiness()
 
 bool MavrosHardwareBridgeNode::send_arm_command(bool arm)
 {
+  const auto capabilities = firmware_provider_->capabilities();
+  if (!(arm ? capabilities.arm_implemented : capabilities.disarm_implemented))
+  {
+    return false;
+  }
   if (!cli_arm_)
   {
     RCLCPP_ERROR(get_logger(), "CommandBool client is null");
@@ -549,6 +564,10 @@ bool MavrosHardwareBridgeNode::send_arm_command(bool arm)
 
 bool MavrosHardwareBridgeNode::send_mode_command(const std::string& mode)
 {
+  if (!firmware_provider_->capabilities().mode_control_implemented)
+  {
+    return false;
+  }
   if (!cli_set_mode_)
   {
     RCLCPP_ERROR(get_logger(), "SetMode client is null");

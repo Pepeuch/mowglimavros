@@ -6,6 +6,8 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_python REQUIRED)
+ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
 find_package(rclcpp REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -32,6 +34,7 @@ target_link_libraries(detect_mavros_firmware PRIVATE ${libmavconn_LIBRARIES})
 add_executable(mavros_hardware_bridge_node
   src/mavros_hardware_bridge_node.cpp
   src/readiness_state.cpp
+  src/firmware_provider.cpp
 )
 
 target_include_directories(mavros_hardware_bridge_node PUBLIC
@@ -62,10 +65,20 @@ if(BUILD_TESTING)
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_gnss_launch.py"
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
   )
+  ament_add_test(test_firmware_provider
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_firmware_provider.py"
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
   ament_add_test(test_firmware_detection
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_firmware_detection.py"
       $<TARGET_FILE:detect_mavros_firmware>
     TIMEOUT 30
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
+  ament_add_test(test_provider_graph
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_provider_graph.py"
+      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
+    TIMEOUT 180
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
   )
   ament_add_test(test_gnss_graph
@@ -78,6 +91,12 @@ if(BUILD_TESTING)
   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
   ament_add_gtest(test_esc_telemetry_tracker test/test_esc_telemetry_tracker.cpp)
   target_include_directories(test_esc_telemetry_tracker PRIVATE include)
+  ament_add_gtest(test_command_provider test/test_command_provider.cpp src/firmware_provider.cpp)
+  target_include_directories(test_command_provider PRIVATE include)
+  target_link_libraries(test_command_provider
+    geometry_msgs::geometry_msgs__rosidl_generator_cpp
+    mavros_msgs::mavros_msgs__rosidl_generator_cpp
+  )
   ament_add_gtest(test_rover_manual_control test/test_rover_manual_control.cpp)
   target_include_directories(test_rover_manual_control PRIVATE include)
   target_link_libraries(

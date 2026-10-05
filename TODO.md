@@ -85,6 +85,18 @@ Acceptance:
   using the retained physical observations. No GNSS change is included here.
 - Evidence: `.agent/shared/checkpoints/retained/MM-FIRMWARE-SELECTION-20261005.md`.
 
+### Firmware provider extraction — 2026-10-05
+
+- Bootstrap metadata/capabilities are centralized in the Python provider registry;
+  one resolution selects both MAVROS profile and C++ provider.
+- Providers own MANUAL_CONTROL conversion, emergency policy and explicit
+  arm/disarm/mode capabilities. ArduPilot/PX4 preserve existing behavior,
+  `HOLD`/disarm defaults and ROS parameter overrides; actuation validation is false.
+- ROS graph/transport, readiness, diagnostics, canonical GNSS, power and ESC
+  handling remain shared. MowgliNext is unchanged.
+- Selection, provider and mock-service regressions accompany the extraction.
+- Evidence: `.agent/shared/checkpoints/retained/MM-FIRMWARE-PROVIDERS-20261005.md`.
+
 ---
 
 ## MM-102 — Make CMake compatible with Lyrical

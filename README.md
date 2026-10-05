@@ -72,3 +72,8 @@ serial bootstrap test on Rock 5B / Pixhawk5X (ArduRover 4.7.1). The probe-to-MAV
 handover and explicit ArduPilot override both connect on that setup. TCP startup,
 other hardware and recovery after USB loss still require validation. See the
 [physical evidence](.agent/shared/checkpoints/retained/MM-FIRMWARE-ROCK5B-20261005.md).
+
+The [firmware provider layer](ros2/src/mowgli_mavros_bridge/README.md) owns profile
+metadata, MANUAL_CONTROL mapping, emergency policy and explicit command
+capabilities. ArduPilot/PX4 retain their current profiles and runtime behavior;
+ROS transport, telemetry, readiness, GNSS, power and ESC handling remain shared.

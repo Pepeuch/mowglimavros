@@ -21,6 +21,8 @@ Navigation only. Not the project backlog.
 
 ## Retained
 
+- `MM-FIRMWARE-PROVIDERS-20261005` — bootstrap and C++ command/emergency providers; capabilities and ArduPilot/PX4 software equivalence; nine suites and installed graph pass.
+
 - `MM-FC-MAVLINK-PROVIDER-COMPAT-20261004` — Betaflight/INAV source sender findings, MowgliMAVROS ESC contract, selected MSP hardware evidence; MAVLink runtime capture and outdoor fix pending.
 - `MM-FIRMWARE-ROCK5B-20261005` — passive auto/ArduPilot serial bootstrap passes on Pixhawk5X; telemetry and restoration evidence; GNSS transients retained for follow-up.
 

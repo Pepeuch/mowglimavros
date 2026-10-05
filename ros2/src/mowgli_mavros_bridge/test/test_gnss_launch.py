@@ -3,6 +3,7 @@
 import importlib.util
 import os
 import subprocess
+import sys
 from pathlib import Path
 import unittest
 from unittest.mock import patch
@@ -10,6 +11,8 @@ from unittest.mock import patch
 from launch import LaunchContext
 import warnings
 
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
 
 path = Path(__file__).resolve().parents[1] / "launch/mavros_backend.launch.py"
 spec = importlib.util.spec_from_file_location("mavros_backend_launch", path)
@@ -25,6 +28,13 @@ class Value:
         return self.value
 
 
+def backend_nodes(context, mavros_share, *values):
+    return launch._backend_nodes(
+        context, mavros_share, *values,
+        bridge_params="/bridge.yaml", hardware_bridge_remappings=[("~/status", "/hardware_bridge/status")],
+    )
+
+
 class FirmwareLaunchTest(unittest.TestCase):
     def test_supported_profiles_preserve_node_configuration(self):
         for firmware, profile in (("ardupilot", "apm"), ("px4", "px4")):
@@ -34,11 +44,11 @@ class FirmwareLaunchTest(unittest.TestCase):
                         patch.object(launch.os.path, "isfile", return_value=True), \
                         patch.object(launch, "Node", side_effect=lambda **kwargs: kwargs), \
                         patch.object(launch.subprocess, "run") as probe:
-                    result = launch._mavros_node(
+                    result = backend_nodes(
                         None, "/mavros", *map(Value, (
                             selected, "serial:///dev/mavros:921600", "", "255", "1", "1",
                             "mavros", "gps1")))
-                    self.assertEqual(result, [{
+                    self.assertEqual(result[:1], [{
                         "package": "mavros", "executable": "mavros_node", "output": "screen",
                         "additional_env": {"GNSS_SOURCE": "mavros", "GNSS_MAVROS_SOURCE": "gps1"},
                         "parameters": [
@@ -57,7 +67,7 @@ class FirmwareLaunchTest(unittest.TestCase):
         for firmware in ("betaflight", "inav", "mowgli"):
             with self.subTest(firmware=firmware), patch.object(launch, "Node") as node, \
                     self.assertRaisesRegex(NotImplementedError, f"{firmware}: not implemented"):
-                launch._mavros_node(None, "/test", *map(Value, (
+                backend_nodes(None, "/test", *map(Value, (
                     firmware, "unused", "", "255", "1", "1", "mavros", "gps1")))
             node.assert_not_called()
 
@@ -96,6 +106,41 @@ class FirmwareLaunchTest(unittest.TestCase):
             description = launch.generate_launch_description()
             with self.assertRaisesRegex(RuntimeError, "auto: detection failed"):
                 description.entities[0].execute(LaunchContext())
+
+    def test_one_resolution_drives_profile_and_cpp_provider_without_changing_bridge(self):
+        remappings = [
+            ("~/imu/data_raw", "/imu/data"),
+            ("~/emergency", "/hardware_bridge/emergency"),
+            ("~/status", "/hardware_bridge/status"),
+            ("~/cmd_vel", "/cmd_vel"),
+        ]
+        for selected, detected in (("auto", "ardupilot"), ("auto", "px4"),
+                                   ("ardupilot", "ardupilot"), ("px4", "px4")):
+            for neutral in ("false", "true"):
+                env = {"MAVROS_FIRMWARE": selected, "MAVROS_NEUTRAL_TEST": neutral}
+                with self.subTest(selected=selected, detected=detected, neutral=neutral), \
+                        patch.dict(os.environ, env, clear=True), \
+                        patch.object(launch, "get_package_share_directory", return_value="/test"), \
+                        patch.object(launch, "get_package_prefix", return_value="/prefix"), \
+                        patch.object(launch.os.path, "isfile", return_value=True), \
+                        patch.object(launch, "Node", side_effect=lambda **kwargs: kwargs), \
+                        patch.object(launch.subprocess, "run", return_value=subprocess.CompletedProcess(
+                            [], 0, detected + "\n", "")) as probe:
+                    description = launch.generate_launch_description()
+                    result = description.entities[0].execute(LaunchContext())
+                    self.assertEqual(len(result), 2)
+                    self.assertEqual(probe.call_count, int(selected == "auto"))
+                    profile = "apm" if detected == "ardupilot" else "px4"
+                    self.assertEqual(result[0]["parameters"][0], f"/test/launch/{profile}_pluginlists.yaml")
+                    self.assertEqual(result[1], {
+                        "package": "mowgli_mavros_bridge",
+                        "executable": "mavros_hardware_bridge_node",
+                        "name": "hardware_bridge", "output": "screen",
+                        "additional_env": {"MAVROS_RESOLVED_FIRMWARE": detected},
+                        "parameters": ["/test/config/hardware_bridge_mavros.yaml", {
+                            "neutral_manual_control_enabled": neutral == "true"}],
+                        "remappings": remappings,
+                    })
 
     def test_auto_uses_target_transport_and_resolves_detected_profile(self):
         for firmware, profile in (("ardupilot", "apm"), ("px4", "px4")):
@@ -137,7 +182,7 @@ class GnssLaunchTest(unittest.TestCase):
                 with self.subTest(mode=mode, source=source), \
                         patch.object(launch.os.path, "isfile", return_value=True), \
                         patch.object(launch, "Node", side_effect=lambda **kwargs: kwargs):
-                    result = launch._mavros_node(
+                    result = backend_nodes(
                         None, "/test", *map(Value, (
                             "ardupilot", "udp://127.0.0.1:0@127.0.0.1:19999", "", "255", "1", "1",
                             mode, source)))
