@@ -4,6 +4,10 @@ Navigation only. Not the project backlog.
 
 ## Active
 
+- `MM-MAVROS-REFRESH-20261006` — WheelTick unit/provenance, Safety latches,
+  dedicated runtime configuration, RTK calibration GUI and traction opt-in;
+  software tests pass, full sidecar graph and target acceptance pending.
+
 - `MM-SAFETY-INPUTS-20261006` — Pixhawk hardware-safety and AP_Button wheel-lift
   ROS contract validated; physical polarity/GPIO/authority acceptance pending.
 

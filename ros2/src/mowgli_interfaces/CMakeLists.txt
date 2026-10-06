@@ -18,6 +18,7 @@ set(msg_files
   "msg/HighLevelStatus.msg"
   "msg/Power.msg"
   "msg/Status.msg"
+  "msg/WheelTick.msg"
 )
 
 set(srv_files

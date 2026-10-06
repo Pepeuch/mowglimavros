@@ -26,11 +26,18 @@ struct EmergencyState
 class SafetyState
 {
 public:
-  void observe_motor_outputs(bool enabled)
+  void observe_motor_outputs(bool present, bool enabled)
   {
+    if (!present) {
+      hardware_safety_state_ = HardwareSafetyState::Unknown;
+      hardware_emergency_latched_ = false;
+      return;
+    }
     hardware_safety_state_ = enabled ? HardwareSafetyState::Released :
       HardwareSafetyState::Engaged;
-    if (!enabled) {
+    if (enabled) {
+      hardware_emergency_latched_ = false;
+    } else {
       hardware_emergency_latched_ = true;
     }
   }
@@ -58,12 +65,15 @@ public:
     service_emergency_active_ = active;
     if (active) {
       service_emergency_latched_ = true;
+    } else {
+      service_emergency_latched_ = false;
     }
   }
 
   void disconnect()
   {
     hardware_safety_state_ = HardwareSafetyState::Unknown;
+    hardware_emergency_latched_ = false;
     wheel_lift_state_valid_ = false;
     lift_started_ns_ = 0;
   }
@@ -102,6 +112,13 @@ public:
   }
 
   HardwareSafetyState hardware_safety_state() const {return hardware_safety_state_;}
+  bool traction_allowed(bool enabled, bool connected, bool armed, int64_t now_ns,
+    bool wheel_lift_safety_enabled) const
+  {
+    const auto emergency = project(now_ns, wheel_lift_safety_enabled);
+    return enabled && connected && armed && hardware_safety_state_ == HardwareSafetyState::Released &&
+      !emergency.active_emergency && !emergency.latched_emergency;
+  }
   bool wheel_lift_state_valid() const {return wheel_lift_state_valid_;}
   bool left_wheel_lifted() const {return left_wheel_lifted_;}
   bool right_wheel_lifted() const {return right_wheel_lifted_;}

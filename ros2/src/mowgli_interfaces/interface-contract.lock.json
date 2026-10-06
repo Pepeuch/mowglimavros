@@ -10,8 +10,9 @@
     "msg/HighLevelStatus.msg": "0edb16633afe5bdaba17be430ea7383475015cbbbc86c519930565be4e77c413",
     "msg/Power.msg": "dd24ecf5ae095f290c48e5fee1129606463e5f07233bf47033fad4eeb84ed423",
     "msg/Status.msg": "a1aaee33fdb8b99581bf732b030d55e64e6472b66884f748344a3d596692e660",
+    "msg/WheelTick.msg": "28d89849fd0dcc08bff66e0992491ec8c54a92924a79bc4c2ba9f8b0db730773",
     "srv/EmergencyStop.srv": "42a65c6856c2e0d1e90303cd32f5b622948762cedc98884a45ba680f218866b7",
     "srv/MowerControl.srv": "1ec1a54cc0ac253cab1206bd823c88dc9b4c825a8a643fb9006e3ded283c773b"
   },
-  "fingerprint": "855c5d11421e394b0a2afbeb40c6e358ac2972b50b01d0669297b1adcc986d7a"
+  "fingerprint": "f3dd10cbbfbe64e1ae5e2e7412b58fefe3903d1593c61965f823e5cdb4117f20"
 }

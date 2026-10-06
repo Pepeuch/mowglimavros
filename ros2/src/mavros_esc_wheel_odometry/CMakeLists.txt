@@ -22,6 +22,7 @@ find_package(libmavconn REQUIRED)
 find_package(mavros REQUIRED)
 find_package(mavros_msgs REQUIRED)
 find_package(mavlink REQUIRED)
+find_package(mowgli_interfaces REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(pluginlib REQUIRED)
 find_package(rclcpp REQUIRED)
@@ -53,6 +54,7 @@ target_link_libraries(mavros_esc_wheel_odometry_plugins PUBLIC
   ${libmavconn_LIBRARIES}
   ${mavros_LIBRARIES}
   ${mavros_msgs_TARGETS}
+  ${mowgli_interfaces_TARGETS}
   ${nav_msgs_TARGETS}
   pluginlib::pluginlib
   rclcpp::rclcpp
@@ -83,6 +85,8 @@ if(BUILD_TESTING)
   target_link_libraries(test_observation_engine wheel_odometry_core)
   ament_add_gtest(test_wheel_odometry_core test/test_wheel_odometry_core.cpp)
   target_link_libraries(test_wheel_odometry_core wheel_odometry_core)
+  ament_add_gtest(test_wheel_tick_projection test/test_wheel_tick_projection.cpp)
+  target_link_libraries(test_wheel_tick_projection wheel_odometry_core)
 endif()
 
 ament_package()

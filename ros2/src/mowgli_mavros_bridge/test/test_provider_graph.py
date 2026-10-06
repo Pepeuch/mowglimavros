@@ -39,7 +39,7 @@ def main():
 
     import rclpy
     from geometry_msgs.msg import TwistStamped
-    from mavros_msgs.msg import ManualControl
+    from mavros_msgs.msg import ManualControl, State, SysStatus
     from mavros_msgs.srv import CommandBool, SetMode
     from mowgli_interfaces.srv import EmergencyStop
 
@@ -63,6 +63,14 @@ def main():
                 node.create_service(CommandBool, "/mavros/cmd/arming", arm_request)]
     subscription = node.create_subscription(ManualControl, "/mavros/manual_control/send", commands.append, 10)
     publisher = node.create_publisher(TwistStamped, "/cmd_vel", 10)
+    state_publisher = node.create_publisher(State, "/mavros/state", 10)
+    safety_publisher = node.create_publisher(SysStatus, "/mavros/sys_status", 10)
+    fcu_state = State(connected=True, armed=True)
+    safety_status = SysStatus(sensors_present=1 << 15, sensors_enabled=1 << 15)
+    def publish_safety():
+        state_publisher.publish(fcu_state)
+        safety_publisher.publish(safety_status)
+    safety_timer = node.create_timer(0.05, publish_safety)
     client = node.create_client(EmergencyStop, "/hardware_bridge/emergency_stop")
 
     def wait_for(predicate, timeout=6):
@@ -98,6 +106,10 @@ def main():
             try:
                 wait_for(lambda: client.service_is_ready() and publisher.get_subscription_count() == 1)
                 wait_for(lambda: subscription.get_publisher_count() == 1)
+                wait_for(lambda: state_publisher.get_subscription_count() == 1 and safety_publisher.get_subscription_count() == 1)
+                end = time.monotonic() + 0.3
+                while time.monotonic() < end:
+                    rclpy.spin_once(node, timeout_sec=0.05)
                 output = send_twist(0.2, -0.35)
                 if drive:
                     assert output
@@ -108,6 +120,18 @@ def main():
                 assert bool(output) == (drive or neutral)
                 assert all((msg.x, msg.y, msg.z, msg.r, msg.buttons) == (0, 0, 0, 0, 0) for msg in output)
                 assert not send_twist(float("nan"), 0.0), "invalid command gate changed"
+                assert not requests, "traction opt-in must never auto-arm or change mode"
+                if drive:
+                    safety_status.sensors_enabled = 0
+                    for _ in range(5):
+                        publish_safety()
+                        rclpy.spin_once(node, timeout_sec=0.05)
+                    output = send_twist(0.2, 0.0)
+                    assert output and all(msg.x == msg.y == msg.z == msg.r == 0 for msg in output), "physical safety must block traction"
+                    safety_status.sensors_enabled = 1 << 15
+                    for _ in range(5):
+                        publish_safety()
+                        rclpy.spin_once(node, timeout_sec=0.05)
 
                 future = client.call_async(EmergencyStop.Request(emergency=1))
                 wait_for(future.done)

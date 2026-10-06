@@ -105,6 +105,7 @@ def _backend_nodes(
         "config",
         "esc_wheel_odometry.yaml",
     )
+    runtime_wheel_odom_config = "/ros2_ws/config/esc_wheel_odometry.yaml"
     battery_observer_config = os.path.join(
         get_package_share_directory("mavros_battery_observer"),
         "config",
@@ -120,6 +121,14 @@ def _backend_nodes(
         raise RuntimeError(
             "MAVROS battery observer configuration is unavailable"
         )
+
+    wheel_odom_parameters = [wheel_odom_config]
+    if os.path.isfile(runtime_wheel_odom_config):
+        wheel_odom_parameters.append(runtime_wheel_odom_config)
+    bridge_parameters = [bridge_params]
+    runtime_bridge_config = "/ros2_ws/config/hardware_bridge.yaml"
+    if os.path.isfile(runtime_bridge_config):
+        bridge_parameters.append(runtime_bridge_config)
 
     # Universal GNSS owns the canonical /rtcm stream.
     #
@@ -144,7 +153,7 @@ def _backend_nodes(
             parameters=[
                 os.path.join(mavros_share, "launch", plugin_list),
                 os.path.join(mavros_share, "launch", config),
-                wheel_odom_config,
+                *wheel_odom_parameters,
                 battery_observer_config,
                 {
                     "fcu_url": fcu_url.perform(context),
@@ -168,11 +177,12 @@ def _backend_nodes(
             output="screen",
             additional_env={"MAVROS_RESOLVED_FIRMWARE": provider.name},
             parameters=[
-                bridge_params,
+                *bridge_parameters,
                 {
                     "neutral_manual_control_enabled": _as_bool(
                         os.environ.get("MAVROS_NEUTRAL_TEST", "false")
                     ),
+                    "blade_control_enabled": False,
                 },
             ],
             remappings=hardware_bridge_remappings,
