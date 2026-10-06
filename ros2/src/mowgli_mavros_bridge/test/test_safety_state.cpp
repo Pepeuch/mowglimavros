@@ -117,7 +117,7 @@ TEST(SafetyState, OneWheelWarnsAndTwoWheelsActivateEmergency)
 TEST(SafetyState, HardwareSafetyAlwaysActivatesEmergency)
 {
   SafetyState safety;
-  safety.observe_motor_outputs(false);
+  safety.observe_motor_outputs(true, false);
   const auto emergency = safety.project(1000000000LL, true);
   EXPECT_EQ(safety.hardware_safety_state(), HardwareSafetyState::Engaged);
   EXPECT_TRUE(emergency.active_emergency);
@@ -128,7 +128,7 @@ TEST(SafetyState, HardwareSafetyAlwaysActivatesEmergency)
 TEST(SafetyState, WheelSafetyParameterCannotDisableHardwareSafety)
 {
   SafetyState safety;
-  safety.observe_motor_outputs(false);
+  safety.observe_motor_outputs(true, false);
   safety.observe_button_change(0x00U, 1000000000LL);
   const auto emergency = safety.project(2000000000LL, false);
   EXPECT_TRUE(emergency.active_emergency);
@@ -140,7 +140,7 @@ TEST(SafetyState, SoftwareClearCannotMaskEngagedHardwareSafety)
 {
   SafetyState safety;
   safety.set_service_emergency(true);
-  safety.observe_motor_outputs(false);
+  safety.observe_motor_outputs(true, false);
   safety.set_service_emergency(false);
   const auto emergency = safety.project(1000000000LL, true);
   EXPECT_TRUE(emergency.active_emergency);
@@ -153,7 +153,7 @@ TEST(SafetyState, HardwareHasPriorityOverServiceAndWheelLift)
   SafetyState safety;
   safety.set_service_emergency(true);
   safety.observe_button_change(0x03U, 1000000000LL);
-  safety.observe_motor_outputs(false);
+  safety.observe_motor_outputs(true, false);
   const auto emergency = safety.project(2000000000LL, true);
   EXPECT_EQ(emergency.reason, "HARDWARE_SAFETY_SWITCH");
 }
@@ -172,8 +172,31 @@ TEST(SafetyState, ServiceEmergencyIsPreservedAcrossWheelCompositionAndClear)
   safety.set_service_emergency(false);
   emergency = safety.project(4000000000LL, true);
   EXPECT_FALSE(emergency.active_emergency);
-  EXPECT_TRUE(emergency.latched_emergency);
+  EXPECT_FALSE(emergency.latched_emergency);
   EXPECT_EQ(emergency.reason, "NONE");
+}
+
+TEST(SafetyState, AbsentMotorOutputsRemainUnknown)
+{
+  SafetyState safety;
+  safety.observe_motor_outputs(false, false);
+  const auto emergency = safety.project(1000000000LL, true);
+  EXPECT_EQ(safety.hardware_safety_state(), HardwareSafetyState::Unknown);
+  EXPECT_FALSE(emergency.active_emergency);
+  EXPECT_FALSE(emergency.latched_emergency);
+}
+
+TEST(SafetyState, ReleasedSafetyClearsOnlyHardwareLatch)
+{
+  SafetyState safety;
+  safety.observe_motor_outputs(true, false);
+  safety.set_service_emergency(true);
+  safety.observe_motor_outputs(true, true);
+  const auto emergency = safety.project(1000000000LL, true);
+  EXPECT_EQ(safety.hardware_safety_state(), HardwareSafetyState::Released);
+  EXPECT_TRUE(emergency.active_emergency);
+  EXPECT_TRUE(emergency.latched_emergency);
+  EXPECT_EQ(emergency.reason, "SERVICE_EMERGENCY_STOP");
 }
 
 }  // namespace

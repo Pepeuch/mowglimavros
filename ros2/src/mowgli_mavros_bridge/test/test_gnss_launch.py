@@ -55,6 +55,7 @@ class FirmwareLaunchTest(unittest.TestCase):
                             f"/mavros/launch/{profile}_pluginlists.yaml",
                             f"/mavros/launch/{profile}_config.yaml",
                             "/test/config/esc_wheel_odometry.yaml",
+                            "/ros2_ws/config/esc_wheel_odometry.yaml",
                             "/test/config/battery_observer.yaml",
                             {"fcu_url": "serial:///dev/mavros:921600", "gcs_url": "",
                              "system_id": 255, "tgt_system": 1, "tgt_component": 1},
@@ -137,8 +138,9 @@ class FirmwareLaunchTest(unittest.TestCase):
                         "executable": "mavros_hardware_bridge_node",
                         "name": "hardware_bridge", "output": "screen",
                         "additional_env": {"MAVROS_RESOLVED_FIRMWARE": detected},
-                        "parameters": ["/test/config/hardware_bridge_mavros.yaml", {
-                            "neutral_manual_control_enabled": neutral == "true"}],
+                        "parameters": ["/test/config/hardware_bridge_mavros.yaml", "/ros2_ws/config/hardware_bridge.yaml", {
+                            "neutral_manual_control_enabled": neutral == "true",
+                            "blade_control_enabled": False}],
                         "remappings": remappings,
                     })
 

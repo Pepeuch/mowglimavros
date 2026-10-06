@@ -19,6 +19,7 @@
   <depend>libmavconn</depend>
   <depend>mavros</depend>
   <depend>mavros_msgs</depend>
+  <depend>mowgli_interfaces</depend>
   <depend>nav_msgs</depend>
   <depend>pluginlib</depend>
   <depend>rclcpp</depend>

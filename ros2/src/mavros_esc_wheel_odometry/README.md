@@ -45,6 +45,18 @@ separately before choosing the common calibration. A disagreement is evidence
 to investigate, not a theoretical gear-ratio correction. No RTK fitting controller
 or cross-node configuration infrastructure is added in this patch.
 
+When a signed COMMON or legacy RPM source is selected and valid, the plugin also
+publishes `/wheel_ticks` as `mowgli_interfaces/WheelTick`. RL is the left drive
+wheel and RR the right one. The message uses the native backend's monotonic
+magnitude-plus-direction convention: raw fractional motor revolutions are
+transported with 1000 counts per motor revolution and `wheel_tick_factor` carries the matching
+`ticks_per_meter * 1000` scale. Accumulation does not depend on calibration;
+uncalibrated feedback remains available with factor zero. A source, epoch or
+segment change establishes a new reference while retaining published magnitude
+counts, rather than inventing a delta. Only new sample identities are published.
+WHEEL_DISTANCE has no motor-revolution
+counter and therefore never produces this topic.
+
 WHEEL_DISTANCE already reports metres and keeps its direct distance/dt path;
 its producer owns encoder calibration. The RPM tick conversion is not imposed
 on those measurements. Public /wheel_odom remains twist-only as before.

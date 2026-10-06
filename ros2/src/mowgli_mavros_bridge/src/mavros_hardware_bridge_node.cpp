@@ -69,6 +69,11 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions & o
           if (parameter.get_name() == "right_esc_slot") {right = parameter.as_int();}
           if (parameter.get_name() == "left_esc_slot") {left = parameter.as_int();}
           if (parameter.get_name() == "blade_esc_slot") {blade = parameter.as_int();}
+          if (parameter.get_name() == "manual_control_enabled" ||
+            parameter.get_name() == "wheel_lift_safety_enabled") {(void)parameter.as_bool();}
+          if (parameter.get_name() == "blade_control_enabled" && parameter.as_bool()) {
+            result.reason = "blade control remains disabled for this integration"; return result;
+          }
         }
         if (!roles_valid(right, left, blade)) {
           result.reason = "invalid or overlapping ESC role mapping"; return result;
@@ -88,6 +93,16 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions & o
         if (p.get_name() == "blade_esc_slot") {blade_esc_slot_ = p.as_int(); changed = true;}
         if (p.get_name() == "wheel_lift_safety_enabled") {
           wheel_lift_safety_enabled_ = p.as_bool();
+        }
+        if (p.get_name() == "manual_control_enabled") {
+          manual_control_enabled_ = p.as_bool();
+          if (!manual_control_enabled_) {
+            geometry_msgs::msg::TwistStamped zero;
+            auto neutral = firmware_provider_->manual_control_from_twist(
+              zero, manual_control_linear_scale_, manual_control_yaw_scale_);
+            neutral.header.stamp = now();
+            pub_manual_control_->publish(neutral);
+          }
         }
       }
       if (changed) {esc_tracker_.reset();}
@@ -220,10 +235,22 @@ void MavrosHardwareBridgeNode::create_timers()
 
 void MavrosHardwareBridgeNode::on_cmd_vel(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
+  std::lock_guard<std::mutex> lock(mutex_);
   if (!manual_control_allowed(*msg, manual_control_enabled_, neutral_manual_control_enabled_)) {
     RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), 5000,
         "Ignoring /cmd_vel: drive is disabled, neutral test not enabled, or command invalid.");
+    return;
+  }
+
+  const bool moving = msg->twist.linear.x != 0.0 || msg->twist.angular.z != 0.0;
+  if (moving && !safety_state_.traction_allowed(manual_control_enabled_,
+    mavros_state_.connected, mavros_state_.armed, now().nanoseconds(), wheel_lift_safety_enabled_)) {
+    geometry_msgs::msg::TwistStamped zero;
+    auto neutral = firmware_provider_->manual_control_from_twist(
+      zero, manual_control_linear_scale_, manual_control_yaw_scale_);
+    neutral.header.stamp = now();
+    pub_manual_control_->publish(neutral);
     return;
   }
 
@@ -267,7 +294,9 @@ void MavrosHardwareBridgeNode::on_mavros_sys_status(
     mavlink::common::MAV_SYS_STATUS_SENSOR::MOTOR_OUTPUTS);
   std::lock_guard<std::mutex> lock(mutex_);
   if (mavros_state_.connected) {
-    safety_state_.observe_motor_outputs((msg->sensors_enabled & kMotorOutputs) != 0U);
+    safety_state_.observe_motor_outputs(
+      (msg->sensors_present & kMotorOutputs) != 0U,
+      (msg->sensors_enabled & kMotorOutputs) != 0U);
   }
 }
 

@@ -432,9 +432,22 @@ Document the software contract that MowgliNext may depend on:
 - [ ] RTCM publication bound and byte-perfect tests (MM-201).
 - [ ] supported image architecture/digest requirements (MM-301 through MM-304 and MM-402).
 - [ ] Explicitly classify backend capability parity/absence for:
-      `/wheel_ticks`, `/imu/mag_raw`,
+      `/imu/mag_raw`,
       `reboot_board`, `set_firmware_debug`,
       and dig-safety inputs/behaviour.
+- [x] Project validated signed ESC motor-revolution observations onto
+      `/wheel_ticks` (`mowgli_interfaces/WheelTick`) without changing the
+      public schema. The projection retains the native magnitude-plus-direction
+      convention, rebaselines source/epoch/segment changes, and does not invent
+      gearing or metric calibration. Target source/scale/direction acceptance
+      remains `HARDWARE_PENDING`.
+- [x] Accept dedicated MowgliNext runtime odometry and hardware-bridge YAML,
+      false-by-default explicit traction opt-in and live wheel-lift protection.
+      Traction requires connected/already armed FCU, released physical safety
+      and no active/latched emergency; it never arms. Blade remains disabled.
+      Pure state/unit and mocked launch checks pass; real sidecar graph and new
+      target acceptance remain `ENVIRONMENT_PENDING` / `HARDWARE_PENDING`.
+      Evidence: `.agent/shared/checkpoints/active/MM-MAVROS-REFRESH-20261006.md`.
 - [x] Wire the software-side Pixhawk safety switch and AP_Button wheel-lift
       observations into canonical Emergency composition and diagnostics. MAVROS
       2.16 runtime evidence fixes the raw FCU stream at

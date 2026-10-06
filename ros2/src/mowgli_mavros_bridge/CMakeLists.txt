@@ -135,6 +135,8 @@ if(BUILD_TESTING)
     ${mavlink_INCLUDE_DIRS}
   )
   target_link_libraries(test_safety_state ${mavros_msgs_TARGETS})
+  ament_add_gtest(test_safety_traction test/test_safety_traction.cpp)
+  target_include_directories(test_safety_traction PRIVATE include)
 endif()
 
 install(

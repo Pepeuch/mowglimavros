@@ -17,8 +17,10 @@
 #include "diagnostic_msgs/msg/diagnostic_status.hpp"
 #include "diagnostic_msgs/msg/key_value.hpp"
 #include "nav_msgs/msg/odometry.hpp"
+#include "mowgli_interfaces/msg/wheel_tick.hpp"
 #include "mavros_esc_wheel_odometry/msg/esc_observation.hpp"
 #include "mavros_esc_wheel_odometry/observation_engine.hpp"
+#include "mavros_esc_wheel_odometry/wheel_tick_projection.hpp"
 
 namespace mavros_esc_wheel_odometry
 {
@@ -62,6 +64,7 @@ public:
       "/mavros/esc_wheel_odometry/esc_observation", rclcpp::SensorDataQoS().keep_last(64));
     diagnostics_pub_ = node->create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics",
         10);
+    wheel_ticks_pub_ = node->create_publisher<mowgli_interfaces::msg::WheelTick>("/wheel_ticks", 10);
     if (engine_->wheel_configured() && !frame_id_.empty() && !child_frame_id_.empty() &&
       std::isfinite(velocity_stddev_) && velocity_stddev_ >= 0 &&
       std::isfinite(velocity_stddev_ * velocity_stddev_))
@@ -244,6 +247,8 @@ private:
         status.values.push_back(item);
       };
     add("ticks_unit", "motor_revolution");
+    add("wheel_tick_transport_scale", precise(WheelTickProjection::kCountsPerMotorRevolution));
+    add("wheel_tick_source", source_name(wheel_tick_source_));
     add("ticks_per_meter", precise(config_.geometry.ticks_per_meter));
     add("rpm_metric_calibrated", config_.geometry.ticks_per_meter > 0 ? "true" : "false");
     const auto now = node->now().nanoseconds();
@@ -274,6 +279,40 @@ private:
     }
     out.status.push_back(status); diagnostics_pub_->publish(out);
   }
+  void publish_wheel_ticks()
+  {
+    const auto now = node->now().nanoseconds();
+    // Raw ticks remain available before metric calibration. Explicit source
+    // selection is preserved; WHEEL_DISTANCE has no motor tick contract.
+    WheelSource source = WheelSource::None;
+    auto ticks = engine_->motor_ticks(WheelSource::EscStatus, now);
+    if ((config_.source == "auto" || config_.source == "esc_status") &&
+      (ticks.left_valid || ticks.right_valid)) {
+      source = WheelSource::EscStatus;
+    } else if (config_.source == "auto" || config_.source == "ardupilot_legacy") {
+      ticks = engine_->motor_ticks(WheelSource::ArduPilotLegacy, now);
+      source = WheelSource::ArduPilotLegacy;
+    }
+    if (!ticks.left_valid && !ticks.right_valid) {source = WheelSource::None;}
+    wheel_tick_source_ = source;
+    const auto projected = wheel_tick_projector_.project(source, ticks);
+    if (!projected) {return;}
+    mowgli_interfaces::msg::WheelTick out;
+    out.stamp = stamp(std::max(ticks.left_receipt_ns, ticks.right_receipt_ns));
+    out.wheel_tick_factor = WheelTickProjection::factor(config_.geometry.ticks_per_meter);
+    // Keep magnitude counts continuous even while one wheel is invalid.
+    out.wheel_direction_rl = projected->left_direction;
+    out.wheel_ticks_rl = projected->left_count;
+    out.wheel_direction_rr = projected->right_direction;
+    out.wheel_ticks_rr = projected->right_count;
+    if (projected->left_valid) {
+      out.valid_wheels |= mowgli_interfaces::msg::WheelTick::WHEEL_VALID_RL;
+    }
+    if (projected->right_valid) {
+      out.valid_wheels |= mowgli_interfaces::msg::WheelTick::WHEEL_VALID_RR;
+    }
+    wheel_ticks_pub_->publish(out);
+  }
   void publish_wheel(const std::optional<WheelObservation> & observation)
   {
     if (!observation || !odom_pub_) {return;}
@@ -294,7 +333,7 @@ private:
     std::lock_guard<std::mutex> lock(mutex_); const auto now = node->now().nanoseconds();
     publish_wheel(engine_->common_status(CommonStatusPacket{m.index, m.time_usec, m.rpm, m.voltage,
         m.current, message->compid}, now));
-    publish_esc(now);
+    publish_esc(now); publish_wheel_ticks();
   }
   void handle_info(
     const mavlink::mavlink_message_t * message, mavlink::common::msg::ESC_INFO & m,
@@ -320,6 +359,7 @@ private:
     std::lock_guard<std::mutex> lock(mutex_);
     publish_wheel(engine_->legacy_rpm(left_rpm_instance_ == 1 ? m.rpm1 : m.rpm2,
       right_rpm_instance_ == 1 ? m.rpm1 : m.rpm2, node->now().nanoseconds()));
+    publish_wheel_ticks();
   }
   template<typename T> void legacy_packet(const T & m, unsigned index)
   {
@@ -345,6 +385,10 @@ private:
   {
     std::lock_guard<std::mutex> lock(mutex_); connected_ = connected;
     engine_->connection(connected);
+    if (!connected) {
+      wheel_tick_projector_.project(WheelSource::None, MotorTickState{});
+      wheel_tick_source_ = WheelSource::None;
+    }
   }
   ObservationConfig config_;
   int expected_offset_{-1};
@@ -358,9 +402,12 @@ private:
   int left_rpm_instance_{-1}, right_rpm_instance_{-1};
   double velocity_stddev_{0.1};
   rclcpp::Publisher<nav_msgs::msg::Odometry>::SharedPtr odom_pub_;
+  rclcpp::Publisher<mowgli_interfaces::msg::WheelTick>::SharedPtr wheel_ticks_pub_;
   rclcpp::Publisher<msg::EscObservation>::SharedPtr esc_pub_;
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr diagnostics_pub_;
   rclcpp::TimerBase::SharedPtr timer_;
+  WheelTickProjector wheel_tick_projector_;
+  WheelSource wheel_tick_source_{WheelSource::None};
 };
 }  // namespace mavros_esc_wheel_odometry
 #include <mavros/mavros_plugin_register_macro.hpp>
