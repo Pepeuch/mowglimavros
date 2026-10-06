@@ -435,6 +435,15 @@ Document the software contract that MowgliNext may depend on:
       `/wheel_ticks`, `/imu/mag_raw`,
       `reboot_board`, `set_firmware_debug`,
       and dig-safety inputs/behaviour.
+- [x] Wire the software-side Pixhawk safety switch and AP_Button wheel-lift
+      observations into canonical Emergency composition and diagnostics. MAVROS
+      2.16 runtime evidence fixes the raw FCU stream at
+      `/uas1/mavlink_source`; `/mavros/sys_status` supplies the official
+      `MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS` bit. The hot
+      `wheel_lift_safety_enabled` parameter gates only Emergency effects.
+      Focused state/decode and real-MAVROS graph tests pass (2026-10-06).
+      Physical switch polarity, GPIO mapping, timing, and blade interruption
+      remain `HARDWARE_PENDING` under MM-801/HW-MAV-004.
 - [ ] Define truthful MAVROS-backend semantics for
       `Status.firmware_compatible` / preflight compatibility.
       Do not publish `true` merely to bypass the native STM32 guard.
@@ -701,6 +710,10 @@ Hardware acceptance gates retained from the migration audit:
 - [ ] `HW-MAV-002` — steering/throttle plus zero, HOLD, disarm, DDS, and USB-loss stop semantics (`HARDWARE_PENDING`).
 - [ ] `HW-MAV-003` — physical POWER1 traction and POWER2 dock behavior (`HARDWARE_PENDING`).
 - [ ] `HW-MAV-004` — blade command/feedback and emergency authority (`HARDWARE_PENDING`; separate blade-on authorization required).
+- [ ] `HW-MAV-006` — verify physical Pixhawk safety-switch polarity plus
+      AP_Button BTN_PIN1/GPIO50 left and BTN_PIN2/GPIO51 right wheel-lift
+      mapping, reconnect timing, and actual actuator/blade authority
+      (`HARDWARE_PENDING`; no blade interruption is inferred from ROS tests).
 - [ ] `HW-MAV-005` — outdoor GNSS/RTCM and HERE4 CAN1/VESC coexistence (`HARDWARE_PENDING`).
 
 Follow `.agent/policies/HARDWARE.md`.

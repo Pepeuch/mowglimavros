@@ -43,6 +43,10 @@ target_include_directories(mavros_hardware_bridge_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+target_include_directories(mavros_hardware_bridge_node SYSTEM PRIVATE
+  ${libmavconn_INCLUDE_DIRS}
+  ${mavlink_INCLUDE_DIRS}
+)
 
 target_link_libraries(mavros_hardware_bridge_node PUBLIC
   ${geometry_msgs_TARGETS}
@@ -92,6 +96,13 @@ if(BUILD_TESTING)
     TIMEOUT 100
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
   )
+  ament_add_test(test_safety_graph
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_safety_graph.py"
+      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
+    ENV ROS_DOMAIN_ID=196 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+    TIMEOUT 60
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
   ament_add_test(test_gnss_graph
     COMMAND "${Python3_EXECUTABLE}"
       "${mavros_gnss_adapter_DIR}/../../../lib/mavros_gnss_adapter/test_gnss_graph.py"
@@ -117,6 +128,13 @@ if(BUILD_TESTING)
     mavros_msgs::mavros_msgs__rosidl_generator_cpp
   )
   target_include_directories(test_readiness_state PRIVATE include)
+  ament_add_gtest(test_safety_state test/test_safety_state.cpp)
+  target_include_directories(test_safety_state PRIVATE
+    include
+    ${libmavconn_INCLUDE_DIRS}
+    ${mavlink_INCLUDE_DIRS}
+  )
+  target_link_libraries(test_safety_state ${mavros_msgs_TARGETS})
 endif()
 
 install(

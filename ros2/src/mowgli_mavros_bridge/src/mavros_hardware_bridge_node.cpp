@@ -1,4 +1,5 @@
 #include "mavros_hardware_bridge_node.hpp"
+#include "mowgli_mavros_bridge/button_change_decoder.hpp"
 #include "mowgli_mavros_bridge/vesc_telemetry_projection.hpp"
 #include "mowgli_mavros_bridge/rover_manual_control.hpp"
 
@@ -16,8 +17,8 @@ namespace mowgli_mavros_bridge
 
 using namespace std::chrono_literals;
 
-MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& options)
-    : rclcpp::Node("hardware_bridge", options)
+MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions & options)
+: rclcpp::Node("hardware_bridge", options)
 {
   // Set only by the backend launch after its single firmware resolution.
   // Standalone bridge execution preserves its existing Rover conversion.
@@ -28,12 +29,13 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   status_publish_rate_hz_ = declare_parameter<double>("status_publish_rate_hz", 10.0);
   manual_control_enabled_ = declare_parameter<bool>("manual_control_enabled", false);
   neutral_manual_control_enabled_ =
-      declare_parameter<bool>("neutral_manual_control_enabled", false);
+    declare_parameter<bool>("neutral_manual_control_enabled", false);
   manual_control_linear_scale_ = declare_parameter<double>("manual_control_linear_scale", 1000.0);
   manual_control_yaw_scale_ = declare_parameter<double>("manual_control_yaw_scale", 1000.0);
   blade_control_enabled_ = declare_parameter<bool>("blade_control_enabled", false);
   battery_observation_timeout_s_ = declare_parameter<double>("battery_observation_timeout_s", 5.0);
-  const auto readiness_timeout_s = declare_parameter<double>("readiness_observation_timeout_s", 5.0);
+  const auto readiness_timeout_s = declare_parameter<double>("readiness_observation_timeout_s",
+      5.0);
   gnss_required_ = declare_parameter<bool>("gnss_required", true);
   wheel_odometry_required_ = declare_parameter<bool>("wheel_odometry_required", false);
   readiness_ = ReadinessState(readiness_timeout_s, gnss_required_, wheel_odometry_required_);
@@ -43,15 +45,21 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   left_esc_slot_ = declare_parameter<int64_t>("left_esc_slot", 1);
   blade_esc_slot_ = declare_parameter<int64_t>("blade_esc_slot", 2);
   auto roles_valid = [](int64_t right, int64_t left, int64_t blade) {
-    const int64_t roles[] = {right, left, blade};
-    for (int64_t role : roles) {if (role < -1 || role >= 64) {return false;}}
-    return (right < 0 || left < 0 || right != left) &&
-      (right < 0 || blade < 0 || right != blade) && (left < 0 || blade < 0 || left != blade);
-  };
+      const int64_t roles[] = {right, left, blade};
+      for (int64_t role : roles) {
+        if (role < -1 || role >= 64) {
+          return false;
+        }
+      }
+      return (right < 0 || left < 0 || right != left) &&
+             (right < 0 || blade < 0 || right != blade) && (left < 0 || blade < 0 || left != blade);
+    };
   if (!roles_valid(right_esc_slot_, left_esc_slot_, blade_esc_slot_)) {
-    throw std::invalid_argument("ESC role mappings must be distinct indexes in [0,63], or -1 disabled");
+    throw std::invalid_argument(
+        "ESC role mappings must be distinct indexes in [0,63], or -1 disabled");
   }
-  esc_mapping_callback_ = add_on_set_parameters_callback(
+  wheel_lift_safety_enabled_ = declare_parameter<bool>("wheel_lift_safety_enabled", true);
+  parameter_validation_callback_ = add_on_set_parameters_callback(
     [this, roles_valid](const std::vector<rclcpp::Parameter> & parameters) {
       std::lock_guard<std::mutex> lock(mutex_);
       int64_t right = right_esc_slot_, left = left_esc_slot_, blade = blade_esc_slot_;
@@ -62,18 +70,25 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
           if (parameter.get_name() == "left_esc_slot") {left = parameter.as_int();}
           if (parameter.get_name() == "blade_esc_slot") {blade = parameter.as_int();}
         }
-        if (!roles_valid(right, left, blade)) {result.reason = "invalid or overlapping ESC role mapping"; return result;}
+        if (!roles_valid(right, left, blade)) {
+          result.reason = "invalid or overlapping ESC role mapping"; return result;
+        }
         result.successful = true;
-      } catch (const std::exception & error) {result.reason = error.what();}
+      } catch (const std::exception & error) {
+        result.reason = error.what();
+      }
       return result;
     });
-  esc_mapping_apply_ = add_post_set_parameters_callback(
+  parameter_apply_callback_ = add_post_set_parameters_callback(
     [this](const std::vector<rclcpp::Parameter> & parameters) {
       std::lock_guard<std::mutex> lock(mutex_); bool changed = false;
       for (const auto & p : parameters) {
         if (p.get_name() == "right_esc_slot") {right_esc_slot_ = p.as_int(); changed = true;}
         if (p.get_name() == "left_esc_slot") {left_esc_slot_ = p.as_int(); changed = true;}
         if (p.get_name() == "blade_esc_slot") {blade_esc_slot_ = p.as_int(); changed = true;}
+        if (p.get_name() == "wheel_lift_safety_enabled") {
+          wheel_lift_safety_enabled_ = p.as_bool();
+        }
       }
       if (changed) {esc_tracker_.reset();}
     });
@@ -90,14 +105,12 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   create_clients();
   create_timers();
 
-  if (!manual_control_enabled_)
-  {
+  if (!manual_control_enabled_) {
     RCLCPP_WARN(
         get_logger(),
         "manual_control_enabled=false: /cmd_vel commands will be ignored until MAVROS manual control mapping is validated.");
   }
-  if (!blade_control_enabled_)
-  {
+  if (!blade_control_enabled_) {
     RCLCPP_WARN(
         get_logger(),
         "blade_control_enabled=false: mower_control remains provisional and will report failure.");
@@ -111,7 +124,7 @@ void MavrosHardwareBridgeNode::create_publishers()
   pub_emergency_ = create_publisher<mowgli_interfaces::msg::Emergency>("~/emergency", 10);
   pub_imu_ = create_publisher<sensor_msgs::msg::Imu>("~/imu/data_raw", 10);
   pub_manual_control_ =
-      create_publisher<mavros_msgs::msg::ManualControl>("/mavros/manual_control/send", 10);
+    create_publisher<mavros_msgs::msg::ManualControl>("/mavros/manual_control/send", 10);
   pub_readiness_ = create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics", 10);
 }
 
@@ -134,6 +147,18 @@ void MavrosHardwareBridgeNode::create_subscriptions()
       "/mavros/state",
       default_qos,
       std::bind(&MavrosHardwareBridgeNode::on_mavros_state, this, std::placeholders::_1));
+
+  sub_mavros_sys_status_ = create_subscription<mavros_msgs::msg::SysStatus>(
+      "/mavros/sys_status",
+      sensor_qos,
+      std::bind(&MavrosHardwareBridgeNode::on_mavros_sys_status, this, std::placeholders::_1));
+
+  // MAVROS 2.16 exposes the FCU receive stream on its UAS endpoint, /uas1.
+  // It is not a private plugin topic under /mavros.
+  sub_mavlink_source_ = create_subscription<mavros_msgs::msg::Mavlink>(
+      "/uas1/mavlink_source",
+      sensor_qos,
+      std::bind(&MavrosHardwareBridgeNode::on_mavlink_source, this, std::placeholders::_1));
 
   sub_mavros_imu_ = create_subscription<sensor_msgs::msg::Imu>(
       "/mavros/imu/data",
@@ -183,20 +208,19 @@ void MavrosHardwareBridgeNode::create_timers()
   const auto period = std::chrono::duration<double>(1.0 / std::max(1.0, status_publish_rate_hz_));
 
   timer_status_ = create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(period),
-                                    [this]()
-                                    {
-                                      publish_status();
-                                      publish_emergency();
+      [this]()
+      {
+        publish_status();
+        publish_emergency();
                                     });
   timer_diagnostics_ = create_wall_timer(1s, [this]() {
-    publish_readiness();
+        publish_readiness();
   });
 }
 
 void MavrosHardwareBridgeNode::on_cmd_vel(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
-  if (!manual_control_allowed(*msg, manual_control_enabled_, neutral_manual_control_enabled_))
-  {
+  if (!manual_control_allowed(*msg, manual_control_enabled_, neutral_manual_control_enabled_)) {
     RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), 5000,
         "Ignoring /cmd_vel: drive is disabled, neutral test not enabled, or command invalid.");
@@ -212,7 +236,7 @@ void MavrosHardwareBridgeNode::on_cmd_vel(const geometry_msgs::msg::TwistStamped
 }
 
 void MavrosHardwareBridgeNode::on_high_level_status(
-    const mowgli_interfaces::msg::HighLevelStatus::SharedPtr msg)
+  const mowgli_interfaces::msg::HighLevelStatus::SharedPtr msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   last_high_level_status_ = *msg;
@@ -229,8 +253,37 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
     charger_enabled_ = false;
     charger_status_ = "unknown";
   }
+  if (!msg->connected) {
+    safety_state_.disconnect();
+  }
   readiness_.connection(msg->connected);
   mavros_state_ = *msg;
+}
+
+void MavrosHardwareBridgeNode::on_mavros_sys_status(
+  const mavros_msgs::msg::SysStatus::SharedPtr msg)
+{
+  constexpr uint32_t kMotorOutputs = static_cast<uint32_t>(
+    mavlink::common::MAV_SYS_STATUS_SENSOR::MOTOR_OUTPUTS);
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (mavros_state_.connected) {
+    safety_state_.observe_motor_outputs((msg->sensors_enabled & kMotorOutputs) != 0U);
+  }
+}
+
+void MavrosHardwareBridgeNode::on_mavlink_source(
+  const mavros_msgs::msg::Mavlink::SharedPtr msg)
+{
+  const auto button_state = decode_button_change(*msg);
+  if (!button_state) {
+    return;
+  }
+
+  const auto receipt_ns = now().nanoseconds();
+  std::lock_guard<std::mutex> lock(mutex_);
+  if (mavros_state_.connected) {
+    safety_state_.observe_button_change(*button_state, receipt_ns);
+  }
 }
 
 void MavrosHardwareBridgeNode::on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg)
@@ -244,7 +297,7 @@ void MavrosHardwareBridgeNode::on_mavros_imu(const sensor_msgs::msg::Imu::Shared
 }
 
 void MavrosHardwareBridgeNode::on_power(
-    const mowgli_interfaces::msg::Power::SharedPtr msg)
+  const mowgli_interfaces::msg::Power::SharedPtr msg)
 {
   const auto receipt_ns = now().nanoseconds();
   std::lock_guard<std::mutex> lock(mutex_);
@@ -257,14 +310,15 @@ void MavrosHardwareBridgeNode::on_power(
 }
 
 void MavrosHardwareBridgeNode::on_esc_telemetry(
-    const mavros_esc_wheel_odometry::msg::EscObservation::SharedPtr msg)
+  const mavros_esc_wheel_odometry::msg::EscObservation::SharedPtr msg)
 {
   const auto receipt_ns = now().nanoseconds();
   std::lock_guard<std::mutex> lock(mutex_);
   if (mavros_state_.connected) {esc_tracker_.observe(*msg, receipt_ns);}
 }
 
-void MavrosHardwareBridgeNode::on_gnss_status(const mowgli_interfaces::msg::GnssStatus::SharedPtr msg)
+void MavrosHardwareBridgeNode::on_gnss_status(
+  const mowgli_interfaces::msg::GnssStatus::SharedPtr msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
   readiness_.gnss(now().nanoseconds(), msg->position_observation_sequence,
@@ -278,11 +332,10 @@ void MavrosHardwareBridgeNode::on_wheel_odom(const nav_msgs::msg::Odometry::Shar
 }
 
 void MavrosHardwareBridgeNode::on_mower_control(
-    const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
-    std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response)
+  const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
+  std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response)
 {
-  if (!blade_control_enabled_)
-  {
+  if (!blade_control_enabled_) {
     RCLCPP_WARN(
         get_logger(),
         "Mower control requested, but blade_control_enabled=false because the Pixhawk blade path is still provisional.");
@@ -306,30 +359,21 @@ void MavrosHardwareBridgeNode::on_mower_control(
 }
 
 void MavrosHardwareBridgeNode::on_emergency_stop(
-    const std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Request> request,
-    std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Response> response)
+  const std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Request> request,
+  std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Response> response)
 {
   const bool emergency_requested = (request->emergency != 0U);
 
   {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    if (emergency_requested)
-    {
-      emergency_active_ = true;
-      emergency_latched_ = true;
-      emergency_reason_ = "SERVICE_EMERGENCY_STOP";
+    safety_state_.set_service_emergency(emergency_requested);
+    if (emergency_requested) {
       mow_enabled_ = false;
-    }
-    else
-    {
-      emergency_active_ = false;
-      emergency_reason_ = "NONE";
     }
   }
 
-  if (!emergency_requested)
-  {
+  if (!emergency_requested) {
     response->success = true;
     return;
   }
@@ -340,27 +384,22 @@ void MavrosHardwareBridgeNode::on_emergency_stop(
   const auto policy = firmware_provider_->emergency_policy(emergency_mode_, emergency_disarm_);
   bool request_sent = true;
 
-  if (!policy.mode.empty())
-  {
+  if (!policy.mode.empty()) {
     request_sent = send_mode_command(policy.mode) && request_sent;
   }
-  if (policy.disarm)
-  {
+  if (policy.disarm) {
     request_sent = send_arm_command(false) && request_sent;
   }
 
   response->success = request_sent;
 
-  if (request_sent)
-  {
+  if (request_sent) {
     RCLCPP_WARN(
         get_logger(),
         "Emergency stop request sent to MAVROS (mode='%s', disarm=%s). Autopilot confirmation will be logged asynchronously.",
         policy.mode.c_str(),
         policy.disarm ? "true" : "false");
-  }
-  else
-  {
+  } else {
     RCLCPP_ERROR(
         get_logger(),
         "Emergency stop request could not be fully sent to MAVROS (mode='%s', disarm=%s).",
@@ -392,17 +431,17 @@ void MavrosHardwareBridgeNode::publish_status()
     // ArduPilot armed state is not a mower-controller health report.
     msg.mower_status = mowgli_interfaces::msg::Status::MOWER_STATUS_INITIALIZING;
 
-    const auto mower = esc_tracker_.project(static_cast<unsigned>(blade_esc_slot_), now().nanoseconds());
+    const auto mower = esc_tracker_.project(static_cast<unsigned>(blade_esc_slot_),
+        now().nanoseconds());
     const auto blade = blade_telemetry_from_esc(mower);
     msg.mower_esc_status = blade.status;
     msg.mower_esc_temperature = blade.temperature;
-    if (blade.available)
-    {
+    if (blade.available) {
       msg.mower_esc_current = blade.current;
       msg.mower_motor_rpm = blade.rpm;
       msg.blade_status_stamp.sec = static_cast<int32_t>(blade.stamp_ns / 1000000000LL);
       msg.blade_status_stamp.nanosec =
-          static_cast<uint32_t>(blade.stamp_ns % 1000000000LL);
+        static_cast<uint32_t>(blade.stamp_ns % 1000000000LL);
     }
     // Configured blade role only. Wheel roles remain diagnostics-only here;
     // motor winding temperature and hardware E-stop remain unavailable.
@@ -419,9 +458,13 @@ void MavrosHardwareBridgeNode::publish_emergency()
   {
     std::lock_guard<std::mutex> lock(mutex_);
     msg.stamp = now();
-    msg.active_emergency = emergency_active_;
-    msg.latched_emergency = emergency_latched_;
-    msg.reason = emergency_reason_;
+    const auto emergency = safety_state_.project(
+      rclcpp::Time(msg.stamp).nanoseconds(), wheel_lift_safety_enabled_);
+    msg.active_emergency = emergency.active_emergency;
+    msg.latched_emergency = emergency.latched_emergency;
+    msg.lift_warning = emergency.lift_warning;
+    msg.lift_duration_sec = emergency.lift_duration_sec;
+    msg.reason = emergency.reason;
   }
 
   pub_emergency_->publish(msg);
@@ -438,6 +481,8 @@ void MavrosHardwareBridgeNode::publish_readiness()
   std::array<EscState, 3> esc{};
   std::array<int64_t, 3> esc_slots{};
   mavros_msgs::msg::State fcu{};
+  SafetyState safety{};
+  bool wheel_lift_safety_enabled = true;
   {
     std::lock_guard<std::mutex> lock(mutex_);
     readiness = readiness_.project(now_ns);
@@ -445,33 +490,34 @@ void MavrosHardwareBridgeNode::publish_readiness()
     power_fresh = last_power_receipt_ns_ > 0 && now_ns >= last_power_receipt_ns_ &&
       now_ns - last_power_receipt_ns_ <= static_cast<int64_t>(battery_observation_timeout_s_ * 1e9);
     esc_slots = {right_esc_slot_, left_esc_slot_, blade_esc_slot_};
-    for (unsigned i = 0; i < esc.size(); ++i)
-    {
+    for (unsigned i = 0; i < esc.size(); ++i) {
       esc[i] = esc_tracker_.project(static_cast<unsigned>(esc_slots[i]), now_ns);
     }
     fcu = mavros_state_;
+    safety = safety_state_;
+    wheel_lift_safety_enabled = wheel_lift_safety_enabled_;
   }
-  const auto add_value = [](diagnostic_msgs::msg::DiagnosticStatus& status,
-                            const char* key, const std::string& value) {
-    diagnostic_msgs::msg::KeyValue item;
-    item.key = key;
-    item.value = value;
-    status.values.push_back(std::move(item));
-  };
+  const auto add_value = [](diagnostic_msgs::msg::DiagnosticStatus & status,
+    const char * key, const std::string & value) {
+      diagnostic_msgs::msg::KeyValue item;
+      item.key = key;
+      item.value = value;
+      status.values.push_back(std::move(item));
+    };
   const auto format_value = [](double value) {
-    return std::isfinite(value) ? std::to_string(value) : std::string("unavailable");
-  };
-  const auto add_component = [&output](const char* name, bool ok, const char* message) {
-    diagnostic_msgs::msg::DiagnosticStatus status;
-    status.name = name;
-    status.level = ok ? diagnostic_msgs::msg::DiagnosticStatus::OK :
-                        diagnostic_msgs::msg::DiagnosticStatus::WARN;
-    status.message = message;
-    output.status.push_back(std::move(status));
-  };
+      return std::isfinite(value) ? std::to_string(value) : std::string("unavailable");
+    };
+  const auto add_component = [&output](const char * name, bool ok, const char * message) {
+      diagnostic_msgs::msg::DiagnosticStatus status;
+      status.name = name;
+      status.level = ok ? diagnostic_msgs::msg::DiagnosticStatus::OK :
+        diagnostic_msgs::msg::DiagnosticStatus::WARN;
+      status.message = message;
+      output.status.push_back(std::move(status));
+    };
   add_component("mowgli_mavros_bridge/fcu_connection", readiness.connected,
                 readiness.connected ? "connected" : "disconnected");
-  auto& fcu_status = output.status.back();
+  auto & fcu_status = output.status.back();
   add_value(fcu_status, "mode", fcu.mode);
   add_value(fcu_status, "armed", fcu.armed ? "true" : "false");
   add_value(fcu_status, "firmware_compatible", "unknown");
@@ -492,7 +538,7 @@ void MavrosHardwareBridgeNode::publish_readiness()
   diagnostic_msgs::msg::DiagnosticStatus power_status;
   power_status.name = "mowgli_mavros_bridge/power";
   power_status.level = power_fresh ? diagnostic_msgs::msg::DiagnosticStatus::OK :
-      diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    diagnostic_msgs::msg::DiagnosticStatus::STALE;
   power_status.message = power_fresh ? "fresh_canonical_power" : "missing_or_stale";
   add_value(power_status, "charge_current_a", format_value(power.charge_current));
   add_value(power_status, "battery_voltage_v", format_value(power.v_battery));
@@ -501,41 +547,93 @@ void MavrosHardwareBridgeNode::publish_readiness()
   add_value(power_status, "charger_status", power_fresh ? power.charger_status : "unavailable");
   output.status.push_back(std::move(power_status));
 
-  constexpr const char* kEscNames[3] = {"right_wheel", "left_wheel", "mower"};
-  for (unsigned i = 0; i < esc.size(); ++i)
-  {
+  constexpr const char * kEscNames[3] = {"right_wheel", "left_wheel", "mower"};
+  for (unsigned i = 0; i < esc.size(); ++i) {
     diagnostic_msgs::msg::DiagnosticStatus status;
     status.name = std::string("mowgli_mavros_bridge/vesc_") + kEscNames[i];
     status.level = esc[i].online ? diagnostic_msgs::msg::DiagnosticStatus::OK :
-        diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      diagnostic_msgs::msg::DiagnosticStatus::STALE;
     const bool failure = esc[i].sample.failure_flags_valid && esc[i].sample.failure_flags != 0;
     if (esc[i].online && failure) {status.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;}
-    status.message = esc[i].online ? (failure ? "esc_failure_flags" : "online") : (esc[i].stale ? "stale" : "absent");
+    status.message =
+      esc[i].online ? (failure ? "esc_failure_flags" : "online") :
+      (esc[i].stale ? "stale" : "absent");
     add_value(status, "esc_index", std::to_string(esc_slots[i]));
     add_value(status, "source", std::to_string(esc[i].sample.source));
     add_value(status, "online", esc[i].online ? "true" : "false");
     add_value(status, "stale", esc[i].stale ? "true" : "false");
     add_value(status, "age_ms", std::to_string(esc[i].age_ms));
-    if (esc[i].observed)
-    {
+    if (esc[i].observed) {
       add_value(status, "rpm_abs", esc[i].sample.rpm_valid ? std::to_string(
         std::abs(static_cast<int64_t>(esc[i].sample.rpm))) : "unavailable");
-      add_value(status, "voltage_v", esc[i].sample.voltage_valid ? format_value(esc[i].sample.voltage) : "unavailable");
-      add_value(status, "current_a", esc[i].sample.current_valid ? format_value(esc[i].sample.current) : "unavailable");
-      add_value(status, "totalcurrent_ah", esc[i].sample.totalcurrent_valid ? format_value(esc[i].sample.totalcurrent) : "unavailable");
-      add_value(status, "temperature_c", esc[i].sample.temperature_valid ? format_value(esc[i].sample.temperature) : "unavailable");
-      add_value(status, "count", esc[i].sample.count_valid ? std::to_string(esc[i].sample.count) : "unavailable");
+      add_value(status, "voltage_v",
+          esc[i].sample.voltage_valid ? format_value(esc[i].sample.voltage) : "unavailable");
+      add_value(status, "current_a",
+          esc[i].sample.current_valid ? format_value(esc[i].sample.current) : "unavailable");
+      add_value(status, "totalcurrent_ah",
+          esc[i].sample.totalcurrent_valid ? format_value(esc[i].sample.totalcurrent) :
+          "unavailable");
+      add_value(status, "temperature_c",
+          esc[i].sample.temperature_valid ? format_value(esc[i].sample.temperature) :
+          "unavailable");
+      add_value(status, "count",
+          esc[i].sample.count_valid ? std::to_string(esc[i].sample.count) : "unavailable");
       add_value(status, "rpm_valid", esc[i].sample.rpm_valid ? "true" : "false");
       add_value(status, "temperature_valid", esc[i].sample.temperature_valid ? "true" : "false");
-      add_value(status, "failure_flags_valid", esc[i].sample.failure_flags_valid ? "true" : "false");
-      add_value(status, "failure_flags", esc[i].sample.failure_flags_valid ? std::to_string(esc[i].sample.failure_flags) : "unavailable");
+      add_value(status, "failure_flags_valid",
+          esc[i].sample.failure_flags_valid ? "true" : "false");
+      add_value(status, "failure_flags",
+          esc[i].sample.failure_flags_valid ? std::to_string(esc[i].sample.failure_flags) :
+          "unavailable");
       add_value(status, "error_count_valid", esc[i].sample.error_count_valid ? "true" : "false");
-      add_value(status, "error_count", esc[i].sample.error_count_valid ? std::to_string(esc[i].sample.error_count) : "unavailable");
+      add_value(status, "error_count",
+          esc[i].sample.error_count_valid ? std::to_string(esc[i].sample.error_count) :
+          "unavailable");
     }
     output.status.push_back(std::move(status));
   }
-  add_component("mowgli_mavros_bridge/hardware_emergency_stop", false,
-                "unavailable_not_installed");
+  diagnostic_msgs::msg::DiagnosticStatus hardware_safety;
+  hardware_safety.name = "mowgli_mavros_bridge/hardware_emergency_stop";
+  switch (safety.hardware_safety_state()) {
+    case HardwareSafetyState::Engaged:
+      hardware_safety.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+      hardware_safety.message = "engaged";
+      break;
+    case HardwareSafetyState::Released:
+      hardware_safety.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+      hardware_safety.message = "released";
+      break;
+    case HardwareSafetyState::Unknown:
+      hardware_safety.level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+      hardware_safety.message = "unknown";
+      break;
+  }
+  output.status.push_back(std::move(hardware_safety));
+
+  diagnostic_msgs::msg::DiagnosticStatus wheel_lift;
+  wheel_lift.name = "mowgli_mavros_bridge/wheel_lift";
+  if (!safety.wheel_lift_state_valid()) {
+    wheel_lift.level = diagnostic_msgs::msg::DiagnosticStatus::STALE;
+    wheel_lift.message = "unknown";
+  } else if (safety.left_wheel_lifted() && safety.right_wheel_lifted()) {
+    wheel_lift.level = diagnostic_msgs::msg::DiagnosticStatus::ERROR;
+    wheel_lift.message = "both_wheels_lifted";
+  } else if (safety.left_wheel_lifted() || safety.right_wheel_lifted()) {
+    wheel_lift.level = diagnostic_msgs::msg::DiagnosticStatus::WARN;
+    wheel_lift.message = "one_wheel_lifted";
+  } else {
+    wheel_lift.level = diagnostic_msgs::msg::DiagnosticStatus::OK;
+    wheel_lift.message = "no_wheel_lifted";
+  }
+  add_value(wheel_lift, "state_valid", safety.wheel_lift_state_valid() ? "true" : "false");
+  add_value(wheel_lift, "left_lifted", safety.wheel_lift_state_valid() ?
+    (safety.left_wheel_lifted() ? "true" : "false") : "unknown");
+  add_value(wheel_lift, "right_lifted", safety.wheel_lift_state_valid() ?
+    (safety.right_wheel_lifted() ? "true" : "false") : "unknown");
+  add_value(wheel_lift, "safety_enabled", wheel_lift_safety_enabled ? "true" : "false");
+  add_value(wheel_lift, "raw_button_state", safety.wheel_lift_state_valid() ?
+    std::to_string(safety.raw_button_state()) : "unknown");
+  output.status.push_back(std::move(wheel_lift));
   add_component("mowgli_mavros_bridge/backend_readiness", readiness.ready,
                 readiness.ready ? "ready" : "not_ready");
   pub_readiness_->publish(output);
@@ -544,18 +642,15 @@ void MavrosHardwareBridgeNode::publish_readiness()
 bool MavrosHardwareBridgeNode::send_arm_command(bool arm)
 {
   const auto capabilities = firmware_provider_->capabilities();
-  if (!(arm ? capabilities.arm_implemented : capabilities.disarm_implemented))
-  {
+  if (!(arm ? capabilities.arm_implemented : capabilities.disarm_implemented)) {
     return false;
   }
-  if (!cli_arm_)
-  {
+  if (!cli_arm_) {
     RCLCPP_ERROR(get_logger(), "CommandBool client is null");
     return false;
   }
 
-  if (!cli_arm_->wait_for_service(std::chrono::seconds(1)))
-  {
+  if (!cli_arm_->wait_for_service(std::chrono::seconds(1))) {
     RCLCPP_ERROR(get_logger(), "Service /mavros/cmd/arming not available");
     return false;
   }
@@ -565,54 +660,46 @@ bool MavrosHardwareBridgeNode::send_arm_command(bool arm)
 
   cli_arm_->async_send_request(
       request,
-      [this, arm](rclcpp::Client<mavros_msgs::srv::CommandBool>::SharedFuture future)
-      {
-        try
-        {
-          const auto response = future.get();
-          if (!response)
-          {
-            RCLCPP_ERROR(get_logger(), "Null response from /mavros/cmd/arming");
-            return;
-          }
+    [this, arm](rclcpp::Client<mavros_msgs::srv::CommandBool>::SharedFuture future)
+    {
+      try {
+        const auto response = future.get();
+        if (!response) {
+          RCLCPP_ERROR(get_logger(), "Null response from /mavros/cmd/arming");
+          return;
+        }
 
-          if (!response->success)
-          {
-            RCLCPP_ERROR(
+        if (!response->success) {
+          RCLCPP_ERROR(
                 get_logger(),
                 "Autopilot rejected arming request: %s",
                 arm ? "ARM" : "DISARM");
-            return;
-          }
+          return;
+        }
 
-          RCLCPP_INFO(
+        RCLCPP_INFO(
               get_logger(),
               "Autopilot confirmed arming request: %s",
               arm ? "ARM" : "DISARM");
-        }
-        catch (const std::exception& e)
-        {
-          RCLCPP_ERROR(get_logger(), "Arm/disarm request failed asynchronously: %s", e.what());
-        }
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Arm/disarm request failed asynchronously: %s", e.what());
+      }
       });
 
   return true;
 }
 
-bool MavrosHardwareBridgeNode::send_mode_command(const std::string& mode)
+bool MavrosHardwareBridgeNode::send_mode_command(const std::string & mode)
 {
-  if (!firmware_provider_->capabilities().mode_control_implemented)
-  {
+  if (!firmware_provider_->capabilities().mode_control_implemented) {
     return false;
   }
-  if (!cli_set_mode_)
-  {
+  if (!cli_set_mode_) {
     RCLCPP_ERROR(get_logger(), "SetMode client is null");
     return false;
   }
 
-  if (!cli_set_mode_->wait_for_service(std::chrono::seconds(1)))
-  {
+  if (!cli_set_mode_->wait_for_service(std::chrono::seconds(1))) {
     RCLCPP_ERROR(get_logger(), "Service /mavros/set_mode not available");
     return false;
   }
@@ -622,33 +709,28 @@ bool MavrosHardwareBridgeNode::send_mode_command(const std::string& mode)
 
   cli_set_mode_->async_send_request(
       request,
-      [this, mode](rclcpp::Client<mavros_msgs::srv::SetMode>::SharedFuture future)
-      {
-        try
-        {
-          const auto response = future.get();
-          if (!response)
-          {
-            RCLCPP_ERROR(get_logger(), "Null response from /mavros/set_mode");
-            return;
-          }
+    [this, mode](rclcpp::Client<mavros_msgs::srv::SetMode>::SharedFuture future)
+    {
+      try {
+        const auto response = future.get();
+        if (!response) {
+          RCLCPP_ERROR(get_logger(), "Null response from /mavros/set_mode");
+          return;
+        }
 
-          if (!response->mode_sent)
-          {
-            RCLCPP_ERROR(
+        if (!response->mode_sent) {
+          RCLCPP_ERROR(
                 get_logger(),
                 "Autopilot rejected mode request '%s'",
                 mode.c_str());
-            return;
-          }
+          return;
+        }
 
-          RCLCPP_INFO(get_logger(), "Autopilot confirmed mode request '%s'", mode.c_str());
-        }
-        catch (const std::exception& e)
-        {
-          RCLCPP_ERROR(get_logger(), "Set mode request failed asynchronously for '%s': %s",
+        RCLCPP_INFO(get_logger(), "Autopilot confirmed mode request '%s'", mode.c_str());
+      } catch (const std::exception & e) {
+        RCLCPP_ERROR(get_logger(), "Set mode request failed asynchronously for '%s': %s",
                        mode.c_str(), e.what());
-        }
+      }
       });
 
   return true;
@@ -656,7 +738,7 @@ bool MavrosHardwareBridgeNode::send_mode_command(const std::string& mode)
 
 }  // namespace mowgli_mavros_bridge
 
-int main(int argc, char** argv)
+int main(int argc, char ** argv)
 {
   rclcpp::init(argc, argv);
   rclcpp::spin(std::make_shared<mowgli_mavros_bridge::MavrosHardwareBridgeNode>());

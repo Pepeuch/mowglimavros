@@ -32,6 +32,16 @@ The bridge retains its existing finite-input, drive and neutral-only gates. It
 also retains timestamps, MAVROS clients and asynchronous response handling:
 emergency-service success means local forwarding, not FCU confirmation.
 
+The bridge also observes `/mavros/sys_status` for the official MAVLink
+`MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS` safety state and decodes ArduPilot
+`BUTTON_CHANGE` messages from the MAVROS 2.16 UAS receive stream
+`/uas1/mavlink_source`. AP_Button state bit 0 is
+the left wheel-lift input and bit 1 is the right input. Hardware safety, service
+emergency, and wheel lift are composed in that priority order. The dynamic
+`wheel_lift_safety_enabled` parameter disables only the wheel-lift Emergency
+effect; physical lift telemetry and diagnostics remain active. This is a ROS
+safety-contract integration and does not claim physical blade interruption.
+
 Publishers/subscribers, ROS services and parameters, readiness, generic diagnostics,
 canonical GNSS, power, ESC telemetry/projection and wheel odometry remain common.
 `betaflight`, `inav` and `mowgli` have explicit unsupported bootstrap capabilities

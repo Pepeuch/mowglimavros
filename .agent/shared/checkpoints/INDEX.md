@@ -4,6 +4,9 @@ Navigation only. Not the project backlog.
 
 ## Active
 
+- `MM-SAFETY-INPUTS-20261006` — Pixhawk hardware-safety and AP_Button wheel-lift
+  ROS contract validated; physical polarity/GPIO/authority acceptance pending.
+
 - `MM-ESC-ODOMETRY-20261005` — COMMON/legacy ESC and configurable wheel sources; review A/B/C and STATUS-authoritative ownership fixes, raw motor ticks/ticks_per_meter refactor validated (76 wheel/source cases, all10 bridge suites, power/contracts/build pass); bench signed feedback/short powered F-R pairing verified, RTK metric calibration/odometry acceptance pending.
 
 

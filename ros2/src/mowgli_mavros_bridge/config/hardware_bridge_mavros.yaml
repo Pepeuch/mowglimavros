@@ -29,3 +29,7 @@ hardware_bridge:
     # Emergency requests are sent asynchronously to MAVROS.
     emergency_mode: "HOLD"
     emergency_disarm: true
+
+    # AP_Button wheel-lift telemetry is always decoded. This parameter controls
+    # only whether it contributes to the canonical Emergency message.
+    wheel_lift_safety_enabled: true

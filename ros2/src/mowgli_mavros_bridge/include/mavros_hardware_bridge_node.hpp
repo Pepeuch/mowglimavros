@@ -11,7 +11,9 @@
 #include <sensor_msgs/msg/imu.hpp>
 
 #include <mavros_msgs/msg/manual_control.hpp>
+#include <mavros_msgs/msg/mavlink.hpp>
 #include <mavros_msgs/msg/state.hpp>
+#include <mavros_msgs/msg/sys_status.hpp>
 #include <mavros_esc_wheel_odometry/msg/esc_observation.hpp>
 #include <mavros_msgs/srv/command_bool.hpp>
 #include <mavros_msgs/srv/set_mode.hpp>
@@ -25,6 +27,7 @@
 #include "mowgli_mavros_bridge/firmware_provider.hpp"
 #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
 #include "mowgli_mavros_bridge/readiness_state.hpp"
+#include "mowgli_mavros_bridge/safety_state.hpp"
 
 namespace mowgli_mavros_bridge
 {
@@ -32,7 +35,7 @@ namespace mowgli_mavros_bridge
 class MavrosHardwareBridgeNode : public rclcpp::Node
 {
 public:
-  explicit MavrosHardwareBridgeNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+  explicit MavrosHardwareBridgeNode(const rclcpp::NodeOptions & options = rclcpp::NodeOptions());
 
 private:
   void create_publishers();
@@ -45,6 +48,8 @@ private:
   void on_high_level_status(const mowgli_interfaces::msg::HighLevelStatus::SharedPtr msg);
 
   void on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg);
+  void on_mavros_sys_status(const mavros_msgs::msg::SysStatus::SharedPtr msg);
+  void on_mavlink_source(const mavros_msgs::msg::Mavlink::SharedPtr msg);
   void on_mavros_imu(const sensor_msgs::msg::Imu::SharedPtr msg);
   void on_power(const mowgli_interfaces::msg::Power::SharedPtr msg);
   void on_esc_telemetry(const mavros_esc_wheel_odometry::msg::EscObservation::SharedPtr msg);
@@ -52,19 +57,19 @@ private:
   void on_wheel_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   void on_mower_control(
-      const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
-      std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response);
+    const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
+    std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response);
 
   void on_emergency_stop(
-      const std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Request> request,
-      std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Response> response);
+    const std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Request> request,
+    std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Response> response);
 
   void publish_status();
   void publish_emergency();
   void publish_readiness();
 
   bool send_arm_command(bool arm);
-  bool send_mode_command(const std::string& mode);
+  bool send_mode_command(const std::string & mode);
 
 private:
   std::mutex mutex_;
@@ -82,6 +87,7 @@ private:
   bool wheel_odometry_required_{false};
   bool emergency_disarm_{};
   std::string emergency_mode_;
+  bool wheel_lift_safety_enabled_{true};
   bool rain_detected_{false};
   bool esc_power_{true};
   bool raspberry_pi_power_{true};
@@ -92,9 +98,7 @@ private:
   bool mow_enabled_{false};
   uint8_t mow_direction_{0};
 
-  bool emergency_active_{false};
-  bool emergency_latched_{false};
-  std::string emergency_reason_{"NONE"};
+  SafetyState safety_state_;
 
   bool is_charging_{false};
   bool charger_enabled_{false};
@@ -103,8 +107,8 @@ private:
   ReadinessState readiness_{5.0};
   EscTelemetryTracker esc_tracker_{3.0};
   int64_t right_esc_slot_{0}, left_esc_slot_{1}, blade_esc_slot_{2};
-  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr esc_mapping_callback_;
-  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr esc_mapping_apply_;
+  rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr parameter_validation_callback_;
+  rclcpp::node_interfaces::PostSetParametersCallbackHandle::SharedPtr parameter_apply_callback_;
 
   uint8_t mower_esc_status_{0};
   float mower_esc_temperature_{0.0F};
@@ -127,6 +131,8 @@ private:
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_cmd_vel_;
   rclcpp::Subscription<mowgli_interfaces::msg::HighLevelStatus>::SharedPtr sub_hl_status_;
   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
+  rclcpp::Subscription<mavros_msgs::msg::SysStatus>::SharedPtr sub_mavros_sys_status_;
+  rclcpp::Subscription<mavros_msgs::msg::Mavlink>::SharedPtr sub_mavlink_source_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
   rclcpp::Subscription<mowgli_interfaces::msg::Power>::SharedPtr sub_power_;
   rclcpp::Subscription<mavros_esc_wheel_odometry::msg::EscObservation>::SharedPtr sub_esc_telemetry_;
