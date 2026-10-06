@@ -32,6 +32,16 @@ The bridge retains its existing finite-input, drive and neutral-only gates. It
 also retains timestamps, MAVROS clients and asynchronous response handling:
 emergency-service success means local forwarding, not FCU confirmation.
 
+The bridge also observes `/mavros/sys_status` for the official MAVLink
+`MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS` safety state and decodes ArduPilot
+`BUTTON_CHANGE` messages from the MAVROS 2.16 UAS receive stream
+`/uas1/mavlink_source`. AP_Button state bit 0 is
+the left wheel-lift input and bit 1 is the right input. Hardware safety, service
+emergency, and wheel lift are composed in that priority order. The dynamic
+`wheel_lift_safety_enabled` parameter disables only the wheel-lift Emergency
+effect; physical lift telemetry and diagnostics remain active. This is a ROS
+safety-contract integration and does not claim physical blade interruption.
+
 Publishers/subscribers, ROS services and parameters, readiness, generic diagnostics,
 canonical GNSS, power, ESC telemetry/projection and wheel odometry remain common.
 `betaflight`, `inav` and `mowgli` have explicit unsupported bootstrap capabilities
@@ -44,3 +54,23 @@ and capabilities, and real-bridge tests using mock MAVROS services in isolated
 ROS domains. Those tests use no FCU or serial transport. The earlier
 [Rock bootstrap evidence](../../../.agent/shared/checkpoints/retained/MM-FIRMWARE-ROCK5B-20261005.md)
 refers to the preceding build; it is not new physical validation of this layer.
+
+ESC acquisition is normalized exclusively by the external
+[ESC/wheel plugin](../mavros_esc_wheel_odometry/README.md). The bridge subscribes
+to its internal `EscObservation` topic; it no longer interprets legacy MAVLink
+telemetry counters or wire formats. Role parameters retain `right_esc_slot=0`,
+`left_esc_slot=1`, `blade_esc_slot=2` defaults and permit other distinct slots,
+including atomic runtime updates. Raw motor RPM accumulation and ticks_per_meter calibration belong to the plugin.
+No wheel radius or motor-to-wheel gear ratio is assumed. Track width remains an
+uncalibrated installation input.
+These are installation inputs, not firmware-provider constants. Public blade
+RPM/current freshness remains valid when temperature is unknown; public Status
+uses NaN for that temperature while internal validity remains explicit.
+
+The plugin enforces a single COMMON component owner acquired/renewed by STATUS,
+with INFO only enriching that owner, and a separate encoder owner. Pre-STATUS INFO
+is a metadata candidate and never blocks STATUS from another component. Source clock resets preserve independent observations;
+wheel COMMON pairing uses the dedicated 0.25-second skew default. See the plugin
+README for `esc_component_id`, `common_pair_max_skew_s` and dynamic validation.
+Mowgli wheel PID/feed-forward is not used by the MAVROS command path.
+Cross-node mapping/calibration coherence remains the installation owner's responsibility.

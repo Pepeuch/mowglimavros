@@ -435,6 +435,15 @@ Document the software contract that MowgliNext may depend on:
       `/wheel_ticks`, `/imu/mag_raw`,
       `reboot_board`, `set_firmware_debug`,
       and dig-safety inputs/behaviour.
+- [x] Wire the software-side Pixhawk safety switch and AP_Button wheel-lift
+      observations into canonical Emergency composition and diagnostics. MAVROS
+      2.16 runtime evidence fixes the raw FCU stream at
+      `/uas1/mavlink_source`; `/mavros/sys_status` supplies the official
+      `MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS` bit. The hot
+      `wheel_lift_safety_enabled` parameter gates only Emergency effects.
+      Focused state/decode and real-MAVROS graph tests pass (2026-10-06).
+      Physical switch polarity, GPIO mapping, timing, and blade interruption
+      remain `HARDWARE_PENDING` under MM-801/HW-MAV-004.
 - [ ] Define truthful MAVROS-backend semantics for
       `Status.firmware_compatible` / preflight compatibility.
       Do not publish `true` merely to bypass the native STM32 guard.
@@ -505,22 +514,50 @@ Tasks:
 
 Acceptance: no production path labels fused MAVROS local position as wheel-only odometry.
 
-Architecture: use signed RPM #226 for wheel values and selected
-`ESC_TELEMETRY_* .count[]` fields solely as per-ESC genuine-observation
-sequences. The stock MAVROS 2.15.1 wheel-odometry plugin remains unsuitable;
-the external plugin must not use its unsigned ESC telemetry RPM field.
+Architecture: the external plugin normalizes COMMON ESC_STATUS/ESC_INFO and
+legacy ESC_TELEMETRY into the approved internal EscObservation message. Wheel
+motion stays in C++, with one differential core and one /wheel_odom producer.
+Auto prefers configured/fresh WHEEL_DISTANCE, signed ESC_STATUS, then signed
+RPM #226 gated by legacy telemetry counters. Unsigned legacy ESC telemetry RPM
+never provides wheel direction. Measurement time controls deltas/monotonicity;
+reception controls freshness. Same-SYSID encoder components are accepted.
+Mappings, ticks_per_meter and track width are parameters,
+including atomic runtime changes; bridge roles retain right0/left1/blade2 defaults.
+COMMON STATUS acquires/renews the component owner; INFO only enriches that owner.
+Pre-STATUS INFO is candidate metadata and cannot block another STATUS component.
+Encoder ownership is independent.
+MAVLink clock resets isolate their source, INFO resets isolate metadata, while
+ROS clock rollback/disconnect resets all sources. Wheel STATUS pair skew uses
+common_pair_max_skew_s=0.25 independently of reception freshness.
 
-Software evidence: 20 focused pairing/kinematics tests, Kilted sidecar build,
-pluginlib discovery, safe-disabled and synthetic-config no-FCU startup, and
-canonical plugin remap passed on 2026-09-09. `git diff --check` passed.
+Software evidence: retained 20 legacy pairing/kinematics cases plus source-engine
+and canonical bridge tests. Lyrical build/install and native MAVROS/bridge graph
+cover COMMON without INFO, temperature validity/recovery, different encoder
+COMPID, one publisher, mapping/geometry updates, source expiry and lifecycle.
+See [feature checkpoint](.agent/shared/checkpoints/active/MM-ESC-ODOMETRY-20261005.md)
+for final test results and the passive Rock baseline. Physical acceptance remains
+pending; the motor-tick calibration refactor has not been deployed to the test robot.
+
+Bench evidence on 2026-10-05: operator-configured RPM_TYPE=5, masks1/2 and
+scaling1 expose rightESC0/RPM1 and leftESC1/RPM2, each manually verified forward
+positive/reverse negative. Two bounded positive wheel ramps and a separately authorized
+reverse ramp show coherent paired signed feedback and successful neutral/disarm.
+All were interrupted by the declared500RPM guard; ESC2 stayed idle.
+No sustained steady-state synchronization, geometry or distance acceptance claimed;
+/wheel_odom remains unconfigured. See the active ESC checkpoint for chronology.
 
 `HARDWARE_PENDING`: VESC command-index configuration and routing (CAN1
 `Status.esc_index` 0/1/2 was passively reconfirmed on 2026-09-28;
 no disarmed `RawCommand` was observed), `CAN_D1_ESC_OFFSET`,
-`ESC_TELEM_MAV_OFS=0`, RPM1/RPM2 masks, installation
-signs, gear-ratio calibration, wheel radii, track width, telemetry cadence,
-one-VESC loss/reboot, FCU reconnect/reboot, forward/reverse sign, and measured
-distance validation.
+`ESC_TELEM_MAV_OFS=0` provisioning, track width, telemetry cadence,
+one-VESC loss/reboot, FCU reconnect/reboot, sustained/mixed command behavior,
+and RTK ticks_per_meter calibration over a known straight distance. RPM1/RPM2
+remain raw signed motor RPM with FCU SCALING=1.0; the measured rightESC0/RPM1,
+leftESC1/RPM2 forward+/reverse- mapping is retained. No theoretical gear ratio
+or wheel-radius conversion is required. Separate fractional motor ticks remain
+available uncalibrated for diagnostics and fitting; one MAVROS tick=one motor
+revolution. Mowgli wheel PID/feed-forward remains native-backend-specific and
+is absent from the MAVROS command path.
 
 ## MM-605 — Map POWER1 and POWER2 by configured MAVROS instances
 Related migration finding: `MN-MAV-006`
@@ -673,6 +710,10 @@ Hardware acceptance gates retained from the migration audit:
 - [ ] `HW-MAV-002` — steering/throttle plus zero, HOLD, disarm, DDS, and USB-loss stop semantics (`HARDWARE_PENDING`).
 - [ ] `HW-MAV-003` — physical POWER1 traction and POWER2 dock behavior (`HARDWARE_PENDING`).
 - [ ] `HW-MAV-004` — blade command/feedback and emergency authority (`HARDWARE_PENDING`; separate blade-on authorization required).
+- [ ] `HW-MAV-006` — verify physical Pixhawk safety-switch polarity plus
+      AP_Button BTN_PIN1/GPIO50 left and BTN_PIN2/GPIO51 right wheel-lift
+      mapping, reconnect timing, and actual actuator/blade authority
+      (`HARDWARE_PENDING`; no blade interruption is inferred from ROS tests).
 - [ ] `HW-MAV-005` — outdoor GNSS/RTCM and HERE4 CAN1/VESC coexistence (`HARDWARE_PENDING`).
 
 Follow `.agent/policies/HARDWARE.md`.
@@ -822,6 +863,15 @@ Status: DEFERRED
 Do not include this in the primary compatibility patch unless it becomes relevant.
 
 ---
+
+## MM-902 — MAVLink stream/plugin policy
+Status: DEFERRED
+
+- [ ] Define minimal/normal/debug profiles and activate MAVLink messages and MAVROS
+  plugins according to capabilities actually required by MowgliNext.
+- [ ] Provide provider-specific translation, preferring a nonpersistent runtime policy.
+
+Deferred explicitly during the live ESC bench validation; do not implement now.
 
 # Current execution order
 

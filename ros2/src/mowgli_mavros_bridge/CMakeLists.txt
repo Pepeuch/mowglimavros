@@ -9,6 +9,7 @@ find_package(ament_cmake REQUIRED)
 find_package(ament_cmake_python REQUIRED)
 ament_python_install_package(${PROJECT_NAME} PACKAGE_DIR python/${PROJECT_NAME})
 find_package(rclcpp REQUIRED)
+find_package(rcl_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(diagnostic_msgs REQUIRED)
@@ -19,6 +20,7 @@ find_package(tf2 REQUIRED)
 find_package(tf2_geometry_msgs REQUIRED)
 find_package(mowgli_interfaces REQUIRED)
 find_package(mavros_msgs REQUIRED)
+find_package(mavros_esc_wheel_odometry REQUIRED)
 find_package(mavros REQUIRED)
 find_package(libmavconn REQUIRED)
 find_package(mavlink REQUIRED)
@@ -41,12 +43,17 @@ target_include_directories(mavros_hardware_bridge_node PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
 )
+target_include_directories(mavros_hardware_bridge_node SYSTEM PRIVATE
+  ${libmavconn_INCLUDE_DIRS}
+  ${mavlink_INCLUDE_DIRS}
+)
 
 target_link_libraries(mavros_hardware_bridge_node PUBLIC
   ${geometry_msgs_TARGETS}
   ${nav_msgs_TARGETS}
   ${diagnostic_msgs_TARGETS}
   ${mavros_msgs_TARGETS}
+  ${mavros_esc_wheel_odometry_TARGETS}
   ${mowgli_interfaces_TARGETS}
   ${sensor_msgs_TARGETS}
   ${std_msgs_TARGETS}
@@ -81,6 +88,21 @@ if(BUILD_TESTING)
     TIMEOUT 180
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
   )
+  ament_add_test(test_esc_graph
+    COMMAND "${Python3_EXECUTABLE}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/../mavros_esc_wheel_odometry/test/test_esc_graph.py"
+      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
+    ENV ROS_DOMAIN_ID=195 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+    TIMEOUT 100
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
+  ament_add_test(test_safety_graph
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_safety_graph.py"
+      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
+    ENV ROS_DOMAIN_ID=196 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+    TIMEOUT 60
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
   ament_add_test(test_gnss_graph
     COMMAND "${Python3_EXECUTABLE}"
       "${mavros_gnss_adapter_DIR}/../../../lib/mavros_gnss_adapter/test_gnss_graph.py"
@@ -91,6 +113,7 @@ if(BUILD_TESTING)
   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
   ament_add_gtest(test_esc_telemetry_tracker test/test_esc_telemetry_tracker.cpp)
   target_include_directories(test_esc_telemetry_tracker PRIVATE include)
+  target_link_libraries(test_esc_telemetry_tracker ${mavros_esc_wheel_odometry_TARGETS})
   ament_add_gtest(test_command_provider test/test_command_provider.cpp src/firmware_provider.cpp)
   target_include_directories(test_command_provider PRIVATE include)
   target_link_libraries(test_command_provider
@@ -105,6 +128,13 @@ if(BUILD_TESTING)
     mavros_msgs::mavros_msgs__rosidl_generator_cpp
   )
   target_include_directories(test_readiness_state PRIVATE include)
+  ament_add_gtest(test_safety_state test/test_safety_state.cpp)
+  target_include_directories(test_safety_state PRIVATE
+    include
+    ${libmavconn_INCLUDE_DIRS}
+    ${mavlink_INCLUDE_DIRS}
+  )
+  target_link_libraries(test_safety_state ${mavros_msgs_TARGETS})
 endif()
 
 install(

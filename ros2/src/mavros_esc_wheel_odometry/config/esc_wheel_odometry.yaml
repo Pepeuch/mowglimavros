@@ -1,19 +1,25 @@
 /**/esc_wheel_odometry:
   ros__parameters:
-    # These must match ArduPilot ESC slots with ESC_TELEM_MAV_OFS=0. Leave
-    # invalid until the physical VESC/AP configuration is verified.
-    left_esc_slot: -1
-    right_esc_slot: -1
-    # Assign RPM #226 fields after configuring RPM1/RPM2 masks in ArduPilot.
-    left_rpm_instance: -1
-    right_rpm_instance: -1
-    # Must be set to 0 only after confirming FCU ESC_TELEM_MAV_OFS=0.
-    expected_esc_telem_mav_offset: -1
-
-    # RPM #226 is already signed wheel RPM after RPMx_SCALING. These are
-    # physical wheel radii and track width, not gear-ratio compensation.
-    left_wheel_radius_m: 0.0
-    right_wheel_radius_m: 0.0
+    # Wheel source selection only; ESC normalization is independent of geometry.
+    source: auto
+    observation_timeout_s: 3.0
+    common_pair_max_skew_s: 0.25
+    # One COMMON component owns all STATUS/INFO slots; -1 selects a live owner.
+    esc_component_id: -1
+    left_wheel_index: -1
+    right_wheel_index: -1
+    # -1 accepts one live encoder component of the target SYSID, including ESP32.
+    wheel_distance_component_id: -1
+    max_distance_speed_mps: 10.0
+    # Proven installation defaults; remain configurable for other vehicles.
+    left_esc_slot: 1
+    right_esc_slot: 0
+    left_rpm_instance: 2
+    right_rpm_instance: 1
+    expected_esc_telem_mav_offset: 0
+    # Raw signed motor RPM, FCU RPMx_SCALING=1.0; one fractional tick = one revolution.
+    # Calibrate ticks_per_meter with RTK; no wheel radius or gear ratio is assumed.
+    ticks_per_meter: 0.0
     track_width_m: 0.0
 
     frame_id: odom
