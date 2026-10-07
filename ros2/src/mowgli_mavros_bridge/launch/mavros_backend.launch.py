@@ -176,15 +176,7 @@ def _backend_nodes(
             name="hardware_bridge",
             output="screen",
             additional_env={"MAVROS_RESOLVED_FIRMWARE": provider.name},
-            parameters=[
-                *bridge_parameters,
-                {
-                    "neutral_manual_control_enabled": _as_bool(
-                        os.environ.get("MAVROS_NEUTRAL_TEST", "false")
-                    ),
-                    "blade_control_enabled": False,
-                },
-            ],
+            parameters=bridge_parameters,
             remappings=hardware_bridge_remappings,
         ),
     ]

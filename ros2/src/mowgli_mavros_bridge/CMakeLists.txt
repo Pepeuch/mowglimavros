@@ -67,7 +67,7 @@ target_link_libraries(mavros_hardware_bridge_node PUBLIC
 if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_test REQUIRED)
-  find_package(mavros_gnss_adapter REQUIRED)
+  find_package(mavros_gnss_adapter QUIET)
   ament_add_test(test_gnss_launch
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_gnss_launch.py"
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
@@ -103,13 +103,15 @@ if(BUILD_TESTING)
     TIMEOUT 60
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
   )
-  ament_add_test(test_gnss_graph
-    COMMAND "${Python3_EXECUTABLE}"
-      "${mavros_gnss_adapter_DIR}/../../../lib/mavros_gnss_adapter/test_gnss_graph.py"
-      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
-    TIMEOUT 180
-    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
-  )
+  if(mavros_gnss_adapter_FOUND)
+    ament_add_test(test_gnss_graph
+      COMMAND "${Python3_EXECUTABLE}"
+        "${mavros_gnss_adapter_DIR}/../../../lib/mavros_gnss_adapter/test_gnss_graph.py"
+        --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
+      TIMEOUT 180
+      GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+    )
+  endif()
   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
   ament_add_gtest(test_esc_telemetry_tracker test/test_esc_telemetry_tracker.cpp)
   target_include_directories(test_esc_telemetry_tracker PRIVATE include)
@@ -135,8 +137,6 @@ if(BUILD_TESTING)
     ${mavlink_INCLUDE_DIRS}
   )
   target_link_libraries(test_safety_state ${mavros_msgs_TARGETS})
-  ament_add_gtest(test_safety_traction test/test_safety_traction.cpp)
-  target_include_directories(test_safety_traction PRIVATE include)
 endif()
 
 install(

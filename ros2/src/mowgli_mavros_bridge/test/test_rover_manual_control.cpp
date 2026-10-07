@@ -1,5 +1,4 @@
 #include <gtest/gtest.h>
-
 #include <mowgli_mavros_bridge/rover_manual_control.hpp>
 
 TEST(RoverManualControl, MapsSteeringAndThrottleToRoverAxes)
@@ -20,18 +19,6 @@ TEST(RoverManualControl, MapsSteeringAndThrottleToRoverAxes)
   EXPECT_FLOAT_EQ(neutral.y, 0.0F);
   EXPECT_FLOAT_EQ(neutral.z, 0.0F);
 }
-TEST(RoverManualControl, NeutralOnlyModeNeverAdmitsPropulsion)
-{
-  geometry_msgs::msg::TwistStamped twist{};
-  EXPECT_FALSE(mowgli_mavros_bridge::manual_control_allowed(twist, false, false));
-  EXPECT_TRUE(mowgli_mavros_bridge::manual_control_allowed(twist, false, true));
-  twist.twist.linear.x = 0.01;
-  EXPECT_FALSE(mowgli_mavros_bridge::manual_control_allowed(twist, false, true));
-  twist.twist.linear.x = 0.0;
-  twist.twist.angular.z = 0.01;
-  EXPECT_FALSE(mowgli_mavros_bridge::manual_control_allowed(twist, false, true));
-}
-
 TEST(RoverManualControl, RoverAxesAreBounded)
 {
   geometry_msgs::msg::TwistStamped twist{};

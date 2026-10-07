@@ -1,16 +1,15 @@
+#include <cstdint>
+
 #include "mowgli_mavros_bridge/button_change_decoder.hpp"
 #include "mowgli_mavros_bridge/safety_state.hpp"
-
 #include <gtest/gtest.h>
-
-#include <cstdint>
 
 namespace
 {
 
+using mowgli_mavros_bridge::decode_button_change;
 using mowgli_mavros_bridge::HardwareSafetyState;
 using mowgli_mavros_bridge::SafetyState;
-using mowgli_mavros_bridge::decode_button_change;
 
 mavros_msgs::msg::Mavlink make_button_change(uint8_t state)
 {
@@ -84,31 +83,17 @@ TEST(SafetyState, DisconnectInvalidatesWheelLiftState)
   EXPECT_EQ(safety.last_button_change_ns(), 1000000000LL);
 }
 
-TEST(SafetyState, DisabledWheelSafetyPreservesTelemetryWithoutEmergencyEffect)
-{
-  SafetyState safety;
-  safety.observe_button_change(0x03U, 1000000000LL);
-  const auto emergency = safety.project(3000000000LL, false);
-  EXPECT_TRUE(safety.wheel_lift_state_valid());
-  EXPECT_TRUE(safety.left_wheel_lifted());
-  EXPECT_TRUE(safety.right_wheel_lifted());
-  EXPECT_FALSE(emergency.active_emergency);
-  EXPECT_FALSE(emergency.lift_warning);
-  EXPECT_FLOAT_EQ(emergency.lift_duration_sec, 0.0F);
-  EXPECT_EQ(emergency.reason, "NONE");
-}
-
 TEST(SafetyState, OneWheelWarnsAndTwoWheelsActivateEmergency)
 {
   SafetyState safety;
   safety.observe_button_change(0x01U, 1000000000LL);
-  auto emergency = safety.project(2500000000LL, true);
+  auto emergency = safety.project(2500000000LL);
   EXPECT_TRUE(emergency.lift_warning);
   EXPECT_FALSE(emergency.active_emergency);
   EXPECT_FLOAT_EQ(emergency.lift_duration_sec, 1.5F);
 
   safety.observe_button_change(0x03U, 3000000000LL);
-  emergency = safety.project(4000000000LL, true);
+  emergency = safety.project(4000000000LL);
   EXPECT_FALSE(emergency.lift_warning);
   EXPECT_TRUE(emergency.active_emergency);
   EXPECT_FLOAT_EQ(emergency.lift_duration_sec, 3.0F);
@@ -118,19 +103,19 @@ TEST(SafetyState, HardwareSafetyAlwaysActivatesEmergency)
 {
   SafetyState safety;
   safety.observe_motor_outputs(true, false);
-  const auto emergency = safety.project(1000000000LL, true);
+  const auto emergency = safety.project(1000000000LL);
   EXPECT_EQ(safety.hardware_safety_state(), HardwareSafetyState::Engaged);
   EXPECT_TRUE(emergency.active_emergency);
   EXPECT_TRUE(emergency.latched_emergency);
   EXPECT_EQ(emergency.reason, "HARDWARE_SAFETY_SWITCH");
 }
 
-TEST(SafetyState, WheelSafetyParameterCannotDisableHardwareSafety)
+TEST(SafetyState, HardwareSafetyHasPriorityWithWheelTelemetryPresent)
 {
   SafetyState safety;
   safety.observe_motor_outputs(true, false);
   safety.observe_button_change(0x00U, 1000000000LL);
-  const auto emergency = safety.project(2000000000LL, false);
+  const auto emergency = safety.project(2000000000LL);
   EXPECT_TRUE(emergency.active_emergency);
   EXPECT_TRUE(emergency.latched_emergency);
   EXPECT_EQ(emergency.reason, "HARDWARE_SAFETY_SWITCH");
@@ -142,7 +127,7 @@ TEST(SafetyState, SoftwareClearCannotMaskEngagedHardwareSafety)
   safety.set_service_emergency(true);
   safety.observe_motor_outputs(true, false);
   safety.set_service_emergency(false);
-  const auto emergency = safety.project(1000000000LL, true);
+  const auto emergency = safety.project(1000000000LL);
   EXPECT_TRUE(emergency.active_emergency);
   EXPECT_TRUE(emergency.latched_emergency);
   EXPECT_EQ(emergency.reason, "HARDWARE_SAFETY_SWITCH");
@@ -154,7 +139,7 @@ TEST(SafetyState, HardwareHasPriorityOverServiceAndWheelLift)
   safety.set_service_emergency(true);
   safety.observe_button_change(0x03U, 1000000000LL);
   safety.observe_motor_outputs(true, false);
-  const auto emergency = safety.project(2000000000LL, true);
+  const auto emergency = safety.project(2000000000LL);
   EXPECT_EQ(emergency.reason, "HARDWARE_SAFETY_SWITCH");
 }
 
@@ -163,14 +148,14 @@ TEST(SafetyState, ServiceEmergencyIsPreservedAcrossWheelCompositionAndClear)
   SafetyState safety;
   safety.observe_button_change(0x03U, 1000000000LL);
   safety.set_service_emergency(true);
-  auto emergency = safety.project(2000000000LL, true);
+  auto emergency = safety.project(2000000000LL);
   EXPECT_TRUE(emergency.active_emergency);
   EXPECT_TRUE(emergency.latched_emergency);
   EXPECT_EQ(emergency.reason, "SERVICE_EMERGENCY_STOP");
 
   safety.observe_button_change(0x00U, 3000000000LL);
   safety.set_service_emergency(false);
-  emergency = safety.project(4000000000LL, true);
+  emergency = safety.project(4000000000LL);
   EXPECT_FALSE(emergency.active_emergency);
   EXPECT_FALSE(emergency.latched_emergency);
   EXPECT_EQ(emergency.reason, "NONE");
@@ -180,7 +165,7 @@ TEST(SafetyState, AbsentMotorOutputsRemainUnknown)
 {
   SafetyState safety;
   safety.observe_motor_outputs(false, false);
-  const auto emergency = safety.project(1000000000LL, true);
+  const auto emergency = safety.project(1000000000LL);
   EXPECT_EQ(safety.hardware_safety_state(), HardwareSafetyState::Unknown);
   EXPECT_FALSE(emergency.active_emergency);
   EXPECT_FALSE(emergency.latched_emergency);
@@ -192,11 +177,31 @@ TEST(SafetyState, ReleasedSafetyClearsOnlyHardwareLatch)
   safety.observe_motor_outputs(true, false);
   safety.set_service_emergency(true);
   safety.observe_motor_outputs(true, true);
-  const auto emergency = safety.project(1000000000LL, true);
+  const auto emergency = safety.project(1000000000LL);
   EXPECT_EQ(safety.hardware_safety_state(), HardwareSafetyState::Released);
   EXPECT_TRUE(emergency.active_emergency);
   EXPECT_TRUE(emergency.latched_emergency);
   EXPECT_EQ(emergency.reason, "SERVICE_EMERGENCY_STOP");
+}
+
+TEST(SafetyState, TiltStaysLatchedUntilPhysicalCauseAndServiceReleaseAreClear)
+{
+  SafetyState safety;
+  safety.observe_tilt(true);
+  auto emergency = safety.project(1000000000LL);
+  EXPECT_TRUE(emergency.active_emergency);
+  EXPECT_TRUE(emergency.latched_emergency);
+  EXPECT_EQ(emergency.reason, "TILT");
+
+  safety.observe_tilt(false);
+  emergency = safety.project(2000000000LL);
+  EXPECT_FALSE(emergency.active_emergency);
+  EXPECT_TRUE(emergency.latched_emergency);
+
+  safety.clear_released_latches();
+  emergency = safety.project(3000000000LL);
+  EXPECT_FALSE(emergency.active_emergency);
+  EXPECT_FALSE(emergency.latched_emergency);
 }
 
 }  // namespace

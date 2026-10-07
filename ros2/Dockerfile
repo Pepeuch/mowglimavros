@@ -58,6 +58,8 @@ ARG MAVROS_COMMIT
 ARG MAVLINK_VERSION
 ARG TARGETARCH
 
+COPY tools/disable_mavros_mount_plugin.py /usr/local/bin/disable_mavros_mount_plugin.py
+
 RUN set -eux; \
     apt-get update; \
     apt-get dist-upgrade -y; \
@@ -113,7 +115,9 @@ RUN set -eux; \
     git -C /mavros_ws/src/mavros checkout --detach "${MAVROS_COMMIT}"; \
     git -C /mavros_ws/src/mavros fetch --depth 1 origin "refs/tags/${MAVROS_VERSION}:refs/tags/${MAVROS_VERSION}"; \
     test "$(git -C /mavros_ws/src/mavros rev-list -n 1 "${MAVROS_VERSION}")" = "${MAVROS_COMMIT}"; \
-    test "$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' /mavros_ws/src/mavros/mavros/package.xml | head -n 1)" = "${MAVROS_VERSION}"
+    test "$(sed -n 's:.*<version>\(.*\)</version>.*:\1:p' /mavros_ws/src/mavros/mavros/package.xml | head -n 1)" = "${MAVROS_VERSION}"; \
+    python3 /usr/local/bin/disable_mavros_mount_plugin.py /mavros_ws/src/mavros/mavros/launch/apm_pluginlists.yaml; \
+    grep --fixed-strings --quiet -- '- mount_control' /mavros_ws/src/mavros/mavros/launch/apm_pluginlists.yaml
 
 WORKDIR /mavros_ws
 

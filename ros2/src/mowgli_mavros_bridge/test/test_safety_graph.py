@@ -19,14 +19,14 @@ def main():
     from ament_index_python.packages import get_package_prefix
     from diagnostic_msgs.msg import DiagnosticArray, DiagnosticStatus
     from mavros_msgs.msg import Mavlink, State
+    from mavros_msgs.srv import CommandBool, SetMode
     from mowgli_interfaces.msg import Emergency
     from mowgli_interfaces.srv import EmergencyStop
-    from rcl_interfaces.srv import SetParametersAtomically
-    from rclpy.parameter import Parameter
 
     rclpy.init()
     node = rclpy.create_node("safety_contract_test")
     states, emergencies, diagnostics = [], [], []
+    requests = []
     subscriptions = [
         node.create_subscription(State, "/mavros/state", states.append, 20),
         node.create_subscription(
@@ -35,12 +35,24 @@ def main():
         node.create_subscription(DiagnosticArray, "/diagnostics", diagnostics.append, 20),
     ]
     raw_publisher = node.create_publisher(Mavlink, "/uas1/mavlink_source", 100)
-    parameters = node.create_client(
-        SetParametersAtomically, "/hardware_bridge/set_parameters_atomically"
-    )
     emergency_stop = node.create_client(
         EmergencyStop, "/hardware_bridge/emergency_stop"
     )
+
+    def arm_request(request, response):
+        requests.append(("arm", request.value))
+        response.success = True
+        return response
+
+    def mode_request(request, response):
+        requests.append(("mode", request.custom_mode))
+        response.mode_sent = True
+        return response
+
+    services = [
+        node.create_service(CommandBool, "/mavros/cmd/arming", arm_request),
+        node.create_service(SetMode, "/mavros/set_mode", mode_request),
+    ]
 
     def frame(msgid, payload):
         message = Mavlink()
@@ -117,18 +129,6 @@ def main():
 
     def diagnostic_values(status):
         return {value.key: value.value for value in status.values}
-
-    def configure(values):
-        wait(parameters.service_is_ready)
-        request = SetParametersAtomically.Request(
-            parameters=[
-                Parameter(name, value=value).to_parameter_msg()
-                for name, value in values.items()
-            ]
-        )
-        future = parameters.call_async(request)
-        wait(future.done)
-        return future.result().result.successful
 
     with tempfile.TemporaryDirectory(prefix="safety-graph-") as directory:
         config = Path(directory) / "mavros.yaml"
@@ -208,23 +208,16 @@ def main():
                 and emergencies[-1].active_emergency
                 and emergencies[-1].reason == "WHEEL_LIFT"
             )
-
-            assert configure({"wheel_lift_safety_enabled": False})
+            wait(lambda: ("arm", False) in requests)
             wait(
-                lambda: emergencies
-                and not emergencies[-1].lift_warning
-                and not emergencies[-1].active_emergency
-            )
-            wait(
-                lambda: diagnostic_values(
-                    latest_diagnostic("mowgli_mavros_bridge/wheel_lift")
-                ).get("safety_enabled")
-                == "false"
+                lambda: latest_diagnostic("mowgli_mavros_bridge/wheel_lift").level
+                == DiagnosticStatus.ERROR
             )
             wheel_lift = latest_diagnostic("mowgli_mavros_bridge/wheel_lift")
             assert wheel_lift.level == wheel_lift.ERROR
             assert diagnostic_values(wheel_lift)["raw_button_state"] == "3"
 
+            before = len(requests)
             send(sys_status(False))
             wait(
                 lambda: emergencies
@@ -237,6 +230,9 @@ def main():
                 ).message
                 == "engaged"
             )
+            wait(lambda: len(requests) >= before + 2)
+            assert ("mode", "HOLD") in requests[before:]
+            assert ("arm", False) in requests[before:]
             wait(emergency_stop.service_is_ready)
             future = emergency_stop.call_async(EmergencyStop.Request(emergency=0))
             wait(future.done)
@@ -246,6 +242,7 @@ def main():
                 and emergencies[-1].reason == "HARDWARE_SAFETY_SWITCH"
             )
 
+            send(button(0x00))
             send(sys_status(True))
             wait(
                 lambda: latest_diagnostic(
@@ -270,8 +267,8 @@ def main():
                 == "unknown"
             )
             print(
-                "PASS safety graph: MAVROS raw BUTTON_CHANGE, SysStatus, dynamic gate, "
-                "diagnostics, priority and disconnect"
+                "PASS safety graph: MAVROS raw BUTTON_CHANGE, SysStatus, blade disarm, "
+                "HOLD, release, diagnostics, priority and disconnect"
             )
         except BaseException:
             for log in logs:

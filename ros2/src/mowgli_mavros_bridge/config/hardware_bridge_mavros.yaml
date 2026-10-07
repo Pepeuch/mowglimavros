@@ -2,14 +2,9 @@ hardware_bridge:
   ros__parameters:
     status_publish_rate_hz: 10.0
 
-    # Provisional until Pixhawk wiring and validation are complete.
-    manual_control_enabled: false
-    neutral_manual_control_enabled: false
     manual_control_linear_scale: 1000.0
     manual_control_yaw_scale: 1000.0
-
-    # Blade output path via Pixhawk is not validated yet.
-    blade_control_enabled: false
+    mowing_enabled: true
 
     # Canonical Power is produced by the MAVROS battery_observer plugin.
     # This timeout is used only for bridge readiness/diagnostic freshness.
@@ -26,10 +21,5 @@ hardware_bridge:
     gnss_required: true
     wheel_odometry_required: false
 
-    # Emergency requests are sent asynchronously to MAVROS.
-    emergency_mode: "HOLD"
-    emergency_disarm: true
-
-    # AP_Button wheel-lift telemetry is always decoded. This parameter controls
-    # only whether it contributes to the canonical Emergency message.
-    wheel_lift_safety_enabled: true
+    tilt_emergency_ms: 500
+    imu_inclination_threshold: 56

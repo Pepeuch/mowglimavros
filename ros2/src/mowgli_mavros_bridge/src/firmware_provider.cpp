@@ -1,7 +1,8 @@
 #include "mowgli_mavros_bridge/firmware_provider.hpp"
-#include "mowgli_mavros_bridge/rover_manual_control.hpp"
 
 #include <stdexcept>
+
+#include "mowgli_mavros_bridge/rover_manual_control.hpp"
 
 namespace mowgli_mavros_bridge
 {
@@ -14,7 +15,7 @@ class CurrentRuntimeProvider : public FirmwareProvider
 public:
   FirmwareCapabilities capabilities() const noexcept override
   {
-    return {ManualControlMapping::RoverSteeringYThrottleZ, true, true, true, true, false, false};
+    return {ManualControlMapping::RoverSteeringYThrottleZ, true, true, true, true, true, false};
   }
 
   EmergencyPolicy default_emergency_policy() const override
@@ -22,16 +23,17 @@ public:
     return {"HOLD", true};
   }
 
-  EmergencyPolicy emergency_policy(
-    const std::string & configured_mode, bool configured_disarm) const override
+  EmergencyPolicy emergency_policy(const std::string& configured_mode,
+                                   bool configured_disarm) const override
   {
     // Retain all existing ROS parameter overrides, including an empty mode.
     return {configured_mode, configured_disarm};
   }
 
   mavros_msgs::msg::ManualControl manual_control_from_twist(
-    const geometry_msgs::msg::TwistStamped & twist,
-    double linear_scale, double yaw_scale) const override
+      const geometry_msgs::msg::TwistStamped& twist,
+      double linear_scale,
+      double yaw_scale) const override
   {
     return rover_manual_control_from_twist(twist, linear_scale, yaw_scale);
   }
@@ -40,25 +42,34 @@ public:
 class ArduPilotProvider final : public CurrentRuntimeProvider
 {
 public:
-  const char * name() const noexcept override {return "ardupilot";}
+  const char* name() const noexcept override
+  {
+    return "ardupilot";
+  }
 };
 
 class PX4Provider final : public CurrentRuntimeProvider
 {
 public:
-  const char * name() const noexcept override {return "px4";}
+  const char* name() const noexcept override
+  {
+    return "px4";
+  }
 };
 }  // namespace
 
-std::unique_ptr<FirmwareProvider> make_firmware_provider(const std::string & firmware)
+std::unique_ptr<FirmwareProvider> make_firmware_provider(const std::string& firmware)
 {
-  if (firmware == "ardupilot") {
+  if (firmware == "ardupilot")
+  {
     return std::make_unique<ArduPilotProvider>();
   }
-  if (firmware == "px4") {
+  if (firmware == "px4")
+  {
     return std::make_unique<PX4Provider>();
   }
-  if (firmware == "betaflight" || firmware == "inav" || firmware == "mowgli") {
+  if (firmware == "betaflight" || firmware == "inav" || firmware == "mowgli")
+  {
     throw std::invalid_argument("MAVROS_FIRMWARE=" + firmware + ": not implemented");
   }
   throw std::invalid_argument("C++ provider requires a resolved ardupilot or px4 firmware");

@@ -117,9 +117,8 @@ class FirmwareLaunchTest(unittest.TestCase):
         ]
         for selected, detected in (("auto", "ardupilot"), ("auto", "px4"),
                                    ("ardupilot", "ardupilot"), ("px4", "px4")):
-            for neutral in ("false", "true"):
-                env = {"MAVROS_FIRMWARE": selected, "MAVROS_NEUTRAL_TEST": neutral}
-                with self.subTest(selected=selected, detected=detected, neutral=neutral), \
+            env = {"MAVROS_FIRMWARE": selected}
+            with self.subTest(selected=selected, detected=detected), \
                         patch.dict(os.environ, env, clear=True), \
                         patch.object(launch, "get_package_share_directory", return_value="/test"), \
                         patch.object(launch, "get_package_prefix", return_value="/prefix"), \
@@ -138,9 +137,7 @@ class FirmwareLaunchTest(unittest.TestCase):
                         "executable": "mavros_hardware_bridge_node",
                         "name": "hardware_bridge", "output": "screen",
                         "additional_env": {"MAVROS_RESOLVED_FIRMWARE": detected},
-                        "parameters": ["/test/config/hardware_bridge_mavros.yaml", "/ros2_ws/config/hardware_bridge.yaml", {
-                            "neutral_manual_control_enabled": neutral == "true",
-                            "blade_control_enabled": False}],
+                        "parameters": ["/test/config/hardware_bridge_mavros.yaml", "/ros2_ws/config/hardware_bridge.yaml"],
                         "remappings": remappings,
                     })
 
