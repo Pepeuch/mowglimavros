@@ -685,6 +685,64 @@ Current evidence: `.agent/shared/checkpoints/active/MM-MOWGLINEXT-INTEGRATION-20
 
 Blocked for operational enablement by: nominal Universal GNSS MAVROS transport/RTCM, wheel calibration, power-current/SoC validation, hardware E-stop and MM-801 guarded physical tests.
 
+
+## MM-702 — ArduPilot / MAVROS configuration validator
+Status: TODO
+
+Objective:
+
+Provide a small web configurator that validates a user's exported Mission Planner / ArduPilot parameter file against the MowgliNext MAVROS reference profile, without replacing unrelated user configuration.
+
+Design principles:
+
+- [ ] Import the user's ArduPilot / Mission Planner parameter export directly in the browser.
+- [ ] Detect the vehicle firmware family and version from the file when metadata allows it; otherwise require an explicit user selection rather than guessing.
+- [ ] Select the correct version-aware semantic mapping automatically (parameter names, meanings and supported values may differ between ArduPilot releases).
+- [ ] Keep MowgliNext feature semantics separate from raw ArduPilot parameter names so firmware-specific aliases/renames can evolve without changing the UI contract.
+- [ ] Compare only parameters required or recommended by the MowgliNext MAVROS integration; never rewrite the complete configuration blindly.
+- [ ] Preserve every unrelated parameter and original line/value exactly where practical.
+- [ ] Process the configuration locally in the browser; no server upload is required for normal use.
+
+UI target:
+
+- [ ] Show one row per relevant function/parameter with: MowgliNext function, current parameter/value, an arrow/action, recommended parameter/value, and a green check or red cross.
+- [ ] Allow one-click application of all recommended changes.
+- [ ] Allow applying each recommendation individually.
+- [ ] Explain why each parameter is required/recommended and which feature it enables.
+- [ ] Distinguish at least `required`, `recommended`, `optional`, and informational rules.
+- [ ] Warn explicitly when a required capability is unavailable for the detected firmware/version instead of treating a missing parameter as a generic mismatch.
+- [ ] Export a corrected parameter file that contains the user's original configuration plus only the accepted MowgliNext changes.
+
+Reference/profile model:
+
+- [ ] Store a versioned MowgliNext ArduRover/MAVROS reference profile in the repository as the single source of truth.
+- [ ] Describe rules by functional semantic ID first (for example traction output, blade authorization, Safety/HOLD policy, ESC telemetry), then map that semantic to the actual ArduPilot parameter(s) for each supported firmware range.
+- [ ] Support firmware/version ranges rather than duplicating a full profile for every patch release.
+- [ ] Allow hardware/profile variants where justified (for example VESC vs PWM, DroneCAN GNSS, blade output strategy).
+- [ ] Reuse the same reference data for the web validator and user documentation so they cannot silently drift.
+
+Source of truth / rollout:
+
+- [ ] Capture and retain a known-good Mission Planner parameter backup from the physically validated Pixhawk/ArduRover setup.
+- [ ] Derive the MowgliNext reference profile from the smallest proven set of required/recommended deltas, not from an unvalidated theoretical full parameter dump.
+- [ ] Tie every rule to the hardware/software capability it supports and record the validated firmware range.
+- [ ] Add regression fixtures for at least one valid profile, one partially mismatched profile, an unsupported/unknown firmware version, and preservation of unrelated parameters.
+
+Acceptance:
+
+- Importing a supported ArduRover configuration selects the correct firmware-aware semantic profile.
+- A compliant parameter is shown as compliant without being rewritten.
+- A mismatched parameter can be corrected individually or through the global apply action.
+- Unrelated user parameters remain unchanged.
+- The downloaded file contains only the accepted MowgliNext changes relative to the uploaded file.
+- Unsupported or ambiguous firmware/version cases fail explicitly instead of applying guessed parameter names or values.
+- The reference profile is based on a physically validated Pixhawk configuration retained under MM-801 evidence.
+
+Dependency / sequencing:
+
+- The UI/data model may be prepared earlier, but the production reference values must not be frozen until the relevant Pixhawk/ArduPilot behavior has been validated under MM-801.
+- Mission Planner parameter backups used as reference evidence must remain reproducible and version-labelled.
+
 ---
 
 # Phase 8 — Hardware validation
@@ -902,7 +960,8 @@ Deferred explicitly during the live ESC bench validation; do not implement now.
 10. Run external runtime smoke/contract validation: `MM-501` and `MM-502`.
 11. Freeze the external backend contract: `MM-601`.
 12. Return to MowgliNext integration and no-motion DDS/graph validation: `MM-701`.
-13. Execute physical hardware gates: `MM-801` / `HW-MAV-001` through `HW-MAV-005`.
-14. Deferred cleanup only when separately prioritized: `MM-901`.
+13. Execute physical hardware gates and retain the known-good Pixhawk/ArduPilot parameter baseline: `MM-801` / `HW-MAV-001` through `HW-MAV-005`.
+14. Build the firmware-aware ArduPilot/MAVROS configuration validator from the physically validated reference profile: `MM-702`.
+15. Deferred cleanup only when separately prioritized: `MM-901`.
 
 Only advance to the next expensive validation layer when the previous one passes.
