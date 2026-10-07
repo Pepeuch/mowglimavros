@@ -453,7 +453,9 @@ Document the software contract that MowgliNext may depend on:
       2.16 runtime evidence fixes the raw FCU stream at
       `/uas1/mavlink_source`; `/mavros/sys_status` supplies the official
       `MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS` bit. The hot
-      `wheel_lift_safety_enabled` parameter gates only Emergency effects.
+      Wheel-lift observations feed the canonical Safety/Emergency policy directly;
+      there is no runtime opt-in parameter gating their effect. Raw left/right lift
+      telemetry remains available for diagnostics.
       Focused state/decode and real-MAVROS graph tests pass (2026-10-06).
       Physical switch polarity, GPIO mapping, timing, and blade interruption
       remain `HARDWARE_PENDING` under MM-801/HW-MAV-004.

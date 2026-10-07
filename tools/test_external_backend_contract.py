@@ -9,7 +9,6 @@ import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
 ROOT = Path(__file__).resolve().parents[1]
 SRC = ROOT / ("ros2/src" if (ROOT / "ros2/src").is_dir() else "src")
 LOCK = json.loads((ROOT / "tools/external_backend_contract.lock.json").read_text())
@@ -154,10 +153,24 @@ class ExternalBackendContractTest(unittest.TestCase):
         self.assertNotIn('create_publisher<sensor_msgs::msg::NavSatFix>', bridge)
         self.assertNotIn('create_publisher<mowgli_interfaces::msg::GnssStatus>', bridge)
         self.assertIn('create_subscription<mowgli_interfaces::msg::GnssStatus>', bridge)
-        self.assertIn('"/gps/status", sensor_qos', bridge)
-        for legacy in ("gps1_canonical_enabled", "serial_gps_projection", "on_serial_gps_raw", "publish_gps_stale"):
+        self.assertRegex(
+            bridge,
+            r'create_subscription<mowgli_interfaces::msg::GnssStatus>\s*\(\s*'
+            r'"/gps/status"\s*,\s*sensor_qos',
+        )
+
+        for legacy in (
+            "gps1_canonical_enabled",
+            "serial_gps_projection",
+            "on_serial_gps_raw",
+            "publish_gps_stale",
+        ):
             self.assertNotIn(legacy, bridge)
-            self.assertNotIn(legacy, read("ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp"))
+            self.assertNotIn(
+                legacy,
+                read("ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp"),
+            )
+
         self.assertIn(
             'create_publisher<diagnostic_msgs::msg::DiagnosticArray>("/diagnostics"',
             bridge,
@@ -301,11 +314,17 @@ class ExternalBackendContractTest(unittest.TestCase):
         )
 
         self.assertIn(
-            "manual_control_enabled: false",
+            "mowing_enabled: true",
             bridge_config,
         )
-        self.assertIn(
-            "blade_control_enabled: false",
+
+        self.assertNotIn(
+            "manual_control_enabled",
+            bridge_config,
+        )
+
+        self.assertNotIn(
+            "blade_control_enabled",
             bridge_config,
         )
 
