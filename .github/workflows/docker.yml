@@ -4,6 +4,20 @@ on:
   push:
     branches: [ main, dev ]
   workflow_dispatch:
+    inputs:
+      publish_production:
+        description: Publish images only after the blade safety release gates are validated
+        type: boolean
+        default: false
+        required: true
+      failsafe_acceptance_record:
+        description: Tracked docs/acceptance/*.md record of physical companion-loss acceptance
+        type: string
+        default: ''
+      authority_acceptance_record:
+        description: Tracked docs/acceptance/*.md record of exclusive blade authority acceptance
+        type: string
+        default: ''
 
 permissions:
   contents: read
@@ -16,6 +30,7 @@ jobs:
   pins:
     runs-on: ubuntu-latest
     outputs:
+      publish_production: ${{ steps.publication.outputs.enabled }}
       mavros_version: ${{ steps.pins.outputs.mavros_version }}
       mavros_commit: ${{ steps.pins.outputs.mavros_commit }}
       universal_gnss_repository: ${{ steps.pins.outputs.universal_gnss_repository }}
@@ -24,6 +39,28 @@ jobs:
       geographiclib_dataset_version: ${{ steps.pins.outputs.geographiclib_dataset_version }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Test fail-closed publication contract
+        run: |
+          python3 tools/test_docker_publication_guard.py
+          python3 tools/test_mowgli_interface_contract.py
+          python3 tools/test_external_backend_contract.py
+
+      - name: Resolve production publication gate
+        id: publication
+        env:
+          ALLOWED: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish_production == true && vars.ENABLE_PRODUCTION_IMAGE_PUBLICATION == 'true' && vars.BLADE_FAILSAFE_VALIDATED == 'true' && vars.BLADE_EXCLUSIVE_AUTHORITY_VALIDATED == 'true' }}
+          FAILSAFE_RECORD: ${{ inputs.failsafe_acceptance_record }}
+          AUTHORITY_RECORD: ${{ inputs.authority_acceptance_record }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ "$ALLOWED" = true ]; then
+            python3 tools/verify_production_acceptance.py
+            echo 'enabled=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          fi
 
       - id: pins
         shell: bash
@@ -84,20 +121,21 @@ jobs:
           skip-extraction: ${{ steps.ccache.outputs.cache-hit }}
 
       - name: Login to GHCR
+        if: needs.pins.outputs.publish_production == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push architecture image
+      - name: Build architecture image (publish only when explicitly authorized)
         uses: docker/build-push-action@v6
         with:
           context: .
           file: ros2/Dockerfile
           platforms: ${{ matrix.platform }}
           pull: true
-          push: true
+          push: ${{ needs.pins.outputs.publish_production == 'true' }}
           tags: ${{ env.IMAGE_NAME }}:build-${{ matrix.ros_distro }}-${{ matrix.architecture }}
           build-args: |
             ROS_DISTRO=${{ matrix.ros_distro }}
@@ -112,6 +150,7 @@ jobs:
 
   publish-manifest:
     needs: [pins, build]
+    if: needs.pins.outputs.publish_production == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
