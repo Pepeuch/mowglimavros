@@ -1,0 +1,7 @@
+# Historical ROS bench lease correlation ID, not an authentication credential.
+# Verified against passive-can-rescue.py SHA256
+# 11e902e155964b4141e3d642cd99988bb8f097af4c58ae654fcc45a136104179.
+# Immutable evidence blob: 20d3a418a3ec9ae56911c46baf8990f9831fc2cf.
+# Only these two generic-api-key findings are exempted; no directory-wide rule.
+docs/investigations/2026-10-07-runtime-bringup/can-renewal-rescue-proof-2026-10-08.jsonl:generic-api-key:1
+docs/investigations/2026-10-07-runtime-bringup/can-renewal-rescue-proof-2026-10-08.jsonl:generic-api-key:19

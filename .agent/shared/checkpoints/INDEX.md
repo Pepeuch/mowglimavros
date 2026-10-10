@@ -4,6 +4,10 @@ Navigation only. Not the project backlog.
 
 ## Active
 
+- `MM-SESSION-RECOVERY-20261010` — complete47-file stash recovery reconciled in
+  standalone repository; pinned build/mocks PASS, full review diff available,
+  audits preserved, no commit/deploy and physical/failsafe gates still open.
+
 - `MM-MAVROS-REFRESH-20261006` — WheelTick unit/provenance, Safety latches,
   dedicated runtime configuration, RTK calibration GUI and traction opt-in;
   software tests pass, full sidecar graph and target acceptance pending.
@@ -29,6 +33,29 @@ Navigation only. Not the project backlog.
 - `MM-MANUAL-CONTROL-ROUTING-20260928` — armed MANUAL preflight: MAVROS GCS identity and Rover axis blockers; no manual motor command.
 
 ## Retained
+
+- `MM-BLADE-HISTORY-RECOVERY-20261010` — Oct9 session remains in stash c93548f;
+  no published feature commit; original recovery review retained.
+
+## Session recovery in progress
+
+- Complete47-file recovery is prepared in the standalone MowgliMAVROS recovery
+  worktree; report/session inventory under runtime-bringup. Current production
+  and audit source worktrees remain untouched; no new physical acceptance.
+
+## Retained historical session findings
+
+- `MM-MAVLINK-RATES-20261009` — passive60s receive audit +30s instance/topic
+  verification; periodic streams1Hz, ESC republication3Hz/acquisition1Hz,
+  MAV1/MAV2 configuration and source-qualified freshness audited. Per-message
+  rate proposals only, no FCU/interval writes or motors.
+
+- `MM-BLADE-PRODUCT-20261008` — OFF/FWD/REV software patch, neutral-before-inversion,
+  deferred ACKs, safety/startup neutral and source-qualified stop proof; complete
+  pinned build/bridge/ESC/provider/safety validation PASS. ARM64 built/deployed,
+  startup/OFF target PASS; first FWD refused before any nonneutral output,
+  STOP, REV/inversion/safety not run (2026-10-09);
+  native bench baseline retained, companion-loss failsafe and exclusive authority open.
 
 - `MM-FIRMWARE-PROVIDERS-20261005` — bootstrap and C++ command/emergency providers; capabilities and ArduPilot/PX4 software equivalence; nine suites and installed graph pass.
 

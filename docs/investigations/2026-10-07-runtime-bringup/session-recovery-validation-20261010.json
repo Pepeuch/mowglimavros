@@ -1,0 +1,554 @@
+{
+  "baseline": {
+    "repository": "Pepeuch/mowglimavros",
+    "branch": "recovery/full-session-20261010",
+    "head": "9f62ba4b1afbccbdaa8b22899ecd4874bc28b204",
+    "stash": "c93548f36d12549653bc35e26d2d33bf558f76eb"
+  },
+  "sdk": {
+    "image": "sha256:d98e8e9899e57cdcfb9b3b1aec5588bd0c64fc31956dcc726ec5c31ca6825316",
+    "mavros": "2.16.0",
+    "uid": 1000,
+    "network": "none",
+    "devices": [],
+    "production_restarts": 0,
+    "fcu_commands": 0
+  },
+  "build": {
+    "packages": 6,
+    "passed": 6,
+    "source_node_sha256": "dbd60f82dd350ce4390f13e50845eca1a7d2f6062d3bcf280f9605ffee95d4b9",
+    "installed_binary_sha256": "322070cb42ec80a106216383348b21a4c713ebfbe930d6e028aba3157d8ef610"
+  },
+  "tests": {
+    "bridge_suites": 16,
+    "esc_suites": 5,
+    "power_suites": 1,
+    "gnss_suites": 1,
+    "final_failed": 0,
+    "interface_contract_cases": 3,
+    "external_backend_cases": 10,
+    "final_bridge_ctest_duration_s": 130.07,
+    "xml": [
+      {
+        "path": "power/mavros_battery_observer/test_power_state.gtest.xml",
+        "tests": "8",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_safety_state.gtest.xml",
+        "tests": "15",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_blade_off_control.gtest.xml",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_safety_graph.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_gnss_launch.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_provider_graph.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_command_provider.gtest.xml",
+        "tests": "5",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_esc_graph.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_blade_control.gtest.xml",
+        "tests": "16",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_firmware_detection.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_esc_telemetry_tracker.gtest.xml",
+        "tests": "14",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_rover_manual_control.gtest.xml",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_readiness_state.gtest.xml",
+        "tests": "13",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_blade_off_contract.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_blade_graph.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_firmware_provider.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "bridge/mowgli_mavros_bridge/test_gnss_graph.xml",
+        "tests": "1",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "gnss/mavros_gnss_adapter/test_gnss_adapter.gtest.xml",
+        "tests": "14",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "esc/mavros_esc_wheel_odometry/test_wheel_tick_projection.gtest.xml",
+        "tests": "6",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "esc/mavros_esc_wheel_odometry/test_observation_engine.gtest.xml",
+        "tests": "49",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "esc/mavros_esc_wheel_odometry/test_motor_tick_integrator.gtest.xml",
+        "tests": "7",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "esc/mavros_esc_wheel_odometry/test_wheel_odometry_core.gtest.xml",
+        "tests": "20",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      },
+      {
+        "path": "esc/mavros_esc_wheel_odometry/test_signed_esc_contract.gtest.xml",
+        "tests": "2",
+        "failures": "0",
+        "errors": "0",
+        "passed": true
+      }
+    ]
+  },
+  "prior_failures": [
+    {
+      "kind": "environment",
+      "detail": "Host daemon /tmp bind differs from client; fixed by copying sources/deps."
+    },
+    {
+      "kind": "test_fixture",
+      "detail": "Historical blade graph inferred first inversion from command count after new permission-loss scenario; replaced by explicit transition index."
+    },
+    {
+      "kind": "known_intermittent",
+      "detail": "Unchanged ESC graph left_raw_ticks equality failed on second pass; first and final pass succeeded; WARN retained."
+    }
+  ],
+  "hardware_acceptance": "HARDWARE_REQUIRED",
+  "stash_restoration": [
+    {
+      "file": ".agent/shared/checkpoints/INDEX.md",
+      "target": ".agent/shared/checkpoints/INDEX.md",
+      "blob_stash": "35aa697811f7f29ea129bd9cc2cdf153cce1262d",
+      "blob_restored": "f8f04fd5a730f32caf041c6b4563e96da8cd1471",
+      "exact": false
+    },
+    {
+      "file": "TODO.md",
+      "target": "TODO.md",
+      "blob_stash": "2c9e6c7c0e6c1980d982e368c3bf724e16a028f6",
+      "blob_restored": "24b59875f933d495b8dfc982c6c497f835c207e0",
+      "exact": false
+    },
+    {
+      "file": "ros2/src/mavros_esc_wheel_odometry/CMakeLists.txt",
+      "target": "ros2/src/mavros_esc_wheel_odometry/CMakeLists.txt",
+      "blob_stash": "7f677bfc9e88ea91af05d4e14c6639d4c93dc210",
+      "blob_restored": "7f677bfc9e88ea91af05d4e14c6639d4c93dc210",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/CMakeLists.txt",
+      "target": "ros2/src/mowgli_mavros_bridge/CMakeLists.txt",
+      "blob_stash": "6f51f705add506e042f8079b64ea687005d88555",
+      "blob_restored": "6f51f705add506e042f8079b64ea687005d88555",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/README.md",
+      "target": "ros2/src/mowgli_mavros_bridge/README.md",
+      "blob_stash": "d9eaa013c3ccbba1378937bd946b26d53fcd489a",
+      "blob_restored": "c7a62afa709b149e5ea715e5b76b474b1d4ca847",
+      "exact": false
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/config/hardware_bridge_mavros.yaml",
+      "target": "ros2/src/mowgli_mavros_bridge/config/hardware_bridge_mavros.yaml",
+      "blob_stash": "6a69f8a023533c3b3c56c20fefa43595181f0423",
+      "blob_restored": "6a69f8a023533c3b3c56c20fefa43595181f0423",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp",
+      "target": "ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp",
+      "blob_stash": "db58250c8e52dbfa2e2ceca8c14305b9a5b616e5",
+      "blob_restored": "db58250c8e52dbfa2e2ceca8c14305b9a5b616e5",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp",
+      "target": "ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp",
+      "blob_stash": "643c6083685a0b81b9fea2d42ca52b58085fc608",
+      "blob_restored": "310dc6f2a3c6fb03e01d475dd35808118e302cd8",
+      "exact": false
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py",
+      "target": "ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py",
+      "blob_stash": "ea4b6cf91823bdb302fbf1d875f0e48899b22635",
+      "blob_restored": "ea4b6cf91823bdb302fbf1d875f0e48899b22635",
+      "exact": true
+    },
+    {
+      "file": ".agent/shared/checkpoints/retained/MM-BLADE-PRODUCT-20261008.md",
+      "target": ".agent/shared/checkpoints/retained/MM-BLADE-PRODUCT-20261008.md",
+      "blob_stash": "8da5f6e0a47a48e55914ea90e505ebdb511b8192",
+      "blob_restored": "8da5f6e0a47a48e55914ea90e505ebdb511b8192",
+      "exact": true
+    },
+    {
+      "file": ".agent/shared/checkpoints/retained/MM-MAVLINK-RATES-20261009.md",
+      "target": ".agent/shared/checkpoints/retained/MM-MAVLINK-RATES-20261009.md",
+      "blob_stash": "d9e601b6e252ec7c58f64d617a1ac54534027e06",
+      "blob_restored": "d9e601b6e252ec7c58f64d617a1ac54534027e06",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-A-interrupted-2026-10-08.jsonl",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-A-interrupted-2026-10-08.jsonl",
+      "blob_stash": "6fb0da03382574103566eee7920c6abe62ded998",
+      "blob_restored": "6fb0da03382574103566eee7920c6abe62ded998",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-A-pass-2026-10-08.jsonl",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-A-pass-2026-10-08.jsonl",
+      "blob_stash": "788ab8a228a37448b7aa200332f89f58da1da660",
+      "blob_restored": "788ab8a228a37448b7aa200332f89f58da1da660",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-B-pass-2026-10-08.jsonl",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-B-pass-2026-10-08.jsonl",
+      "blob_stash": "fbcddeab53adc26f800f7d0463f089300cb1fe68",
+      "blob_restored": "fbcddeab53adc26f800f7d0463f089300cb1fe68",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-ab-acceptance.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-charge-ab-acceptance.md",
+      "blob_stash": "b091f78d1da5123f9ec5c52d1ff30ef6af6723bb",
+      "blob_restored": "b091f78d1da5123f9ec5c52d1ff30ef6af6723bb",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-off-build-validation.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-off-build-validation.md",
+      "blob_stash": "6a1d9bcbaad0c58a200e18593838819fc78c344d",
+      "blob_restored": "6a1d9bcbaad0c58a200e18593838819fc78c344d",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-off-deployment-runtime.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-off-deployment-runtime.md",
+      "blob_stash": "017788a9cbe3f3507287005aee93ce7d5db41bd1",
+      "blob_restored": "017788a9cbe3f3507287005aee93ce7d5db41bd1",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-off-only-patch.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-off-only-patch.md",
+      "blob_stash": "cf13dda3179d33aaa819ca1387066081e56b3fc4",
+      "blob_restored": "cf13dda3179d33aaa819ca1387066081e56b3fc4",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-product-arm64-deployment.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-product-arm64-deployment.md",
+      "blob_stash": "735b83e3e97fd313527fb1496d6ba6b4e583f8ed",
+      "blob_restored": "735b83e3e97fd313527fb1496d6ba6b4e583f8ed",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/blade-product-fwd-rev-implementation.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/blade-product-fwd-rev-implementation.md",
+      "blob_stash": "551f2f78cbda1bd49435b063bd020dfa79ab71e8",
+      "blob_restored": "551f2f78cbda1bd49435b063bd020dfa79ab71e8",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/can-passive-before.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/can-passive-before.md",
+      "blob_stash": "3a1f020c5286bec2839d0e4243c03f71a6e42299",
+      "blob_restored": "3a1f020c5286bec2839d0e4243c03f71a6e42299",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/can-passive-results.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/can-passive-results.md",
+      "blob_stash": "aee1f07df01d96aff48ed618f156ee42d0e291b6",
+      "blob_restored": "aee1f07df01d96aff48ed618f156ee42d0e291b6",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/can-renewal-independent-rescue-validation.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/can-renewal-independent-rescue-validation.md",
+      "blob_stash": "3dedb7365a5af4798ea6d77809c8df31f07852ba",
+      "blob_restored": "3dedb7365a5af4798ea6d77809c8df31f07852ba",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/can-renewal-rescue-proof-2026-10-08.jsonl",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/can-renewal-rescue-proof-2026-10-08.jsonl",
+      "blob_stash": "20d3a418a3ec9ae56911c46baf8990f9831fc2cf",
+      "blob_restored": "20d3a418a3ec9ae56911c46baf8990f9831fc2cf",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/esc2-physical-identification.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/esc2-physical-identification.md",
+      "blob_stash": "f5b83d02b28870faf7e4f265c0cce2268a9fe4da",
+      "blob_restored": "f5b83d02b28870faf7e4f265c0cce2268a9fe4da",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/mavlink-frequency-metrics-20261009.csv",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/mavlink-frequency-metrics-20261009.csv",
+      "blob_stash": "d32afc9f10e334aa483d6f9778e070350f74761a",
+      "blob_restored": "d32afc9f10e334aa483d6f9778e070350f74761a",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/mavlink-frequency-proof-20261009.json",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/mavlink-frequency-proof-20261009.json",
+      "blob_stash": "980f8a63316b96db84dc486eb579582c987a526e",
+      "blob_restored": "980f8a63316b96db84dc486eb579582c987a526e",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit-20261009-original.md",
+      "blob_stash": "beccf906895e0e208791dd36d71cad926656afa3",
+      "blob_restored": "beccf906895e0e208791dd36d71cad926656afa3",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/operator-observations-and-contract-checkpoint.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/operator-observations-and-contract-checkpoint.md",
+      "blob_stash": "f51d280572b12939daba5761cd3fa6f682a6b09f",
+      "blob_restored": "f51d280572b12939daba5761cd3fa6f682a6b09f",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/p0-blade-isolation-2026-10-08-runtime.jsonl",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/p0-blade-isolation-2026-10-08-runtime.jsonl",
+      "blob_stash": "80f54b8fe2aefbf1057d51c1e5462e1f9297d3cf",
+      "blob_restored": "80f54b8fe2aefbf1057d51c1e5462e1f9297d3cf",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/p0-blade-only-next-acceptance.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/p0-blade-only-next-acceptance.md",
+      "blob_stash": "9f8a23581a266ab9d2aaeffbc94e46d6d2c944d7",
+      "blob_restored": "9f8a23581a266ab9d2aaeffbc94e46d6d2c944d7",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/p0-blade-sign-attempt-2026-10-08.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/p0-blade-sign-attempt-2026-10-08.md",
+      "blob_stash": "7af8930c487c754c3e355325c285b75e59d67b34",
+      "blob_restored": "7af8930c487c754c3e355325c285b75e59d67b34",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/p0-fcu-traction-blade-contract.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/p0-fcu-traction-blade-contract.md",
+      "blob_stash": "aadd002ad2177d4c64b59e2fa35ebf3bd38ae15a",
+      "blob_restored": "aadd002ad2177d4c64b59e2fa35ebf3bd38ae15a",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/p0-implementation-before.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/p0-implementation-before.md",
+      "blob_stash": "11b09cf1c30fb3ad4cbd73b80ec1d296261c5ac6",
+      "blob_restored": "11b09cf1c30fb3ad4cbd73b80ec1d296261c5ac6",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-preflight.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-preflight.md",
+      "blob_stash": "179ebb1632c1e7a4c0675a5d69b88e784137a13d",
+      "blob_restored": "179ebb1632c1e7a4c0675a5d69b88e784137a13d",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-results.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-results.md",
+      "blob_stash": "809a689e90d52b94b28664a601ef7445fc2fec21",
+      "blob_restored": "809a689e90d52b94b28664a601ef7445fc2fec21",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-runtime.jsonl",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-runtime.jsonl",
+      "blob_stash": "a0f4bf7a44d66f64d0698a5d0213fe1f2191664d",
+      "blob_restored": "a0f4bf7a44d66f64d0698a5d0213fe1f2191664d",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/servo3-native-actuation-preflight.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/servo3-native-actuation-preflight.md",
+      "blob_stash": "0097d1c43572da763f21587310d4799bb724d108",
+      "blob_restored": "0097d1c43572da763f21587310d4799bb724d108",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/servo3-native-actuation-results.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/servo3-native-actuation-results.md",
+      "blob_stash": "cef9c3fb5fab80cc72e7b654e1d714279e94a82a",
+      "blob_restored": "cef9c3fb5fab80cc72e7b654e1d714279e94a82a",
+      "exact": true
+    },
+    {
+      "file": "docs/investigations/2026-10-07-runtime-bringup/signed-rpm-three-esc-audit.md",
+      "target": "docs/investigations/2026-10-07-runtime-bringup/signed-rpm-three-esc-audit.md",
+      "blob_stash": "9d5026475e725d9d4d15a61a382c8f407e1ef26f",
+      "blob_restored": "9d5026475e725d9d4d15a61a382c8f407e1ef26f",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mavros_esc_wheel_odometry/test/test_signed_esc_contract.cpp",
+      "target": "ros2/src/mavros_esc_wheel_odometry/test/test_signed_esc_contract.cpp",
+      "blob_stash": "2c6b9c00d20fdcc6cdf2c2b5d46ebfdd819bfb5a",
+      "blob_restored": "2c6b9c00d20fdcc6cdf2c2b5d46ebfdd819bfb5a",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_control.hpp",
+      "target": "ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_control.hpp",
+      "blob_stash": "6688184d7fb5efbef4eb17df1ecc3ebe16483b91",
+      "blob_restored": "6688184d7fb5efbef4eb17df1ecc3ebe16483b91",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_off_control.hpp",
+      "target": "ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_off_control.hpp",
+      "blob_stash": "c1e27382064762f0a6f8e98ec786d6083a273cda",
+      "blob_restored": "c1e27382064762f0a6f8e98ec786d6083a273cda",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/test/test_blade_control.cpp",
+      "target": "ros2/src/mowgli_mavros_bridge/test/test_blade_control.cpp",
+      "blob_stash": "2137f34a768599e862da74c1a3cc2687ace2988b",
+      "blob_restored": "d644020eb7f9be13383cc5cab87c0a35ed8819aa",
+      "exact": false
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py",
+      "target": "ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py",
+      "blob_stash": "4f8cf6a8c7bc9b640853c948eb1e822bcb868ae8",
+      "blob_restored": "c9c0c512c0adc7d1c99333f60a0d645f9a14f89f",
+      "exact": false
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py",
+      "target": "ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py",
+      "blob_stash": "58d4edd3612468fe0bc9e3619cfa0c8119e5eeb7",
+      "blob_restored": "58d4edd3612468fe0bc9e3619cfa0c8119e5eeb7",
+      "exact": true
+    },
+    {
+      "file": "ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp",
+      "target": "ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp",
+      "blob_stash": "c522b2222b154f57946e1d317f4fc856770b62a1",
+      "blob_restored": "c522b2222b154f57946e1d317f4fc856770b62a1",
+      "exact": true
+    }
+  ],
+  "categories": {
+    "checkpoint_index": 1,
+    "backlog": 1,
+    "build": 2,
+    "documentation": 1,
+    "configuration": 1,
+    "product": 4,
+    "test": 6,
+    "checkpoint": 2,
+    "audit_data": 8,
+    "historical_report": 21
+  }
+}

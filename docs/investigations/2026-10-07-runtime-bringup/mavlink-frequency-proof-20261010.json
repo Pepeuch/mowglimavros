@@ -1,0 +1,2428 @@
+{
+  "baseline": {
+    "repo_parent": "582e6fe96eabaa45d5381fc7f27dbdab7f62ed22",
+    "branch": "feat/mavros-refresh",
+    "submodule": "9f62ba4b1afbccbdaa8b22899ecd4874bc28b204",
+    "image": "sha256:cfb4c921cc2ea23cf05b45843b8941af7a838ddf18a02091eeacc0dd460acf07",
+    "bridge_binary_sha256": "13f26d44d1d08465bb5d7ccefe271a9db6f82a602bf24cc3384c21c9ba643f2b",
+    "started_at": "2026-10-10T12:43:52.639646551Z"
+  },
+  "capture60": [
+    {
+      "event": "audit_started",
+      "wall": 1791638250.2385523,
+      "duration_requested_s": 60
+    },
+    {
+      "event": "audit_result",
+      "wall_start": 1791638250.2385523,
+      "wall_end": 1791638310.271737,
+      "duration_s": 60.000154740992,
+      "rows": [
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 0,
+          "name": "HEARTBEAT",
+          "count": 60,
+          "hz_count_over_window": 0.9999974209901179,
+          "period_stddev_s": 0.0007234305504933385,
+          "period_mean_s": 0.9999909970339119,
+          "period_min_s": 0.9985322970023844,
+          "period_max_s": 1.0018589819956105,
+          "period_p95_s": 1.0010790748143337,
+          "period_p99_s": 1.0016634303668979,
+          "largest_gap_s": 1.0018589819956105,
+          "hz_span": 1.0000090030471422,
+          "largest_boundary_gap_s": 1.0018589819956105,
+          "header_stamp_max_gap_s": 1.0020568370819092
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 1,
+          "name": "SYS_STATUS",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.007302852516366559,
+          "period_mean_s": 0.19997048296996417,
+          "period_min_s": 0.18266496501746587,
+          "period_max_s": 0.21734778099926189,
+          "period_p95_s": 0.2134912129084114,
+          "period_p99_s": 0.2154219127888791,
+          "largest_gap_s": 0.21734778099926189,
+          "hz_span": 5.000738034673854,
+          "largest_boundary_gap_s": 0.21734778099926189,
+          "header_stamp_max_gap_s": 0.22049713134765625
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 2,
+          "name": "SYSTEM_TIME",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.007994551985153826,
+          "period_mean_s": 0.10000491629380699,
+          "period_min_s": 0.07056464700144716,
+          "period_max_s": 0.12166211998555809,
+          "period_p95_s": 0.11534699679759797,
+          "period_p99_s": 0.11767591223469935,
+          "largest_gap_s": 0.12166211998555809,
+          "hz_span": 9.999508394788059,
+          "largest_boundary_gap_s": 0.12166211998555809,
+          "header_stamp_max_gap_s": 0.12344956398010254
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 22,
+          "name": "PARAM_VALUE",
+          "count": 14,
+          "hz_count_over_window": 0.23333273156436085,
+          "period_stddev_s": 5.085251394682031,
+          "period_mean_s": 4.230781295690506,
+          "period_min_s": 0.0005389889993239194,
+          "period_max_s": 10.999446932983119,
+          "period_p95_s": 10.99940402698121,
+          "period_p99_s": 10.999438351782738,
+          "largest_gap_s": 10.999446932983119,
+          "hz_span": 0.23636296232532858,
+          "largest_boundary_gap_s": 10.999446932983119,
+          "header_stamp_max_gap_s": 11.000002145767212
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 24,
+          "name": "GPS_RAW_INT",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.004989772204405402,
+          "period_mean_s": 0.19995744115720507,
+          "period_min_s": 0.18284083702019416,
+          "period_max_s": 0.21599068399518728,
+          "period_p95_s": 0.2068894475029083,
+          "period_p99_s": 0.21437553929514253,
+          "largest_gap_s": 0.21599068399518728,
+          "hz_span": 5.00106419752495,
+          "largest_boundary_gap_s": 0.21599068399518728,
+          "header_stamp_max_gap_s": 0.21857333183288574
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 27,
+          "name": "RAW_IMU",
+          "count": 599,
+          "hz_count_over_window": 9.983307586218011,
+          "period_stddev_s": 0.011029537743880961,
+          "period_mean_s": 0.10002632026587276,
+          "period_min_s": 0.07633019398781471,
+          "period_max_s": 0.12447518602130003,
+          "period_p95_s": 0.11646563240501565,
+          "period_p99_s": 0.11789535886491648,
+          "largest_gap_s": 0.12447518602130003,
+          "hz_span": 9.997368665986833,
+          "largest_boundary_gap_s": 0.12447518602130003,
+          "header_stamp_max_gap_s": 0.12271928787231445
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 29,
+          "name": "SCALED_PRESSURE",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.010234587761343769,
+          "period_mean_s": 0.10000554781967039,
+          "period_min_s": 0.07578595500672236,
+          "period_max_s": 0.12527696101460606,
+          "period_p95_s": 0.11616000041831284,
+          "period_p99_s": 0.11819084480113815,
+          "largest_gap_s": 0.12527696101460606,
+          "hz_span": 9.999445248809558,
+          "largest_boundary_gap_s": 0.12527696101460606,
+          "header_stamp_max_gap_s": 0.12366771697998047
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 30,
+          "name": "ATTITUDE",
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.01122309194128728,
+          "period_mean_s": 0.05000397760549299,
+          "period_min_s": 0.022487904003355652,
+          "period_max_s": 0.08170024698483758,
+          "period_p95_s": 0.06480254380730911,
+          "period_p99_s": 0.06751689977536443,
+          "largest_gap_s": 0.08170024698483758,
+          "hz_span": 19.9984090843635,
+          "largest_boundary_gap_s": 0.08170024698483758,
+          "header_stamp_max_gap_s": 0.0782630443572998
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 32,
+          "name": "LOCAL_POSITION_NED",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.0095893390021877,
+          "period_mean_s": 0.10003009940567932,
+          "period_min_s": 0.0650875540159177,
+          "period_max_s": 0.13663363899104297,
+          "period_p95_s": 0.11820515452127438,
+          "period_p99_s": 0.12007358420989475,
+          "largest_gap_s": 0.13663363899104297,
+          "hz_span": 9.99699096513368,
+          "largest_boundary_gap_s": 0.13663363899104297,
+          "header_stamp_max_gap_s": 0.14031720161437988
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 33,
+          "name": "GLOBAL_POSITION_INT",
+          "count": 599,
+          "hz_count_over_window": 9.983307586218011,
+          "period_stddev_s": 0.0111343655082294,
+          "period_mean_s": 0.10002654608361264,
+          "period_min_s": 0.07809007298783399,
+          "period_max_s": 0.12200919599854387,
+          "period_p95_s": 0.11668089175072964,
+          "period_p99_s": 0.11804691032011759,
+          "largest_gap_s": 0.12200919599854387,
+          "hz_span": 9.997346096146272,
+          "largest_boundary_gap_s": 0.12200919599854387,
+          "header_stamp_max_gap_s": 0.1216893196105957
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 36,
+          "name": "SERVO_OUTPUT_RAW",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.006837821281782465,
+          "period_mean_s": 0.19996159951503148,
+          "period_min_s": 0.18281604599906132,
+          "period_max_s": 0.22147652800776996,
+          "period_p95_s": 0.21314297010540031,
+          "period_p99_s": 0.21514817093906458,
+          "largest_gap_s": 0.22147652800776996,
+          "hz_span": 5.000960196484266,
+          "largest_boundary_gap_s": 0.22147652800776996,
+          "header_stamp_max_gap_s": 0.21957612037658691
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 42,
+          "name": "MISSION_CURRENT",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.0072576423758563356,
+          "period_mean_s": 0.19996614122744197,
+          "period_min_s": 0.18307329001254402,
+          "period_max_s": 0.22024367898120545,
+          "period_p95_s": 0.21335661202610937,
+          "period_p99_s": 0.21532966561906502,
+          "largest_gap_s": 0.22024367898120545,
+          "hz_span": 5.000846612640275,
+          "largest_boundary_gap_s": 0.22024367898120545,
+          "header_stamp_max_gap_s": 0.21956968307495117
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 65,
+          "name": "RC_CHANNELS",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.005736530754125451,
+          "period_mean_s": 0.19995889360878233,
+          "period_min_s": 0.1828548360208515,
+          "period_max_s": 0.21714711899403483,
+          "period_p95_s": 0.2113443880836712,
+          "period_p99_s": 0.21505140995664987,
+          "largest_gap_s": 0.21714711899403483,
+          "hz_span": 5.001027871040788,
+          "largest_boundary_gap_s": 0.21714711899403483,
+          "header_stamp_max_gap_s": 0.2194993495941162
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 74,
+          "name": "VFR_HUD",
+          "count": 60,
+          "hz_count_over_window": 0.9999974209901179,
+          "period_stddev_s": 0.008614705140022367,
+          "period_mean_s": 0.9999066576439595,
+          "period_min_s": 0.9799354389833752,
+          "period_max_s": 1.023928644019179,
+          "period_p95_s": 1.0181734543060883,
+          "period_p99_s": 1.0218257757194806,
+          "largest_gap_s": 1.023928644019179,
+          "hz_span": 1.0000933510696493,
+          "largest_boundary_gap_s": 1.023928644019179,
+          "header_stamp_max_gap_s": 1.0225985050201416
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 77,
+          "name": "COMMAND_ACK",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.07618227311025305,
+          "period_mean_s": 0.09963416605509541,
+          "period_min_s": 0.013944583013653755,
+          "period_max_s": 0.3427166159963235,
+          "period_p95_s": 0.3010314952058252,
+          "period_p99_s": 0.3235421742056496,
+          "largest_gap_s": 0.3427166159963235,
+          "hz_span": 10.036717720375387,
+          "largest_boundary_gap_s": 0.3427166159963235,
+          "header_stamp_max_gap_s": 0.3430483341217041
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 111,
+          "name": "TIMESYNC",
+          "count": 606,
+          "hz_count_over_window": 10.099973952000191,
+          "period_stddev_s": 0.0725772204347962,
+          "period_mean_s": 0.09867266385122356,
+          "period_min_s": 0.0005652389954775572,
+          "period_max_s": 0.32360905897803605,
+          "period_p95_s": 0.30059890518896276,
+          "period_p99_s": 0.30369895210955294,
+          "largest_gap_s": 0.32360905897803605,
+          "hz_span": 10.13451913599675,
+          "largest_boundary_gap_s": 0.32360905897803605,
+          "header_stamp_max_gap_s": 0.3230550289154053
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 116,
+          "name": "SCALED_IMU2",
+          "count": 599,
+          "hz_count_over_window": 9.983307586218011,
+          "period_stddev_s": 0.010731638199715,
+          "period_mean_s": 0.1000260749398061,
+          "period_min_s": 0.07571274798829108,
+          "period_max_s": 0.1251699220156297,
+          "period_p95_s": 0.11627500257018256,
+          "period_p99_s": 0.1181540140058496,
+          "largest_gap_s": 0.1251699220156297,
+          "hz_span": 9.997393185744638,
+          "largest_boundary_gap_s": 0.1251699220156297,
+          "header_stamp_max_gap_s": 0.12304043769836426
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 124,
+          "name": "GPS2_RAW",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.005048919492148904,
+          "period_mean_s": 0.1999860921739149,
+          "period_min_s": 0.18165290498291142,
+          "period_max_s": 0.22016726498259231,
+          "period_p95_s": 0.20649838920217004,
+          "period_p99_s": 0.21489663838699924,
+          "largest_gap_s": 0.22016726498259231,
+          "hz_span": 5.000347719832263,
+          "largest_boundary_gap_s": 0.22016726498259231,
+          "header_stamp_max_gap_s": 0.22029519081115723
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 125,
+          "name": "POWER_STATUS",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.007323802837169282,
+          "period_mean_s": 0.19996592857860135,
+          "period_min_s": 0.18302779100486077,
+          "period_max_s": 0.21841817497625016,
+          "period_p95_s": 0.2135652362165274,
+          "period_p99_s": 0.21544651135860474,
+          "largest_gap_s": 0.21841817497625016,
+          "hz_span": 5.000851930667411,
+          "largest_boundary_gap_s": 0.21841817497625016,
+          "header_stamp_max_gap_s": 0.2205181121826172
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 129,
+          "name": "SCALED_IMU3",
+          "count": 599,
+          "hz_count_over_window": 9.983307586218011,
+          "period_stddev_s": 0.01045650335755535,
+          "period_mean_s": 0.10002583741638879,
+          "period_min_s": 0.07582328698481433,
+          "period_max_s": 0.1252682110061869,
+          "period_p95_s": 0.11619485364499268,
+          "period_p99_s": 0.11817776982323265,
+          "largest_gap_s": 0.1252682110061869,
+          "hz_span": 9.997416925760767,
+          "largest_boundary_gap_s": 0.1252682110061869,
+          "header_stamp_max_gap_s": 0.12317776679992676
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 137,
+          "name": "SCALED_PRESSURE2",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.009230520704943273,
+          "period_mean_s": 0.10000516705343053,
+          "period_min_s": 0.07577516400488093,
+          "period_max_s": 0.12163820400019176,
+          "period_p95_s": 0.11558539990801364,
+          "period_p99_s": 0.1175479782745242,
+          "largest_gap_s": 0.12163820400019176,
+          "hz_span": 9.999483321354008,
+          "largest_boundary_gap_s": 0.12163820400019176,
+          "header_stamp_max_gap_s": 0.12371516227722168
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 147,
+          "name": "BATTERY_STATUS",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.012110523496063653,
+          "period_mean_s": 0.10003111510516575,
+          "period_min_s": 0.07583349497872405,
+          "period_max_s": 0.1235614129982423,
+          "period_p95_s": 0.1195890545961447,
+          "period_p99_s": 0.12157417755632195,
+          "largest_gap_s": 0.1235614129982423,
+          "hz_span": 9.996889457332047,
+          "largest_boundary_gap_s": 0.1235614129982423,
+          "header_stamp_max_gap_s": 0.12489557266235352
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 152,
+          "name": "MEMINFO",
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.007379024276926184,
+          "period_mean_s": 0.19996563106357512,
+          "period_min_s": 0.1829601250065025,
+          "period_max_s": 0.21949002801557072,
+          "period_p95_s": 0.21340368578967173,
+          "period_p99_s": 0.21530198152409866,
+          "largest_gap_s": 0.21949002801557072,
+          "hz_span": 5.000859371088974,
+          "largest_boundary_gap_s": 0.21949002801557072,
+          "header_stamp_max_gap_s": 0.22051167488098145
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 163,
+          "name": "AHRS",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.011158768330780937,
+          "period_mean_s": 0.10002457343403581,
+          "period_min_s": 0.07820673700189218,
+          "period_max_s": 0.12114588101394475,
+          "period_p95_s": 0.11674171828199179,
+          "period_p99_s": 0.11788813617429696,
+          "largest_gap_s": 0.12114588101394475,
+          "hz_span": 9.997543260301729,
+          "largest_boundary_gap_s": 0.12114588101394475,
+          "header_stamp_max_gap_s": 0.12158536911010742
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 178,
+          "name": "AHRS2",
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.01106768259905614,
+          "period_mean_s": 0.05000423010258281,
+          "period_min_s": 0.022215200995560735,
+          "period_max_s": 0.08136833799653687,
+          "period_p95_s": 0.06455238610797095,
+          "period_p99_s": 0.06645986329356673,
+          "largest_gap_s": 0.08136833799653687,
+          "hz_span": 19.99830810210491,
+          "largest_boundary_gap_s": 0.08136833799653687,
+          "header_stamp_max_gap_s": 0.07837677001953125
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 193,
+          "name": "EKF_STATUS_REPORT",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.008340380175534665,
+          "period_mean_s": 0.1000048213472488,
+          "period_min_s": 0.06094888999359682,
+          "period_max_s": 0.13634693701169454,
+          "period_p95_s": 0.1171062061097473,
+          "period_p99_s": 0.12024854634306392,
+          "largest_gap_s": 0.13634693701169454,
+          "hz_span": 9.999517888519389,
+          "largest_boundary_gap_s": 0.13634693701169454,
+          "header_stamp_max_gap_s": 0.14026761054992676
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 226,
+          "name": "RPM",
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.011401753238783152,
+          "period_mean_s": 0.050003591076719665,
+          "period_min_s": 0.02296972699696198,
+          "period_max_s": 0.08133450502646156,
+          "period_p95_s": 0.06513763200200628,
+          "period_p99_s": 0.0692051647923654,
+          "largest_gap_s": 0.08133450502646156,
+          "hz_span": 19.99856367247138,
+          "largest_boundary_gap_s": 0.08133450502646156,
+          "header_stamp_max_gap_s": 0.0782327651977539
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 241,
+          "name": "VIBRATION",
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.011160204953465112,
+          "period_mean_s": 0.10003041881973271,
+          "period_min_s": 0.07604786500451155,
+          "period_max_s": 0.12331496100523509,
+          "period_p95_s": 0.11919735350238625,
+          "period_p99_s": 0.12112280938483308,
+          "largest_gap_s": 0.12331496100523509,
+          "hz_span": 9.996959043049943,
+          "largest_boundary_gap_s": 0.12331496100523509,
+          "header_stamp_max_gap_s": 0.12455105781555176
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 11030,
+          "name": "ESC_TELEMETRY_1_TO_4",
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.011574825429540648,
+          "period_mean_s": 0.050003785922422536,
+          "period_min_s": 0.023604963993420824,
+          "period_max_s": 0.09548499999800697,
+          "period_p95_s": 0.06544690908049233,
+          "period_p99_s": 0.07040114291768987,
+          "largest_gap_s": 0.09548499999800697,
+          "hz_span": 19.998485745687972,
+          "largest_boundary_gap_s": 0.09548499999800697,
+          "header_stamp_max_gap_s": 0.09854435920715332
+        }
+      ],
+      "invalid_framing": 0,
+      "sequence_gap_lower_bound": {},
+      "subscriber_depth": 4096,
+      "esc_observation": {
+        "0": {
+          "delivery": {
+            "count": 1320,
+            "hz_count_over_window": 21.999943261782594,
+            "period_stddev_s": 0.013772485685197816,
+            "period_mean_s": 0.04546742782259213,
+            "period_min_s": 0.00749275999260135,
+            "period_max_s": 0.0714230050216429,
+            "period_p95_s": 0.06274493599194102,
+            "period_p99_s": 0.06596983303839805,
+            "largest_gap_s": 0.0714230050216429,
+            "hz_span": 21.993766700457904,
+            "largest_boundary_gap_s": 0.0714230050216429
+          },
+          "distinct": {
+            "count": 1200,
+            "hz_count_over_window": 19.999948419802358,
+            "period_stddev_s": 0.010643323131330996,
+            "period_mean_s": 0.0500056261326207,
+            "period_min_s": 0.019761461997404695,
+            "period_max_s": 0.09788828401360661,
+            "period_p95_s": 0.06398837300948798,
+            "period_p99_s": 0.06695233212201855,
+            "largest_gap_s": 0.09788828401360661,
+            "hz_span": 19.997749800150178,
+            "largest_boundary_gap_s": 0.09788828401360661
+          }
+        },
+        "1": {
+          "delivery": {
+            "count": 1320,
+            "hz_count_over_window": 21.999943261782594,
+            "period_stddev_s": 0.013920252262481234,
+            "period_mean_s": 0.0454671129439036,
+            "period_min_s": 0.0075525499996729195,
+            "period_max_s": 0.07484797498909757,
+            "period_p95_s": 0.06331297520373481,
+            "period_p99_s": 0.06650804566859732,
+            "largest_gap_s": 0.07484797498909757,
+            "hz_span": 21.993919016449972,
+            "largest_boundary_gap_s": 0.07484797498909757
+          },
+          "distinct": {
+            "count": 1200,
+            "hz_count_over_window": 19.999948419802358,
+            "period_stddev_s": 0.0108269786135589,
+            "period_mean_s": 0.05000515884321802,
+            "period_min_s": 0.02016832699882798,
+            "period_max_s": 0.09734812800888903,
+            "period_p95_s": 0.06422315939853433,
+            "period_p99_s": 0.06776890016510151,
+            "largest_gap_s": 0.09734812800888903,
+            "hz_span": 19.997936675600133,
+            "largest_boundary_gap_s": 0.09734812800888903
+          }
+        },
+        "2": {
+          "delivery": {
+            "count": 1320,
+            "hz_count_over_window": 21.999943261782594,
+            "period_stddev_s": 0.013965351952831427,
+            "period_mean_s": 0.04546727436391931,
+            "period_min_s": 0.007690213999012485,
+            "period_max_s": 0.07699284600676037,
+            "period_p95_s": 0.0636640461103525,
+            "period_p99_s": 0.0673293264163658,
+            "largest_gap_s": 0.07699284600676037,
+            "hz_span": 21.993840932623684,
+            "largest_boundary_gap_s": 0.07699284600676037
+          },
+          "distinct": {
+            "count": 1200,
+            "hz_count_over_window": 19.999948419802358,
+            "period_stddev_s": 0.010932019869273715,
+            "period_mean_s": 0.05000499780985505,
+            "period_min_s": 0.020182618987746537,
+            "period_max_s": 0.09735016897320747,
+            "period_p95_s": 0.06458516849961597,
+            "period_p99_s": 0.06810152722871862,
+            "largest_gap_s": 0.09735016897320747,
+            "hz_span": 19.998001075862835,
+            "largest_boundary_gap_s": 0.09735016897320747
+          }
+        }
+      },
+      "state_changes": [
+        {
+          "connected": true,
+          "armed": false,
+          "mode": "MANUAL"
+        }
+      ],
+      "out_unique": [
+        [
+          1500,
+          1500,
+          1500
+        ]
+      ],
+      "esc_values_summary": {
+        "0": {
+          "first": {
+            "source": 2,
+            "count": 54323,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638250.2636664
+          },
+          "last": {
+            "source": 2,
+            "count": 57256,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638310.2200027
+          },
+          "sources": [
+            2
+          ],
+          "rpm_min": 0,
+          "rpm_max": 0,
+          "count_progresses": true
+        },
+        "1": {
+          "first": {
+            "source": 2,
+            "count": 56367,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638250.2636664
+          },
+          "last": {
+            "source": 2,
+            "count": 59333,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638310.2200027
+          },
+          "sources": [
+            2
+          ],
+          "rpm_min": 0,
+          "rpm_max": 0,
+          "count_progresses": true
+        },
+        "2": {
+          "first": {
+            "source": 2,
+            "count": 54335,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638250.2636664
+          },
+          "last": {
+            "source": 2,
+            "count": 57268,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638310.2200027
+          },
+          "sources": [
+            2
+          ],
+          "rpm_min": 0,
+          "rpm_max": 0,
+          "count_progresses": true
+        }
+      },
+      "raw_rpm226": [
+        {
+          "instance": 1,
+          "min": 0,
+          "max": 0,
+          "nonfinite": 0
+        },
+        {
+          "instance": 2,
+          "min": 0,
+          "max": 0,
+          "nonfinite": 0
+        }
+      ],
+      "message_instances": [
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 147,
+          "instance": 0,
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.013064366682009599,
+          "period_mean_s": 0.20005058916052024,
+          "period_min_s": 0.17578556999797001,
+          "period_max_s": 0.22390372899826616,
+          "period_p95_s": 0.21928347370121629,
+          "period_p99_s": 0.2212835504458053,
+          "largest_gap_s": 0.22390372899826616,
+          "hz_span": 4.9987355908139905,
+          "largest_boundary_gap_s": 0.22390372899826616
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 147,
+          "instance": 1,
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.01118162933040333,
+          "period_mean_s": 0.20005971549499707,
+          "period_min_s": 0.17603260598843917,
+          "period_max_s": 0.223785021022195,
+          "period_p95_s": 0.2176910364010837,
+          "period_p99_s": 0.22161297435639424,
+          "largest_gap_s": 0.223785021022195,
+          "hz_span": 4.998507558234567,
+          "largest_boundary_gap_s": 0.223785021022195
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 36,
+          "instance": 0,
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.0068390072262147685,
+          "period_mean_s": 0.19996146685617078,
+          "period_min_s": 0.1828134210081771,
+          "period_max_s": 0.22148819497670047,
+          "period_p95_s": 0.21314329130691476,
+          "period_p99_s": 0.215148730626679,
+          "largest_gap_s": 0.22148819497670047,
+          "hz_span": 5.000963514231893,
+          "largest_boundary_gap_s": 0.22148819497670047
+        }
+      ],
+      "topic_metrics": {
+        "/hardware_bridge/power": {
+          "count": 600,
+          "hz_count_over_window": 9.999974209901179,
+          "period_stddev_s": 0.012876243604288797,
+          "period_mean_s": 0.10003299556093606,
+          "period_min_s": 0.07565849900129251,
+          "period_max_s": 0.12425818998599425,
+          "period_p95_s": 0.12019984950311483,
+          "period_p99_s": 0.121909429122461,
+          "largest_gap_s": 0.12425818998599425,
+          "hz_span": 9.99670153225433,
+          "largest_boundary_gap_s": 0.12425818998599425
+        },
+        "/mavros/imu/data": {
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.010852087438224913,
+          "period_mean_s": 0.05000477863888426,
+          "period_min_s": 0.021066933986730874,
+          "period_max_s": 0.08037202499690466,
+          "period_p95_s": 0.06422598798526451,
+          "period_p99_s": 0.06650914248195476,
+          "largest_gap_s": 0.08037202499690466,
+          "hz_span": 19.998088727111956,
+          "largest_boundary_gap_s": 0.08037202499690466
+        },
+        "/mavros/esc_telemetry/telemetry": {
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.010674471084241912,
+          "period_mean_s": 0.05000560788823283,
+          "period_min_s": 0.019731128006242216,
+          "period_max_s": 0.09788857502280734,
+          "period_p95_s": 0.06398236479144544,
+          "period_p99_s": 0.06710045983025338,
+          "largest_gap_s": 0.09788857502280734,
+          "hz_span": 19.997757096265936,
+          "largest_boundary_gap_s": 0.09788857502280734
+        },
+        "/mavros/esc_wheel_odometry/esc_observation": {
+          "count": 5279,
+          "hz_count_over_window": 87.98310642344721,
+          "period_stddev_s": 0.019560137716574565,
+          "period_mean_s": 0.0113628923616891,
+          "period_min_s": 0.00046986498637124896,
+          "period_max_s": 0.07057456398615614,
+          "period_p95_s": 0.05691957051021745,
+          "period_p99_s": 0.06129420824843691,
+          "largest_gap_s": 0.07057456398615614,
+          "hz_span": 88.00576192832557,
+          "largest_boundary_gap_s": 0.07057456398615614
+        },
+        "/wheel_odom": {
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.010782498948925799,
+          "period_mean_s": 0.050004464598018966,
+          "period_min_s": 0.02112730802036822,
+          "period_max_s": 0.07913567600189708,
+          "period_p95_s": 0.06408325020747725,
+          "period_p99_s": 0.06662046229816042,
+          "largest_gap_s": 0.07913567600189708,
+          "hz_span": 19.99821432023926,
+          "largest_boundary_gap_s": 0.07913567600189708
+        },
+        "/wheel_ticks": {
+          "count": 1200,
+          "hz_count_over_window": 19.999948419802358,
+          "period_stddev_s": 0.010790225522800224,
+          "period_mean_s": 0.05000447189659941,
+          "period_min_s": 0.021058474987512454,
+          "period_max_s": 0.07985257799737155,
+          "period_p95_s": 0.06401465067756362,
+          "period_p99_s": 0.06674965661251918,
+          "largest_gap_s": 0.07985257799737155,
+          "hz_span": 19.998211401328803,
+          "largest_boundary_gap_s": 0.07985257799737155
+        },
+        "/mavros/state": {
+          "count": 60,
+          "hz_count_over_window": 0.9999974209901179,
+          "period_stddev_s": 0.0008374910312624977,
+          "period_mean_s": 0.9999917830509267,
+          "period_min_s": 0.9984923359879758,
+          "period_max_s": 1.002320382016478,
+          "period_p95_s": 1.0014321613969515,
+          "period_p99_s": 1.002014201162383,
+          "largest_gap_s": 1.002320382016478,
+          "hz_span": 1.000008217016592,
+          "largest_boundary_gap_s": 1.002320382016478
+        },
+        "/mavros/sys_status": {
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.007910704855248427,
+          "period_mean_s": 0.19998690570228855,
+          "period_min_s": 0.18109729001298547,
+          "period_max_s": 0.21823413801030256,
+          "period_p95_s": 0.21355768128705677,
+          "period_p99_s": 0.2165279292553896,
+          "largest_gap_s": 0.21823413801030256,
+          "hz_span": 5.000327378876769,
+          "largest_boundary_gap_s": 0.21823413801030256
+        },
+        "/mavros/rc/out": {
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.007476714978522888,
+          "period_mean_s": 0.19994804559195303,
+          "period_min_s": 0.18061021700850688,
+          "period_max_s": 0.21864217100664973,
+          "period_p95_s": 0.214243930511293,
+          "period_p99_s": 0.21629358686273917,
+          "largest_gap_s": 0.21864217100664973,
+          "hz_span": 5.001299197696411,
+          "largest_boundary_gap_s": 0.21864217100664973
+        },
+        "/gps/status": {
+          "count": 300,
+          "hz_count_over_window": 4.9999871049505895,
+          "period_stddev_s": 0.0056095377481343795,
+          "period_mean_s": 0.1999994100402047,
+          "period_min_s": 0.16175027898862027,
+          "period_max_s": 0.24098570202477276,
+          "period_p95_s": 0.20569057752145453,
+          "period_p99_s": 0.21354960803932038,
+          "largest_gap_s": 0.24098570202477276,
+          "hz_span": 5.000014749038389,
+          "largest_boundary_gap_s": 0.24098570202477276
+        }
+      },
+      "topic_graph": {
+        "/gps/status": {
+          "type": "mowgli_interfaces/msg/GnssStatus",
+          "publishers": [
+            "/mavros/mowgli_gnss"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10",
+            "//hardware_bridge",
+            "//navsat_to_absolute_pose",
+            "//behavior_tree_node",
+            "//mqtt_bridge_node",
+            "//foxglove_bridge"
+          ]
+        },
+        "/hardware_bridge/power": {
+          "type": "mowgli_interfaces/msg/Power",
+          "publishers": [
+            "/mavros/battery_observer"
+          ],
+          "subscribers": [
+            "//diagnostics_node",
+            "//mavlink_passive_rate_audit_oct10",
+            "//hardware_bridge",
+            "//behavior_tree_node",
+            "//mqtt_bridge_node",
+            "//foxglove_bridge"
+          ]
+        },
+        "/mavros/esc_telemetry/telemetry": {
+          "type": "mavros_msgs/msg/ESCTelemetry",
+          "publishers": [
+            "/mavros/esc_telemetry"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/mavros/esc_wheel_odometry/esc_observation": {
+          "type": "mavros_esc_wheel_odometry/msg/EscObservation",
+          "publishers": [
+            "/mavros/esc_wheel_odometry"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10",
+            "//mavlink_passive_rate_audit_oct10",
+            "//hardware_bridge"
+          ]
+        },
+        "/mavros/imu/data": {
+          "type": "sensor_msgs/msg/Imu",
+          "publishers": [
+            "/mavros/imu"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10",
+            "//hardware_bridge"
+          ]
+        },
+        "/mavros/rc/out": {
+          "type": "mavros_msgs/msg/RCOut",
+          "publishers": [
+            "/mavros/rc"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10",
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/mavros/state": {
+          "type": "mavros_msgs/msg/State",
+          "publishers": [
+            "/mavros/sys"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10",
+            "//mavlink_passive_rate_audit_oct10",
+            "//hardware_bridge"
+          ]
+        },
+        "/mavros/sys_status": {
+          "type": "mavros_msgs/msg/SysStatus",
+          "publishers": [
+            "/mavros/sys"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10",
+            "//hardware_bridge"
+          ]
+        },
+        "/wheel_odom": {
+          "type": "nav_msgs/msg/Odometry",
+          "publishers": [
+            "/mavros/esc_wheel_odometry"
+          ],
+          "subscribers": [
+            "//diagnostics_node",
+            "//mavlink_passive_rate_audit_oct10",
+            "//cog_to_imu",
+            "//hardware_bridge",
+            "//localization_monitor_node",
+            "//mqtt_bridge_node",
+            "//foxglove_bridge",
+            "//fusion_graph_node",
+            "//controller_server"
+          ]
+        },
+        "/wheel_ticks": {
+          "type": "mowgli_interfaces/msg/WheelTick",
+          "publishers": [
+            "/mavros/esc_wheel_odometry"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        }
+      },
+      "outgoing_summary": [
+        {
+          "command": 400,
+          "param1": 0,
+          "param2": 0,
+          "count": 600
+        }
+      ],
+      "outgoing_first_last": [
+        {
+          "wall": 1791638250.2623215,
+          "command": 400,
+          "param1": 0,
+          "param2": 0
+        },
+        {
+          "wall": 1791638310.1609838,
+          "command": 400,
+          "param1": 0,
+          "param2": 0
+        }
+      ]
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/param",
+      "values": {
+        "MAV2_ADSB": 0,
+        "MAV2_PARAMS": 10,
+        "MAV2_EXTRA3": 1,
+        "MAV2_RAW_SENS": 1,
+        "MAV1_OPTIONS": 0,
+        "MAV1_ADSB": 0,
+        "MAV1_EXTRA1": 20,
+        "MAV1_RAW_CTRL": 2,
+        "MAV1_RC_CHAN": 5,
+        "MAV1_EXT_STAT": 5,
+        "MAV1_RAW_SENS": 10,
+        "MAV_TELEM_DELAY": 0,
+        "MAV_OPTIONS": 0,
+        "MAV_GCS_SYSID": 255,
+        "MAV_SYSID": 1,
+        "SERIAL8_OPTIONS": 0,
+        "SERIAL8_PROTOCOL": 2,
+        "SERIAL7_OPTIONS": 0,
+        "SERIAL7_PROTOCOL": 9,
+        "SERIAL6_OPTIONS": 0,
+        "SERIAL5_OPTIONS": 0,
+        "SERIAL3_OPTIONS": 0,
+        "SERIAL1_OPTIONS": 0,
+        "SERIAL6_BAUD": 115,
+        "SERIAL6_PROTOCOL": 9,
+        "SERIAL3_PROTOCOL": 5,
+        "SERIAL2_PROTOCOL": -1,
+        "SERIAL1_PROTOCOL": 11,
+        "SERIAL0_PROTOCOL": 2,
+        "SERIAL0_BAUD": 921,
+        "SERIAL2_BAUD": 57,
+        "MAV2_EXT_STAT": 1,
+        "MAV2_EXTRA2": 1,
+        "MAV1_POSITION": 10,
+        "SERIAL8_BAUD": 921,
+        "MAV2_OPTIONS": 0,
+        "MAV2_RAW_CTRL": 1,
+        "MAV1_PARAMS": 10,
+        "SERIAL7_BAUD": 115,
+        "MAV1_EXTRA2": 1,
+        "MAV1_EXTRA3": 10,
+        "MAV2_RC_CHAN": 1,
+        "SERIAL5_PROTOCOL": 22,
+        "MAV2_POSITION": 1,
+        "SERIAL1_BAUD": 230,
+        "SERIAL3_BAUD": 460,
+        "SERIAL4_PROTOCOL": 5,
+        "SERIAL2_OPTIONS": 0,
+        "SERIAL4_BAUD": 921,
+        "MAV_GCS_SYSID_HI": 0,
+        "MAV2_EXTRA1": 1,
+        "SERIAL4_OPTIONS": 0,
+        "SERIAL5_BAUD": 115
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros_node",
+      "values": {
+        "fcu_url": "serial:///dev/serial/by-id/usb-Holybro_Pixhawk5X_2F002F001050425937353320-if00:921600",
+        "gcs_url": "udp-b://@255.255.255.255:14550"
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros",
+      "values": {
+        "plugin_allowlist": [],
+        "plugin_denylist": [
+          "mount_control",
+          "actuator_control",
+          "ftp",
+          "hil",
+          "altitude",
+          "debug_value",
+          "image_pub",
+          "px4flow",
+          "vibration",
+          "vision_speed_estimate",
+          "wheel_odometry"
+        ],
+        "uas_url": "/uas1"
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/sys",
+      "values": {
+        "conn_timeout": 10,
+        "heartbeat_mav_type": "ONBOARD_CONTROLLER",
+        "heartbeat_rate": 1
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/time",
+      "values": {
+        "system_time_rate": 1,
+        "time_ref_source": "fcu",
+        "timesync_alpha_final": 0.003,
+        "timesync_alpha_initial": 0.05,
+        "timesync_beta_final": 0.003,
+        "timesync_beta_initial": 0.05,
+        "timesync_mode": "MAVLINK",
+        "timesync_rate": 10
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/esc_wheel_odometry",
+      "values": {
+        "left_esc_slot": 1,
+        "left_wheel_index": -1,
+        "observation_timeout_s": 3,
+        "right_esc_slot": 0,
+        "right_wheel_index": -1,
+        "source": "auto",
+        "ticks_per_meter": 343,
+        "track_width_m": 0.325,
+        "wheel_distance_component_id": -1
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/battery_observer",
+      "values": {
+        "observation_timeout_s": 5
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/hardware_bridge",
+      "values": {
+        "battery_observation_timeout_s": 5,
+        "blade_esc_slot": 2,
+        "esc_observation_timeout_s": 3,
+        "gnss_required": true,
+        "imu_inclination_threshold": 56,
+        "left_esc_slot": 1,
+        "mowing_enabled": true,
+        "readiness_observation_timeout_s": 5,
+        "right_esc_slot": 0,
+        "status_publish_rate_hz": 10,
+        "tilt_emergency_ms": 500,
+        "wheel_odometry_required": false
+      }
+    }
+  ],
+  "capture30": [
+    {
+      "event": "audit_started",
+      "wall": 1791638411.2673001,
+      "duration_requested_s": 30
+    },
+    {
+      "event": "audit_result",
+      "wall_start": 1791638411.2673001,
+      "wall_end": 1791638441.2916005,
+      "duration_s": 30.00654530499014,
+      "rows": [
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 0,
+          "name": "HEARTBEAT",
+          "count": 30,
+          "hz_count_over_window": 0.9997818707577426,
+          "period_stddev_s": 0.0009951123733447393,
+          "period_mean_s": 0.9999866825518408,
+          "period_min_s": 0.9974190020002425,
+          "period_max_s": 1.001606375008123,
+          "period_p95_s": 1.001596749620512,
+          "period_p99_s": 1.0016061294521206,
+          "largest_gap_s": 1.001606375008123,
+          "hz_span": 1.0000133176255162,
+          "largest_boundary_gap_s": 1.001606375008123,
+          "header_stamp_max_gap_s": 1.0019686222076416
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 1,
+          "name": "SYS_STATUS",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.0068835605677501945,
+          "period_mean_s": 0.2000898611610724,
+          "period_min_s": 0.18197518400847912,
+          "period_max_s": 0.21564535298966803,
+          "period_p95_s": 0.21378315979382023,
+          "period_p99_s": 0.21513264879933558,
+          "largest_gap_s": 0.21564535298966803,
+          "hz_span": 4.997754479898408,
+          "largest_boundary_gap_s": 0.21564535298966803,
+          "header_stamp_max_gap_s": 0.2182471752166748
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 2,
+          "name": "SYSTEM_TIME",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.008010707131800136,
+          "period_mean_s": 0.10000760838797045,
+          "period_min_s": 0.0789542620186694,
+          "period_max_s": 0.12165978201664984,
+          "period_p95_s": 0.11596636459871659,
+          "period_p99_s": 0.11895438622857908,
+          "largest_gap_s": 0.12165978201664984,
+          "hz_span": 9.99923921908612,
+          "largest_boundary_gap_s": 0.12165978201664984,
+          "header_stamp_max_gap_s": 0.12142419815063477
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 22,
+          "name": "PARAM_VALUE",
+          "count": 7,
+          "hz_count_over_window": 0.23328243651013994,
+          "period_stddev_s": 5.184260999105799,
+          "period_mean_s": 3.6663964451678717,
+          "period_min_s": 0.0005491960037034005,
+          "period_max_s": 10.998504818009678,
+          "period_p95_s": 10.998276734753745,
+          "period_p99_s": 10.998459201358491,
+          "largest_gap_s": 10.998504818009678,
+          "hz_span": 0.27274737332836724,
+          "largest_boundary_gap_s": 10.998504818009678,
+          "header_stamp_max_gap_s": 10.998742580413818
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 24,
+          "name": "GPS_RAW_INT",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.0057564580437756705,
+          "period_mean_s": 0.19998680320142567,
+          "period_min_s": 0.18173368900897913,
+          "period_max_s": 0.21419200897798873,
+          "period_p95_s": 0.2112859621993266,
+          "period_p99_s": 0.21401870407280513,
+          "largest_gap_s": 0.21419200897798873,
+          "hz_span": 5.000329941735231,
+          "largest_boundary_gap_s": 0.21419200897798873,
+          "header_stamp_max_gap_s": 0.21839618682861328
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 27,
+          "name": "RAW_IMU",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.011601114242053368,
+          "period_mean_s": 0.1000498962374661,
+          "period_min_s": 0.07923746400047094,
+          "period_max_s": 0.1206984689924866,
+          "period_p95_s": 0.11751336130837445,
+          "period_p99_s": 0.11884715323743875,
+          "largest_gap_s": 0.1206984689924866,
+          "hz_span": 9.995012864646288,
+          "largest_boundary_gap_s": 0.1206984689924866,
+          "header_stamp_max_gap_s": 0.12148046493530273
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 29,
+          "name": "SCALED_PRESSURE",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.010903727640383403,
+          "period_mean_s": 0.1000509360702171,
+          "period_min_s": 0.07772695398307405,
+          "period_max_s": 0.12313004297902808,
+          "period_p95_s": 0.11666807080910076,
+          "period_p99_s": 0.12000032148149328,
+          "largest_gap_s": 0.12313004297902808,
+          "hz_span": 9.994908986140684,
+          "largest_boundary_gap_s": 0.12313004297902808,
+          "header_stamp_max_gap_s": 0.12199950218200684
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 30,
+          "name": "ATTITUDE",
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.011506019251329087,
+          "period_mean_s": 0.050001370504157205,
+          "period_min_s": 0.027913956000702456,
+          "period_max_s": 0.07221136099542491,
+          "period_p95_s": 0.0650538070127368,
+          "period_p99_s": 0.0705306087754434,
+          "largest_gap_s": 0.07221136099542491,
+          "hz_span": 19.99945181336296,
+          "largest_boundary_gap_s": 0.07221136099542491,
+          "header_stamp_max_gap_s": 0.06692695617675781
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 32,
+          "name": "LOCAL_POSITION_NED",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.008497961844397613,
+          "period_mean_s": 0.10005951713713004,
+          "period_min_s": 0.07746825102367438,
+          "period_max_s": 0.12158803400234319,
+          "period_p95_s": 0.1171827639976982,
+          "period_p99_s": 0.12047303831903264,
+          "largest_gap_s": 0.12158803400234319,
+          "hz_span": 9.994051826469592,
+          "largest_boundary_gap_s": 0.12158803400234319,
+          "header_stamp_max_gap_s": 0.12249541282653809
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 33,
+          "name": "GLOBAL_POSITION_INT",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.01161056714279326,
+          "period_mean_s": 0.10005038201670322,
+          "period_min_s": 0.07920538101461716,
+          "period_max_s": 0.12073871897882782,
+          "period_p95_s": 0.11736207650974392,
+          "period_p99_s": 0.11871238342195284,
+          "largest_gap_s": 0.12073871897882782,
+          "hz_span": 9.99496433539906,
+          "largest_boundary_gap_s": 0.12073871897882782,
+          "header_stamp_max_gap_s": 0.12175869941711426
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 36,
+          "name": "SERVO_OUTPUT_RAW",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.006431058353515577,
+          "period_mean_s": 0.2000900373289021,
+          "period_min_s": 0.18204430799232796,
+          "period_max_s": 0.2156806449929718,
+          "period_p95_s": 0.21273003161186352,
+          "period_p99_s": 0.21440205159247852,
+          "largest_gap_s": 0.2156806449929718,
+          "hz_span": 4.997750079661535,
+          "largest_boundary_gap_s": 0.2156806449929718,
+          "header_stamp_max_gap_s": 0.21881866455078125
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 42,
+          "name": "MISSION_CURRENT",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.0067121328089093804,
+          "period_mean_s": 0.20008805442946,
+          "period_min_s": 0.1820017250138335,
+          "period_max_s": 0.21561385301174596,
+          "period_p95_s": 0.21312004000064916,
+          "period_p99_s": 0.21510080041363835,
+          "largest_gap_s": 0.21561385301174596,
+          "hz_span": 4.9977996080347955,
+          "largest_boundary_gap_s": 0.21561385301174596,
+          "header_stamp_max_gap_s": 0.2187342643737793
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 65,
+          "name": "RC_CHANNELS",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.005921425810069522,
+          "period_mean_s": 0.20009071069797688,
+          "period_min_s": 0.1817616889893543,
+          "period_max_s": 0.21572497699526139,
+          "period_p95_s": 0.21224342540372163,
+          "period_p99_s": 0.2140851211582776,
+          "largest_gap_s": 0.21572497699526139,
+          "hz_span": 4.997733260638126,
+          "largest_boundary_gap_s": 0.21572497699526139,
+          "header_stamp_max_gap_s": 0.21890044212341309
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 74,
+          "name": "VFR_HUD",
+          "count": 30,
+          "hz_count_over_window": 0.9997818707577426,
+          "period_stddev_s": 0.007758513287729689,
+          "period_mean_s": 0.999386676413545,
+          "period_min_s": 0.9805531470046844,
+          "period_max_s": 1.0197995750058908,
+          "period_p95_s": 1.0120521372009534,
+          "period_p99_s": 1.0189629991247784,
+          "largest_gap_s": 1.0197995750058908,
+          "hz_span": 1.0006136999831297,
+          "largest_boundary_gap_s": 1.0197995750058908,
+          "header_stamp_max_gap_s": 1.0201590061187744
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 77,
+          "name": "COMMAND_ACK",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.07114512452940734,
+          "period_mean_s": 0.09932890355514587,
+          "period_min_s": 0.015975123998941854,
+          "period_max_s": 0.32324388899724,
+          "period_p95_s": 0.2998710006999317,
+          "period_p99_s": 0.3024111875478411,
+          "largest_gap_s": 0.32324388899724,
+          "hz_span": 10.067563057764103,
+          "largest_boundary_gap_s": 0.32324388899724,
+          "header_stamp_max_gap_s": 0.3230721950531006
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 111,
+          "name": "TIMESYNC",
+          "count": 303,
+          "hz_count_over_window": 10.0977968946532,
+          "period_stddev_s": 0.06787046297499993,
+          "period_mean_s": 0.09840610874500681,
+          "period_min_s": 0.0006060700106900185,
+          "period_max_s": 0.30278652600827627,
+          "period_p95_s": 0.2805792152605136,
+          "period_p99_s": 0.29831030150118765,
+          "largest_gap_s": 0.30278652600827627,
+          "hz_span": 10.16197076333171,
+          "largest_boundary_gap_s": 0.30278652600827627,
+          "header_stamp_max_gap_s": 0.3023097515106201
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 116,
+          "name": "SCALED_IMU2",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.011664566163523267,
+          "period_mean_s": 0.10004946411371989,
+          "period_min_s": 0.07927012999425642,
+          "period_max_s": 0.12084867400699295,
+          "period_p95_s": 0.11738660599221475,
+          "period_p99_s": 0.11963743058266117,
+          "largest_gap_s": 0.12084867400699295,
+          "hz_span": 9.995056034116919,
+          "largest_boundary_gap_s": 0.12084867400699295,
+          "header_stamp_max_gap_s": 0.12149333953857422
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 124,
+          "name": "GPS2_RAW",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.006035125313125601,
+          "period_mean_s": 0.1999850062549508,
+          "period_min_s": 0.18170510599156842,
+          "period_max_s": 0.21523732101195492,
+          "period_p95_s": 0.21198093120474368,
+          "period_p99_s": 0.21391376520041377,
+          "largest_gap_s": 0.21523732101195492,
+          "hz_span": 5.0003748717298855,
+          "largest_boundary_gap_s": 0.21523732101195492,
+          "header_stamp_max_gap_s": 0.2173631191253662
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 125,
+          "name": "POWER_STATUS",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.0069319513670965584,
+          "period_mean_s": 0.20008931111410766,
+          "period_min_s": 0.18213064002338797,
+          "period_max_s": 0.215630478982348,
+          "period_p95_s": 0.21383040840155446,
+          "period_p99_s": 0.21531652348930946,
+          "largest_gap_s": 0.215630478982348,
+          "hz_span": 4.997768218761653,
+          "largest_boundary_gap_s": 0.215630478982348,
+          "header_stamp_max_gap_s": 0.2185063362121582
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 129,
+          "name": "SCALED_IMU3",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.011480340624442276,
+          "period_mean_s": 0.1000502025318234,
+          "period_min_s": 0.07856606101267971,
+          "period_max_s": 0.1219307350111194,
+          "period_p95_s": 0.11712621061014943,
+          "period_p99_s": 0.11999255709117278,
+          "largest_gap_s": 0.1219307350111194,
+          "hz_span": 9.994982265847247,
+          "largest_boundary_gap_s": 0.1219307350111194,
+          "header_stamp_max_gap_s": 0.12150025367736816
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 137,
+          "name": "SCALED_PRESSURE2",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.009823153482459088,
+          "period_mean_s": 0.10000851360528518,
+          "period_min_s": 0.07906275900313631,
+          "period_max_s": 0.12379707099171355,
+          "period_p95_s": 0.1163156571885338,
+          "period_p99_s": 0.11893944150826424,
+          "largest_gap_s": 0.12379707099171355,
+          "hz_span": 9.999148711946786,
+          "largest_boundary_gap_s": 0.12379707099171355,
+          "header_stamp_max_gap_s": 0.12211847305297852
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 147,
+          "name": "BATTERY_STATUS",
+          "count": 301,
+          "hz_count_over_window": 10.031144769936017,
+          "period_stddev_s": 0.011565638209926253,
+          "period_mean_s": 0.0999873813232989,
+          "period_min_s": 0.07695842898101546,
+          "period_max_s": 0.12444076500833035,
+          "period_p95_s": 0.11889514675276587,
+          "period_p99_s": 0.12106112896231934,
+          "largest_gap_s": 0.12444076500833035,
+          "hz_span": 10.001262026921207,
+          "largest_boundary_gap_s": 0.12444076500833035,
+          "header_stamp_max_gap_s": 0.12587666511535645
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 152,
+          "name": "MEMINFO",
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.006849375826598498,
+          "period_mean_s": 0.20008873170469857,
+          "period_min_s": 0.1820168910198845,
+          "period_max_s": 0.21556047999183647,
+          "period_p95_s": 0.2137355023936834,
+          "period_p99_s": 0.21527341699344107,
+          "largest_gap_s": 0.21556047999183647,
+          "hz_span": 4.997782691110524,
+          "largest_boundary_gap_s": 0.21556047999183647,
+          "header_stamp_max_gap_s": 0.21864008903503418
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 163,
+          "name": "AHRS",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.011603469625393197,
+          "period_mean_s": 0.10005082974915493,
+          "period_min_s": 0.07924592198105529,
+          "period_max_s": 0.1207848010235466,
+          "period_p95_s": 0.1173409025912406,
+          "period_p99_s": 0.1185621075151721,
+          "largest_gap_s": 0.1207848010235466,
+          "hz_span": 9.994919607435305,
+          "largest_boundary_gap_s": 0.1207848010235466,
+          "header_stamp_max_gap_s": 0.1215810775756836
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 178,
+          "name": "AHRS2",
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.011261917275242245,
+          "period_mean_s": 0.05000092205844154,
+          "period_min_s": 0.03191320598125458,
+          "period_max_s": 0.06710525997914374,
+          "period_p95_s": 0.06482742039661389,
+          "period_p99_s": 0.066549319854239,
+          "largest_gap_s": 0.06710525997914374,
+          "hz_span": 19.999631183424793,
+          "largest_boundary_gap_s": 0.06710525997914374,
+          "header_stamp_max_gap_s": 0.06698417663574219
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 193,
+          "name": "EKF_STATUS_REPORT",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.00764246391150978,
+          "period_mean_s": 0.10000682022081094,
+          "period_min_s": 0.07734050397993997,
+          "period_max_s": 0.12123979101306759,
+          "period_p95_s": 0.11700417937827295,
+          "period_p99_s": 0.12011465845804195,
+          "largest_gap_s": 0.12123979101306759,
+          "hz_span": 9.999318024431146,
+          "largest_boundary_gap_s": 0.12123979101306759,
+          "header_stamp_max_gap_s": 0.12208247184753418
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 226,
+          "name": "RPM",
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.011682276683332368,
+          "period_mean_s": 0.050001699657741865,
+          "period_min_s": 0.02550542398239486,
+          "period_max_s": 0.07442856498528272,
+          "period_p95_s": 0.0650617983803386,
+          "period_p99_s": 0.07235295704449526,
+          "largest_gap_s": 0.07442856498528272,
+          "hz_span": 19.99932016001316,
+          "largest_boundary_gap_s": 0.07442856498528272,
+          "header_stamp_max_gap_s": 0.06687164306640625
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 241,
+          "name": "VIBRATION",
+          "count": 300,
+          "hz_count_over_window": 9.997818707577427,
+          "period_stddev_s": 0.010675528610732773,
+          "period_mean_s": 0.10005981367557189,
+          "period_min_s": 0.07702755101490766,
+          "period_max_s": 0.12445476598804817,
+          "period_p95_s": 0.11869452749378978,
+          "period_p99_s": 0.12137469551409595,
+          "largest_gap_s": 0.12445476598804817,
+          "hz_span": 9.994022207979937,
+          "largest_boundary_gap_s": 0.12445476598804817,
+          "header_stamp_max_gap_s": 0.1257925033569336
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 11030,
+          "name": "ESC_TELEMETRY_1_TO_4",
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.011795798531489916,
+          "period_mean_s": 0.05000225863105987,
+          "period_min_s": 0.02376333501888439,
+          "period_max_s": 0.07616365299327299,
+          "period_p95_s": 0.06521859449276235,
+          "period_p99_s": 0.07392048078239895,
+          "largest_gap_s": 0.07616365299327299,
+          "hz_span": 19.99909658838552,
+          "largest_boundary_gap_s": 0.07616365299327299,
+          "header_stamp_max_gap_s": 0.06685471534729004
+        }
+      ],
+      "invalid_framing": 0,
+      "sequence_gap_lower_bound": {},
+      "subscriber_depth": 4096,
+      "esc_observation": {
+        "0": {
+          "delivery": {
+            "count": 660,
+            "hz_count_over_window": 21.995201156670337,
+            "period_stddev_s": 0.014308858270997631,
+            "period_mean_s": 0.04546717932927938,
+            "period_min_s": 0.006602611014386639,
+            "period_max_s": 0.06929942200076766,
+            "period_p95_s": 0.06295924661681056,
+            "period_p99_s": 0.06534032813913654,
+            "largest_gap_s": 0.06929942200076766,
+            "hz_span": 21.993886903734815,
+            "largest_boundary_gap_s": 0.06929942200076766
+          },
+          "distinct": {
+            "count": 600,
+            "hz_count_over_window": 19.995637415154853,
+            "period_stddev_s": 0.010645989945615678,
+            "period_mean_s": 0.0499986661903215,
+            "period_min_s": 0.030502152018016204,
+            "period_max_s": 0.06929942200076766,
+            "period_p95_s": 0.06453762559394818,
+            "period_p99_s": 0.06704831529059448,
+            "largest_gap_s": 0.06929942200076766,
+            "hz_span": 20.000533538104165,
+            "largest_boundary_gap_s": 0.06929942200076766
+          }
+        },
+        "1": {
+          "delivery": {
+            "count": 660,
+            "hz_count_over_window": 21.995201156670337,
+            "period_stddev_s": 0.014507351325063698,
+            "period_mean_s": 0.04546736698486024,
+            "period_min_s": 0.006063622975489125,
+            "period_max_s": 0.07200428200303577,
+            "period_p95_s": 0.06294906769762747,
+            "period_p99_s": 0.0680943562480388,
+            "largest_gap_s": 0.07200428200303577,
+            "hz_span": 21.99379612927621,
+            "largest_boundary_gap_s": 0.07200428200303577
+          },
+          "distinct": {
+            "count": 600,
+            "hz_count_over_window": 19.995637415154853,
+            "period_stddev_s": 0.010866596941090724,
+            "period_mean_s": 0.04999935517195637,
+            "period_min_s": 0.027141348022269085,
+            "period_max_s": 0.07200428200303577,
+            "period_p95_s": 0.06488496459205635,
+            "period_p99_s": 0.06829294288996605,
+            "largest_gap_s": 0.07200428200303577,
+            "hz_span": 20.00025793454392,
+            "largest_boundary_gap_s": 0.07200428200303577
+          }
+        },
+        "2": {
+          "delivery": {
+            "count": 660,
+            "hz_count_over_window": 21.995201156670337,
+            "period_stddev_s": 0.01458394813585128,
+            "period_mean_s": 0.04546761881182577,
+            "period_min_s": 0.005167933995835483,
+            "period_max_s": 0.07395257501048036,
+            "period_p95_s": 0.06313841429073364,
+            "period_p99_s": 0.0705217478307895,
+            "largest_gap_s": 0.07395257501048036,
+            "hz_span": 21.993674314431175,
+            "largest_boundary_gap_s": 0.07395257501048036
+          },
+          "distinct": {
+            "count": 600,
+            "hz_count_over_window": 19.995637415154853,
+            "period_stddev_s": 0.010983951807239645,
+            "period_mean_s": 0.04999953046078033,
+            "period_min_s": 0.025042266002856195,
+            "period_max_s": 0.07395257501048036,
+            "period_p95_s": 0.06495230830332731,
+            "period_p99_s": 0.07091705264349002,
+            "largest_gap_s": 0.07395257501048036,
+            "hz_span": 20.000187817451618,
+            "largest_boundary_gap_s": 0.07395257501048036
+          }
+        }
+      },
+      "state_changes": [
+        {
+          "connected": true,
+          "armed": false,
+          "mode": "MANUAL"
+        }
+      ],
+      "out_unique": [
+        [
+          1500,
+          1500,
+          1500
+        ]
+      ],
+      "esc_values_summary": {
+        "0": {
+          "first": {
+            "source": 2,
+            "count": 62199,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638411.2720428
+          },
+          "last": {
+            "source": 2,
+            "count": 63666,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638441.2211528
+          },
+          "sources": [
+            2
+          ],
+          "rpm_min": 0,
+          "rpm_max": 0,
+          "count_progresses": true
+        },
+        "1": {
+          "first": {
+            "source": 2,
+            "count": 64329,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638411.2720428
+          },
+          "last": {
+            "source": 2,
+            "count": 276,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638441.2211528
+          },
+          "sources": [
+            2
+          ],
+          "rpm_min": 0,
+          "rpm_max": 0,
+          "count_progresses": true
+        },
+        "2": {
+          "first": {
+            "source": 2,
+            "count": 62211,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638411.2720428
+          },
+          "last": {
+            "source": 2,
+            "count": 63678,
+            "count_valid": true,
+            "rpm": 0,
+            "rpm_valid": true,
+            "direction_valid": false,
+            "stamp": 1791638441.2211528
+          },
+          "sources": [
+            2
+          ],
+          "rpm_min": 0,
+          "rpm_max": 0,
+          "count_progresses": true
+        }
+      },
+      "raw_rpm226": [
+        {
+          "instance": 1,
+          "min": 0,
+          "max": 0,
+          "nonfinite": 0
+        },
+        {
+          "instance": 2,
+          "min": 0,
+          "max": 0,
+          "nonfinite": 0
+        }
+      ],
+      "message_instances": [
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 147,
+          "instance": 0,
+          "count": 151,
+          "hz_count_over_window": 5.032235416147304,
+          "period_stddev_s": 0.014030105354882473,
+          "period_mean_s": 0.1999746673666717,
+          "period_min_s": 0.17691924900282174,
+          "period_max_s": 0.22291120199952275,
+          "period_p95_s": 0.21908328820427414,
+          "period_p99_s": 0.2214832393673714,
+          "largest_gap_s": 0.22291120199952275,
+          "hz_span": 5.000633396061159,
+          "largest_boundary_gap_s": 0.22291120199952275
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 147,
+          "instance": 1,
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.010418297490088053,
+          "period_mean_s": 0.20001301545635702,
+          "period_min_s": 0.17759006799315102,
+          "period_max_s": 0.22045366899692453,
+          "period_p95_s": 0.21780469180666842,
+          "period_p99_s": 0.21991230048588478,
+          "largest_gap_s": 0.22045366899692453,
+          "hz_span": 4.999674634764959,
+          "largest_boundary_gap_s": 0.22045366899692453
+        },
+        {
+          "sysid": 1,
+          "compid": 1,
+          "id": 36,
+          "instance": 0,
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.006433277200068069,
+          "period_mean_s": 0.2000900353758202,
+          "period_min_s": 0.18204139100271277,
+          "period_max_s": 0.2156826860154979,
+          "period_p95_s": 0.21273224799078888,
+          "period_p99_s": 0.2144057262747083,
+          "largest_gap_s": 0.2156826860154979,
+          "hz_span": 4.9977501284446495,
+          "largest_boundary_gap_s": 0.2156826860154979
+        }
+      ],
+      "topic_metrics": {
+        "/hardware_bridge/power": {
+          "count": 301,
+          "hz_count_over_window": 10.031144769936017,
+          "period_stddev_s": 0.012250475011404437,
+          "period_mean_s": 0.09998732882338421,
+          "period_min_s": 0.07476776599651203,
+          "period_max_s": 0.1250342949933838,
+          "period_p95_s": 0.11965743040345843,
+          "period_p99_s": 0.12252799536945531,
+          "largest_gap_s": 0.1250342949933838,
+          "hz_span": 10.001267278240643,
+          "largest_boundary_gap_s": 0.1250342949933838
+        },
+        "/mavros/imu/data": {
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.010934178976331201,
+          "period_mean_s": 0.050000103557618795,
+          "period_min_s": 0.030261241015978158,
+          "period_max_s": 0.06840927398297936,
+          "period_p95_s": 0.06479562848689965,
+          "period_p99_s": 0.06679042401607148,
+          "largest_gap_s": 0.06840927398297936,
+          "hz_span": 19.999958577038274,
+          "largest_boundary_gap_s": 0.06840927398297936
+        },
+        "/wheel_odom": {
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.010929537125350075,
+          "period_mean_s": 0.05000119813693997,
+          "period_min_s": 0.030477069987682626,
+          "period_max_s": 0.06870501700905152,
+          "period_p95_s": 0.06488586890045554,
+          "period_p99_s": 0.06691657893417868,
+          "largest_gap_s": 0.06870501700905152,
+          "hz_span": 19.999520756707994,
+          "largest_boundary_gap_s": 0.06870501700905152
+        },
+        "/wheel_ticks": {
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.01095831973531924,
+          "period_mean_s": 0.050001190347268167,
+          "period_min_s": 0.03107584800454788,
+          "period_max_s": 0.06888993000029586,
+          "period_p95_s": 0.06488863940176089,
+          "period_p99_s": 0.06725015048636124,
+          "largest_gap_s": 0.06888993000029586,
+          "hz_span": 19.99952387242788,
+          "largest_boundary_gap_s": 0.06888993000029586
+        },
+        "/mavros/esc_telemetry/telemetry": {
+          "count": 600,
+          "hz_count_over_window": 19.995637415154853,
+          "period_stddev_s": 0.010643503296684493,
+          "period_mean_s": 0.04999864720199133,
+          "period_min_s": 0.029775041999528185,
+          "period_max_s": 0.06846702299662866,
+          "period_p95_s": 0.06445351100992411,
+          "period_p99_s": 0.06635640365013387,
+          "largest_gap_s": 0.06846702299662866,
+          "hz_span": 20.000541133844365,
+          "largest_boundary_gap_s": 0.06846702299662866
+        },
+        "/mavros/esc_wheel_odometry/esc_observation": {
+          "count": 2640,
+          "hz_count_over_window": 87.98080462668135,
+          "period_stddev_s": 0.019596648727974585,
+          "period_mean_s": 0.01135462730995571,
+          "period_min_s": 0.0004914480086881667,
+          "period_max_s": 0.06745612699887715,
+          "period_p95_s": 0.056885445103398526,
+          "period_p99_s": 0.06116015000618061,
+          "largest_gap_s": 0.06745612699887715,
+          "hz_span": 88.06982146593243,
+          "largest_boundary_gap_s": 0.06745612699887715
+        },
+        "/mavros/state": {
+          "count": 30,
+          "hz_count_over_window": 0.9997818707577426,
+          "period_stddev_s": 0.0009753952699808421,
+          "period_mean_s": 0.999970339517639,
+          "period_min_s": 0.9980816549796145,
+          "period_max_s": 1.0022206110006664,
+          "period_p95_s": 1.001468417781871,
+          "period_p99_s": 1.0020635690749622,
+          "largest_gap_s": 1.0022206110006664,
+          "hz_span": 1.0000296613621313,
+          "largest_boundary_gap_s": 1.0022206110006664
+        },
+        "/mavros/sys_status": {
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.008184551940563256,
+          "period_mean_s": 0.2000949035571332,
+          "period_min_s": 0.1819363929971587,
+          "period_max_s": 0.21551789800287224,
+          "period_p95_s": 0.21380678319255822,
+          "period_p99_s": 0.21538028058712372,
+          "largest_gap_s": 0.21551789800287224,
+          "hz_span": 4.997628536373339,
+          "largest_boundary_gap_s": 0.21551789800287224
+        },
+        "/mavros/rc/out": {
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.007353786090286212,
+          "period_mean_s": 0.20010158826183722,
+          "period_min_s": 0.18215367998345755,
+          "period_max_s": 0.21748427298734896,
+          "period_p95_s": 0.21386272399686276,
+          "period_p99_s": 0.21661749319406226,
+          "largest_gap_s": 0.21748427298734896,
+          "hz_span": 4.997461582821015,
+          "largest_boundary_gap_s": 0.21748427298734896
+        },
+        "/gps/status": {
+          "count": 150,
+          "hz_count_over_window": 4.998909353788713,
+          "period_stddev_s": 0.005919855148924214,
+          "period_mean_s": 0.19997843704694232,
+          "period_min_s": 0.181727856019279,
+          "period_max_s": 0.21655270899645984,
+          "period_p95_s": 0.20926072919392025,
+          "period_p99_s": 0.21587031719856897,
+          "largest_gap_s": 0.21655270899645984,
+          "hz_span": 5.000539131952827,
+          "largest_boundary_gap_s": 0.21655270899645984
+        }
+      },
+      "topic_graph": {
+        "/gps/status": {
+          "type": "mowgli_interfaces/msg/GnssStatus",
+          "publishers": [
+            "/mavros/mowgli_gnss"
+          ],
+          "subscribers": [
+            "//hardware_bridge",
+            "//navsat_to_absolute_pose",
+            "//mavlink_passive_rate_audit_oct10",
+            "//behavior_tree_node",
+            "//mqtt_bridge_node",
+            "//foxglove_bridge"
+          ]
+        },
+        "/hardware_bridge/power": {
+          "type": "mowgli_interfaces/msg/Power",
+          "publishers": [
+            "/mavros/battery_observer"
+          ],
+          "subscribers": [
+            "//diagnostics_node",
+            "//hardware_bridge",
+            "//mavlink_passive_rate_audit_oct10",
+            "//behavior_tree_node",
+            "//mqtt_bridge_node",
+            "//foxglove_bridge"
+          ]
+        },
+        "/mavros/esc_telemetry/telemetry": {
+          "type": "mavros_msgs/msg/ESCTelemetry",
+          "publishers": [
+            "/mavros/esc_telemetry"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/mavros/esc_wheel_odometry/esc_observation": {
+          "type": "mavros_esc_wheel_odometry/msg/EscObservation",
+          "publishers": [
+            "/mavros/esc_wheel_odometry"
+          ],
+          "subscribers": [
+            "//hardware_bridge",
+            "//mavlink_passive_rate_audit_oct10",
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/mavros/imu/data": {
+          "type": "sensor_msgs/msg/Imu",
+          "publishers": [
+            "/mavros/imu"
+          ],
+          "subscribers": [
+            "//hardware_bridge",
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/mavros/rc/out": {
+          "type": "mavros_msgs/msg/RCOut",
+          "publishers": [
+            "/mavros/rc"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10",
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/mavros/state": {
+          "type": "mavros_msgs/msg/State",
+          "publishers": [
+            "/mavros/sys"
+          ],
+          "subscribers": [
+            "//hardware_bridge",
+            "//mavlink_passive_rate_audit_oct10",
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/mavros/sys_status": {
+          "type": "mavros_msgs/msg/SysStatus",
+          "publishers": [
+            "/mavros/sys"
+          ],
+          "subscribers": [
+            "//hardware_bridge",
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        },
+        "/wheel_odom": {
+          "type": "nav_msgs/msg/Odometry",
+          "publishers": [
+            "/mavros/esc_wheel_odometry"
+          ],
+          "subscribers": [
+            "//diagnostics_node",
+            "//cog_to_imu",
+            "//hardware_bridge",
+            "//localization_monitor_node",
+            "//mavlink_passive_rate_audit_oct10",
+            "//mqtt_bridge_node",
+            "//foxglove_bridge",
+            "//fusion_graph_node",
+            "//controller_server"
+          ]
+        },
+        "/wheel_ticks": {
+          "type": "mowgli_interfaces/msg/WheelTick",
+          "publishers": [
+            "/mavros/esc_wheel_odometry"
+          ],
+          "subscribers": [
+            "//mavlink_passive_rate_audit_oct10"
+          ]
+        }
+      },
+      "outgoing_summary": [
+        {
+          "command": 400,
+          "param1": 0,
+          "param2": 0,
+          "count": 300
+        }
+      ],
+      "outgoing_first_last": [
+        {
+          "wall": 1791638411.4881036,
+          "command": 400,
+          "param1": 0,
+          "param2": 0
+        },
+        {
+          "wall": 1791638441.2618077,
+          "command": 400,
+          "param1": 0,
+          "param2": 0
+        }
+      ]
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/param",
+      "values": {
+        "MAV2_ADSB": 0,
+        "MAV2_PARAMS": 10,
+        "MAV2_EXTRA3": 1,
+        "MAV2_RAW_SENS": 1,
+        "MAV1_OPTIONS": 0,
+        "MAV1_ADSB": 0,
+        "MAV1_EXTRA1": 20,
+        "MAV1_RAW_CTRL": 2,
+        "MAV1_RC_CHAN": 5,
+        "MAV1_EXT_STAT": 5,
+        "MAV1_RAW_SENS": 10,
+        "MAV_TELEM_DELAY": 0,
+        "MAV_OPTIONS": 0,
+        "MAV_GCS_SYSID": 255,
+        "MAV_SYSID": 1,
+        "SERIAL8_OPTIONS": 0,
+        "SERIAL8_PROTOCOL": 2,
+        "SERIAL7_OPTIONS": 0,
+        "SERIAL7_PROTOCOL": 9,
+        "SERIAL6_OPTIONS": 0,
+        "SERIAL5_OPTIONS": 0,
+        "SERIAL3_OPTIONS": 0,
+        "SERIAL1_OPTIONS": 0,
+        "SERIAL6_BAUD": 115,
+        "SERIAL6_PROTOCOL": 9,
+        "SERIAL3_PROTOCOL": 5,
+        "SERIAL2_PROTOCOL": -1,
+        "SERIAL1_PROTOCOL": 11,
+        "SERIAL0_PROTOCOL": 2,
+        "SERIAL0_BAUD": 921,
+        "SERIAL2_BAUD": 57,
+        "MAV2_EXT_STAT": 1,
+        "MAV2_EXTRA2": 1,
+        "MAV1_POSITION": 10,
+        "SERIAL8_BAUD": 921,
+        "MAV2_OPTIONS": 0,
+        "MAV2_RAW_CTRL": 1,
+        "MAV1_PARAMS": 10,
+        "SERIAL7_BAUD": 115,
+        "MAV1_EXTRA2": 1,
+        "MAV1_EXTRA3": 10,
+        "MAV2_RC_CHAN": 1,
+        "SERIAL5_PROTOCOL": 22,
+        "MAV2_POSITION": 1,
+        "SERIAL1_BAUD": 230,
+        "SERIAL3_BAUD": 460,
+        "SERIAL4_PROTOCOL": 5,
+        "SERIAL2_OPTIONS": 0,
+        "SERIAL4_BAUD": 921,
+        "MAV_GCS_SYSID_HI": 0,
+        "MAV2_EXTRA1": 1,
+        "SERIAL4_OPTIONS": 0,
+        "SERIAL5_BAUD": 115
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros_node",
+      "values": {
+        "fcu_url": "serial:///dev/serial/by-id/usb-Holybro_Pixhawk5X_2F002F001050425937353320-if00:921600",
+        "gcs_url": "udp-b://@255.255.255.255:14550"
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros",
+      "values": {
+        "plugin_allowlist": [],
+        "plugin_denylist": [
+          "mount_control",
+          "actuator_control",
+          "ftp",
+          "hil",
+          "altitude",
+          "debug_value",
+          "image_pub",
+          "px4flow",
+          "vibration",
+          "vision_speed_estimate",
+          "wheel_odometry"
+        ],
+        "uas_url": "/uas1"
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/sys",
+      "values": {
+        "conn_timeout": 10,
+        "heartbeat_mav_type": "ONBOARD_CONTROLLER",
+        "heartbeat_rate": 1
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/time",
+      "values": {
+        "system_time_rate": 1,
+        "time_ref_source": "fcu",
+        "timesync_alpha_final": 0.003,
+        "timesync_alpha_initial": 0.05,
+        "timesync_beta_final": 0.003,
+        "timesync_beta_initial": 0.05,
+        "timesync_mode": "MAVLINK",
+        "timesync_rate": 10
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/esc_wheel_odometry",
+      "values": {
+        "left_esc_slot": 1,
+        "left_wheel_index": -1,
+        "observation_timeout_s": 3,
+        "right_esc_slot": 0,
+        "right_wheel_index": -1,
+        "source": "auto",
+        "ticks_per_meter": 343,
+        "track_width_m": 0.325,
+        "wheel_distance_component_id": -1
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/mavros/battery_observer",
+      "values": {
+        "observation_timeout_s": 5
+      }
+    },
+    {
+      "event": "parameters_read",
+      "node": "/hardware_bridge",
+      "values": {
+        "battery_observation_timeout_s": 5,
+        "blade_esc_slot": 2,
+        "esc_observation_timeout_s": 3,
+        "gnss_required": true,
+        "imu_inclination_threshold": 56,
+        "left_esc_slot": 1,
+        "mowing_enabled": true,
+        "readiness_observation_timeout_s": 5,
+        "right_esc_slot": 0,
+        "status_publish_rate_hz": 10,
+        "tilt_emergency_ms": 500,
+        "wheel_odometry_required": false
+      }
+    }
+  ]
+}

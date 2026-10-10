@@ -1,0 +1,1872 @@
+diff --git a/.agent/shared/checkpoints/INDEX.md b/.agent/shared/checkpoints/INDEX.md
+index 1366254..35aa697 100644
+--- a/.agent/shared/checkpoints/INDEX.md
++++ b/.agent/shared/checkpoints/INDEX.md
+@@ -30,6 +30,18 @@ Navigation only. Not the project backlog.
+ 
+ ## Retained
+ 
++- `MM-MAVLINK-RATES-20261009` — passive60s receive audit +30s instance/topic
++  verification; periodic streams1Hz, ESC republication3Hz/acquisition1Hz,
++  MAV1/MAV2 configuration and source-qualified freshness audited. Per-message
++  rate proposals only, no FCU/interval writes or motors.
++
++- `MM-BLADE-PRODUCT-20261008` — OFF/FWD/REV software patch, neutral-before-inversion,
++  deferred ACKs, safety/startup neutral and source-qualified stop proof; complete
++  pinned build/bridge/ESC/provider/safety validation PASS. ARM64 built/deployed,
++  startup/OFF target PASS; first FWD refused before any nonneutral output,
++  STOP, REV/inversion/safety not run (2026-10-09);
++  native bench baseline retained, companion-loss failsafe and exclusive authority open.
++
+ - `MM-FIRMWARE-PROVIDERS-20261005` — bootstrap and C++ command/emergency providers; capabilities and ArduPilot/PX4 software equivalence; nine suites and installed graph pass.
+ 
+ - `MM-FC-MAVLINK-PROVIDER-COMPAT-20261004` — Betaflight/INAV source sender findings, MowgliMAVROS ESC contract, selected MSP hardware evidence; MAVLink runtime capture and outdoor fix pending.
+diff --git a/TODO.md b/TODO.md
+index 3cf6a8f..2c9e6c7 100644
+--- a/TODO.md
++++ b/TODO.md
+@@ -423,6 +423,33 @@ Document the software contract that MowgliNext may depend on:
+ - [ ] status semantics;
+ - [ ] power/battery semantics;
+ - [ ] command semantics;
++      P0 OFF-only preparation (2026-10-08): MowerControl OFF now queues native
++      ArduPilot servo neutral without DISARM; ON is inhibited without ARM.
++      No command/mode authority redesign. Pure state/contract
++      validation recorded in docs/investigations/2026-10-07-runtime-bringup/blade-off-only-patch.md;
++      native build/ROS graph and OFF-only deployment are now recorded in
++      blade-off-build-validation.md and blade-off-deployment-runtime.md in that folder.
++      Passive CAN renewal (17 s) and separate-container rescue surviving principal
++      SIGKILL passed; see can-renewal-independent-rescue-validation.md.
++      Subsequent blade A/B bench passed: opposite signed DroneCAN1034 ESC2 RPM,
++      operator mechanical direction recorded, CHARGE_NO_EFFECT limited to the
++      native low-excursion bench. See blade-charge-ab-acceptance.md; no software
++      direction inversion requested (operator will configure VESC after tests).
++      The subsequent software-only product patch now implements configurable
++      OFF/FWD/REV, neutral-before-inversion with real ESC stop proof, deferred ACK
++      responses, safety/startup/reconnection neutral, anti-spam and intention Status.
++      See blade-product-fwd-rev-implementation.md. ARM64 build and isolated graphs
++      passed, deployed2026-10-09. Corrected target startup/OFF capture now PASS.
++      Explicit bench ARM accepted, first product FWD refused before1450;
++      STOP, neutral/disarmed/RPMzero/CANoff restored, no REV/inversion/safety trial. See
++      blade-product-arm64-deployment.md. Its low-excursion
++      defaults apply only to the recorded baseline, never inferred from RPM.
++      Passive runtime-rate audit2026-10-09: distinct ESC samples1Hz versus
++      BladeControl freshness1000ms (FREQ-001 OPEN); initial diagnostic depth5
++      undercount excluded. See mavlink-runtime-frequency-audit.md and its
++      per-message proposals. No FCU interval or parameter change performed.
++      Signed transport through EscObservation, target acceptance of this new patch and
++      total-companion-loss failsafe remain pending. No nominal-speed acceptance.
+ - [ ] startup behaviour;
+ - [ ] shutdown behaviour;
+ - [ ] reconnect/degraded behaviour;
+@@ -966,4 +993,4 @@ Deferred explicitly during the live ESC bench validation; do not implement now.
+ 14. Build the firmware-aware ArduPilot/MAVROS configuration validator from the physically validated reference profile: `MM-702`.
+ 15. Deferred cleanup only when separately prioritized: `MM-901`.
+ 
+-Only advance to the next expensive validation layer when the previous one passes.
+\ No newline at end of file
++Only advance to the next expensive validation layer when the previous one passes.
+diff --git a/ros2/src/mavros_esc_wheel_odometry/CMakeLists.txt b/ros2/src/mavros_esc_wheel_odometry/CMakeLists.txt
+index 767547b..7f677bf 100644
+--- a/ros2/src/mavros_esc_wheel_odometry/CMakeLists.txt
++++ b/ros2/src/mavros_esc_wheel_odometry/CMakeLists.txt
+@@ -83,6 +83,8 @@ if(BUILD_TESTING)
+   target_link_libraries(test_motor_tick_integrator wheel_odometry_core)
+   ament_add_gtest(test_observation_engine test/test_observation_engine.cpp)
+   target_link_libraries(test_observation_engine wheel_odometry_core)
++  ament_add_gtest(test_signed_esc_contract test/test_signed_esc_contract.cpp)
++  target_link_libraries(test_signed_esc_contract wheel_odometry_core)
+   ament_add_gtest(test_wheel_odometry_core test/test_wheel_odometry_core.cpp)
+   target_link_libraries(test_wheel_odometry_core wheel_odometry_core)
+   ament_add_gtest(test_wheel_tick_projection test/test_wheel_tick_projection.cpp)
+diff --git a/ros2/src/mowgli_mavros_bridge/CMakeLists.txt b/ros2/src/mowgli_mavros_bridge/CMakeLists.txt
+index 3ec2a41..6f51f70 100644
+--- a/ros2/src/mowgli_mavros_bridge/CMakeLists.txt
++++ b/ros2/src/mowgli_mavros_bridge/CMakeLists.txt
+@@ -68,6 +68,10 @@ if(BUILD_TESTING)
+   find_package(ament_cmake_gtest REQUIRED)
+   find_package(ament_cmake_test REQUIRED)
+   find_package(mavros_gnss_adapter QUIET)
++  ament_add_test(test_blade_off_contract
++    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_blade_off_contract.py"
++    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
++  )
+   ament_add_test(test_gnss_launch
+     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_gnss_launch.py"
+     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+@@ -88,6 +92,13 @@ if(BUILD_TESTING)
+     TIMEOUT 180
+     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+   )
++  ament_add_test(test_blade_graph
++    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_blade_graph.py"
++      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
++    ENV ROS_DOMAIN_ID=197 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
++    TIMEOUT 120
++    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
++  )
+   ament_add_test(test_esc_graph
+     COMMAND "${Python3_EXECUTABLE}"
+       "${CMAKE_CURRENT_SOURCE_DIR}/../mavros_esc_wheel_odometry/test/test_esc_graph.py"
+@@ -113,6 +124,10 @@ if(BUILD_TESTING)
+     )
+   endif()
+   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
++  ament_add_gtest(test_blade_off_control test/test_blade_off_control.cpp)
++  target_include_directories(test_blade_off_control PRIVATE include)
++  ament_add_gtest(test_blade_control test/test_blade_control.cpp)
++  target_include_directories(test_blade_control PRIVATE include)
+   ament_add_gtest(test_esc_telemetry_tracker test/test_esc_telemetry_tracker.cpp)
+   target_include_directories(test_esc_telemetry_tracker PRIVATE include)
+   target_link_libraries(test_esc_telemetry_tracker ${mavros_esc_wheel_odometry_TARGETS})
+diff --git a/ros2/src/mowgli_mavros_bridge/README.md b/ros2/src/mowgli_mavros_bridge/README.md
+index a9542c2..d9eaa01 100644
+--- a/ros2/src/mowgli_mavros_bridge/README.md
++++ b/ros2/src/mowgli_mavros_bridge/README.md
+@@ -22,7 +22,8 @@ conversion. The bridge applies HOLD plus DISARM for Safety/E-stop.
+ | Disarm request path implemented | Yes | Yes |
+ | Mode request path implemented | Yes | Yes |
+ | Default emergency policy | `HOLD` + disarm | Existing `HOLD` + disarm preserved |
+-| Blade authorization mapping | `/hardware_bridge/mower_control` → `/mavros/cmd/arming` | Same |
++| MowerControl OFF | Native183 servo neutral, deduplicated | Unsupported (rejected) |
++| MowerControl ON | Native183, guarded FWD/REV, already armed FCU required | Unsupported (rejected) |
+ | Physical actuation validated | No | No |
+ 
+ Capabilities describe implemented software paths; physical actuation still depends
+@@ -32,14 +33,64 @@ produces neutral traction. The bridge retains
+ timestamps, MAVROS clients and asynchronous response handling:
+ emergency-service success means local forwarding, not FCU confirmation.
+ 
++`mower_control` owns only the blade actuator, never ARM/DISARM or mode changes.
++ArduPilot uses `MAV_CMD_DO_SET_SERVO` (183); startup parameters are read-only:
++`blade_servo_channel=3`, `blade_neutral_pwm=1500`, `blade_forward_pwm=1450`,
++`blade_reverse_pwm=1550`. The directional defaults are LOW-EXCURSION acceptance
++values for the recorded VESC installation, not universal or nominal-speed values.
++They can be configured at startup; no FCU/VESC parameters are written and no
++direction is inferred from RPM. Enable0 requests OFF regardless of direction;
++enable1/direction0 requests forward, enable1/direction1 reverse. Other ON values
++are rejected. ON also requires a connected, already armed FCU, fresh heartbeat,
++released/fresh hardware safety, no active/latched emergency, `mowing_enabled`,
++and valid/fresh ESC acquisition. The blade does not arm the FCU for the caller.
++
++State machine: OFF/FWD/REV, TRANSITION_TO_OFF, WAIT_STOP_BEFORE_REVERSE, FAILED.
++Inversions first send neutral and require fresh, distinct zero-RPM observations
++after its ACK (at least five, stable for one second). Legacy observations must
++advance their counter as well as stamp; replaying cached telemetry cannot prove
++an arrest. A missing/stale observation or 15-second stop timeout cancels ON;
++it NEVER permits an opposite direction. ACK timeout is three seconds. Failed
++commands do not retry each tick; a connection or new explicit safety generation
++fences old callbacks and requests neutral again.
++
++Responses are deferred, not blocking callbacks: success means ACK accepted
++(`success=true/result0`), or deduplicated already-confirmed command. It is NOT
++proof of stopped/spinning hardware. Requests superseded by OFF/safety, rejected
++ACKs, invalid transitions and missing services return false. Pending identical
++requests share a transaction; at most32 callers are retained. A reversal response
++can take the coast-down interval plus ACK time (bounded20 s).
++
++Startup, connection transitions, Emergency, hardware safety, double lift and tilt
++also request explicit blade neutral, in addition to the unchanged HOLD/DISARM
++policy. Lost transport can only produce a neutral ATTEMPT: no successful write
++or physical stop is claimed while disconnected. Outgoing unmatched183 commands
++invalidate the cache, including identical PWM; changed rc/out observations also
++invalidate it. Own-wire matching uses a bounded expected-message queue; an
++external identical command racing an outstanding own message is indistinguishable
++on the shared MAVROS endpoint. Deduplication is not exclusive ownership or a
++permanent physical-stop proof.
++
++Status projects `blade_requested_direction` as intention (off/forward/reverse,
++unknown reserved), not inferred rotation. During neutral/wait/ACK transitions,
++`mow_enabled=false`; only an authorized ACK-confirmed ON projects true. Failure
++and safety cancel intention to off; actual RPM/current/temperature and
++`blade_status_stamp` still come from the unchanged ESC-role projection, and may
++show coast-down even with requested off. No public message schema changed.
++This full patch is NOT deployed. The previous OFF-only image alone was runtime
++validated; native A/B bench evidence is not runtime validation of this new node.
++The FCU failsafe for total companion loss remains unresolved; no production
++readiness or 100%-speed acceptance is claimed.
++
+ The bridge also observes `/mavros/sys_status` for the official MAVLink
+ `MAV_SYS_STATUS_SENSOR_MOTOR_OUTPUTS` safety state and decodes ArduPilot
+ `BUTTON_CHANGE` messages from the MAVROS 2.16 UAS receive stream
+ `/uas1/mavlink_source`. AP_Button state bit 0 is
+ the left wheel-lift input and bit 1 is the right input. Hardware safety, service
+ emergency, tilt and wheel lift are composed in that priority order. Double wheel
+-lift and sustained excessive inclination force blade DISARM. Hardware Safety and
+-service E-stop send HOLD, neutral traction and blade DISARM.
++lift and sustained excessive inclination request blade neutral plus DISARM.
++Hardware Safety and service E-stop send blade neutral, HOLD, neutral traction
++and blade DISARM. Blade-neutral forwarding does not replace these protections.
+ 
+ Publishers/subscribers, ROS services and parameters, readiness, generic diagnostics,
+ canonical GNSS, power, ESC telemetry/projection and wheel odometry remain common.
+diff --git a/ros2/src/mowgli_mavros_bridge/config/hardware_bridge_mavros.yaml b/ros2/src/mowgli_mavros_bridge/config/hardware_bridge_mavros.yaml
+index 5875695..6a69f8a 100644
+--- a/ros2/src/mowgli_mavros_bridge/config/hardware_bridge_mavros.yaml
++++ b/ros2/src/mowgli_mavros_bridge/config/hardware_bridge_mavros.yaml
+@@ -5,6 +5,12 @@ hardware_bridge:
+     manual_control_linear_scale: 1000.0
+     manual_control_yaw_scale: 1000.0
+     mowing_enabled: true
++    # OFF-only ArduPilot contract; ON remains inhibited. Read-only after startup.
++    blade_servo_channel: 3
++    blade_neutral_pwm: 1500
++    # Low-excursion acceptance baseline only; validate configuration per installation.
++    blade_forward_pwm: 1450
++    blade_reverse_pwm: 1550
+ 
+     # Canonical Power is produced by the MAVROS battery_observer plugin.
+     # This timeout is used only for bridge readiness/diagnostic freshness.
+diff --git a/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp b/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp
+index df9b780..db58250 100644
+--- a/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp
++++ b/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp
+@@ -1,14 +1,18 @@
+ #pragma once
+ 
++#include <deque>
++#include <map>
+ #include <memory>
+ #include <mutex>
+ #include <string>
++#include <vector>
+ 
+ #include <geometry_msgs/msg/twist_stamped.hpp>
+ #include <nav_msgs/msg/odometry.hpp>
+ #include <rclcpp/rclcpp.hpp>
+ #include <sensor_msgs/msg/imu.hpp>
+ 
++#include "mowgli_mavros_bridge/blade_control.hpp"
+ #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
+ #include "mowgli_mavros_bridge/firmware_provider.hpp"
+ #include "mowgli_mavros_bridge/readiness_state.hpp"
+@@ -17,6 +21,7 @@
+ #include <mavros_esc_wheel_odometry/msg/esc_observation.hpp>
+ #include <mavros_msgs/msg/manual_control.hpp>
+ #include <mavros_msgs/msg/mavlink.hpp>
++#include <mavros_msgs/msg/rc_out.hpp>
+ #include <mavros_msgs/msg/state.hpp>
+ #include <mavros_msgs/msg/sys_status.hpp>
+ #include <mavros_msgs/srv/command_bool.hpp>
+@@ -59,8 +64,8 @@ private:
+   void on_wheel_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
+ 
+   void on_mower_control(
+-      const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
+-      std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response);
++      const std::shared_ptr<rmw_request_id_t> header,
++      const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request);
+ 
+   void on_emergency_stop(
+       const std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Request> request,
+@@ -73,6 +78,9 @@ private:
+   void publish_readiness();
+ 
+   bool send_arm_command(bool arm);
++  bool request_blade_neutral();
++  void drive_blade_locked();
++  void reply_blade(const std::shared_ptr<rmw_request_id_t>& header, bool success);
+   bool send_mode_command(const std::string& mode);
+   bool request_blade_disarm();
+   void publish_neutral_manual_control();
+@@ -104,6 +112,23 @@ private:
+   bool ui_board_available_{false};
+ 
+   bool mow_enabled_{false};
++  BladeControl blade_control_;
++  struct BladeReply
++  {
++    std::shared_ptr<rmw_request_id_t> header;
++    uint64_t revision;
++    int64_t started_ms;
++  };
++  std::vector<BladeReply> blade_replies_;
++  std::map<uint64_t, int64_t> blade_rpc_ids_;
++  int64_t last_fcu_receipt_ms_{-1}, last_hardware_safety_ms_{-1};
++  int64_t last_blade_output_stamp_{0};
++  struct BladeWireExpectation
++  {
++    int pwm;
++    int64_t until_ms;
++  };
++  std::deque<BladeWireExpectation> blade_wire_expectations_;
+   uint8_t mow_direction_{0};
+ 
+   SafetyState safety_state_;
+@@ -140,6 +165,8 @@ private:
+   rclcpp::Subscription<mowgli_interfaces::msg::HighLevelStatus>::SharedPtr sub_hl_status_;
+   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
+   rclcpp::Subscription<mavros_msgs::msg::SysStatus>::SharedPtr sub_mavros_sys_status_;
++  rclcpp::Subscription<mavros_msgs::msg::RCOut>::SharedPtr sub_blade_output_;
++  rclcpp::Subscription<mavros_msgs::msg::Mavlink>::SharedPtr sub_blade_wire_;
+   rclcpp::Subscription<mavros_msgs::msg::Mavlink>::SharedPtr sub_mavlink_source_;
+   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
+   rclcpp::Subscription<mowgli_interfaces::msg::Power>::SharedPtr sub_power_;
+@@ -158,6 +185,7 @@ private:
+ 
+   rclcpp::TimerBase::SharedPtr timer_status_;
+   rclcpp::TimerBase::SharedPtr timer_diagnostics_;
++  rclcpp::TimerBase::SharedPtr timer_blade_;
+ };
+ 
+ }  // namespace mowgli_mavros_bridge
+diff --git a/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp b/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp
+index 28a08b8..643c608 100644
+--- a/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp
++++ b/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp
+@@ -13,11 +13,19 @@
+ #include "mowgli_mavros_bridge/button_change_decoder.hpp"
+ #include "mowgli_mavros_bridge/rover_manual_control.hpp"
+ #include "mowgli_mavros_bridge/vesc_telemetry_projection.hpp"
++#include <rcl_interfaces/msg/parameter_descriptor.hpp>
+ namespace mowgli_mavros_bridge
+ {
+ 
+ using namespace std::chrono_literals;
+ 
++static int64_t blade_steady_ms()
++{
++  return std::chrono::duration_cast<std::chrono::milliseconds>(
++             std::chrono::steady_clock::now().time_since_epoch())
++      .count();
++}
++
+ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& options)
+     : rclcpp::Node("hardware_bridge", options)
+ {
+@@ -30,6 +38,24 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
+   manual_control_linear_scale_ = declare_parameter<double>("manual_control_linear_scale", 1000.0);
+   manual_control_yaw_scale_ = declare_parameter<double>("manual_control_yaw_scale", 1000.0);
+   mowing_enabled_ = declare_parameter<bool>("mowing_enabled", true);
++  // Fixed during a connection: never redirect an in-flight OFF to another ESC.
++  rcl_interfaces::msg::ParameterDescriptor blade_parameter;
++  blade_parameter.read_only = true;
++  const auto blade_channel = declare_parameter<int64_t>("blade_servo_channel", 3, blade_parameter);
++  const auto blade_neutral = declare_parameter<int64_t>("blade_neutral_pwm", 1500, blade_parameter);
++  const auto blade_forward = declare_parameter<int64_t>("blade_forward_pwm", 1450, blade_parameter);
++  const auto blade_reverse = declare_parameter<int64_t>("blade_reverse_pwm", 1550, blade_parameter);
++  if (blade_channel < 1 || blade_channel > 32 || blade_neutral < 1000 || blade_neutral > 2000 ||
++      blade_forward < 1000 || blade_forward > 2000 || blade_reverse < 1000 || blade_reverse > 2000)
++  {
++    throw std::invalid_argument("Blade channel/PWM is out of range");
++  }
++  BladeControl::Config blade_config;
++  blade_config.channel = static_cast<int>(blade_channel);
++  blade_config.neutral = static_cast<int>(blade_neutral);
++  blade_config.forward = static_cast<int>(blade_forward);
++  blade_config.reverse = static_cast<int>(blade_reverse);
++  blade_control_ = BladeControl(blade_config);
+   battery_observation_timeout_s_ = declare_parameter<double>("battery_observation_timeout_s", 5.0);
+   const auto readiness_timeout_s =
+       declare_parameter<double>("readiness_observation_timeout_s", 5.0);
+@@ -142,6 +168,8 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
+         if (changed)
+         {
+           esc_tracker_.reset();
++          blade_control_.force_off(blade_steady_ms());
++          drive_blade_locked();
+         }
+       });
+   rain_detected_ = declare_parameter<bool>("rain_detected_default", false);
+@@ -172,6 +200,64 @@ void MavrosHardwareBridgeNode::create_subscriptions()
+   auto default_qos = rclcpp::SystemDefaultsQoS();
+   auto sensor_qos = rclcpp::SensorDataQoS();
+ 
++  sub_blade_wire_ = create_subscription<mavros_msgs::msg::Mavlink>(
++      "/uas1/mavlink_sink",
++      sensor_qos,
++      [this](mavros_msgs::msg::Mavlink::SharedPtr message)
++      {
++        using Command = mavlink::common::msg::COMMAND_LONG;
++        if (message->framing_status != mavros_msgs::msg::Mavlink::FRAMING_OK ||
++            message->msgid != Command::MSG_ID)
++          return;
++        mavlink::mavlink_message_t raw{};
++        if (!mavros_msgs::mavlink::convert(*message, raw))
++          return;
++        mavlink::MsgMap map(&raw);
++        Command command;
++        command.deserialize(map);
++        std::lock_guard<std::mutex> lock(mutex_);
++        if (command.command != 183 || command.param1 != blade_control_.channel())
++          return;
++        const auto steady = blade_steady_ms();
++        while (!blade_wire_expectations_.empty() &&
++               blade_wire_expectations_.front().until_ms < steady)
++          blade_wire_expectations_.pop_front();
++        const auto own = std::find_if(blade_wire_expectations_.begin(),
++                                      blade_wire_expectations_.end(),
++                                      [&command](const auto& expected)
++                                      {
++                                        return expected.pwm == command.param2;
++                                      });
++        if (own != blade_wire_expectations_.end())
++        {
++          blade_wire_expectations_.erase(own);
++          return;
++        }
++        // An unmatched outgoing blade command invalidates local ownership/cache,
++        // even if its value happens to equal the cached command.
++        blade_control_.force_off(steady);
++        drive_blade_locked();
++      });
++
++  sub_blade_output_ = create_subscription<mavros_msgs::msg::RCOut>(
++      "/mavros/rc/out",
++      sensor_qos,
++      [this](mavros_msgs::msg::RCOut::SharedPtr message)
++      {
++        std::lock_guard<std::mutex> lock(mutex_);
++        const auto channel = static_cast<size_t>(blade_control_.channel() - 1);
++        if (message->header.stamp.sec < 0 || message->header.stamp.nanosec >= 1000000000U)
++          return;
++        const auto stamp = rclcpp::Time(message->header.stamp).nanoseconds();
++        if (mavros_state_.connected && channel < message->channels.size() &&
++            stamp > last_blade_output_stamp_)
++        {
++          last_blade_output_stamp_ = stamp;
++          blade_control_.output(message->channels[channel], blade_steady_ms());
++          drive_blade_locked();
++        }
++      });
++
+   sub_cmd_vel_ = create_subscription<geometry_msgs::msg::TwistStamped>(
+       "/cmd_vel",
+       default_qos,
+@@ -254,6 +340,12 @@ void MavrosHardwareBridgeNode::create_clients()
+ 
+ void MavrosHardwareBridgeNode::create_timers()
+ {
++  timer_blade_ = create_wall_timer(50ms,
++                                   [this]()
++                                   {
++                                     std::lock_guard<std::mutex> lock(mutex_);
++                                     drive_blade_locked();
++                                   });
+   const auto period = std::chrono::duration<double>(1.0 / std::max(1.0, status_publish_rate_hz_));
+ 
+   timer_status_ = create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(period),
+@@ -310,6 +402,13 @@ void MavrosHardwareBridgeNode::on_high_level_status(
+ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg)
+ {
+   std::lock_guard<std::mutex> lock(mutex_);
++  if (mavros_state_.connected != msg->connected)
++  {
++    last_blade_output_stamp_ = 0;
++    blade_wire_expectations_.clear();
++  }
++  blade_control_.connection(msg->connected, blade_steady_ms());
++  last_fcu_receipt_ms_ = blade_steady_ms();
+   if (mavros_state_.connected && !msg->connected)
+   {
+     last_power_receipt_ns_ = 0;
+@@ -325,6 +424,7 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
+   }
+   readiness_.connection(msg->connected);
+   mavros_state_ = *msg;
++  drive_blade_locked();
+ }
+ 
+ void MavrosHardwareBridgeNode::on_mavros_sys_status(
+@@ -338,6 +438,7 @@ void MavrosHardwareBridgeNode::on_mavros_sys_status(
+     const auto previous = safety_state_.hardware_safety_state();
+     if (mavros_state_.connected)
+     {
++      last_hardware_safety_ms_ = blade_steady_ms();
+       safety_state_.observe_motor_outputs((msg->sensors_present & kMotorOutputs) != 0U,
+                                           (msg->sensors_enabled & kMotorOutputs) != 0U);
+       safety_engaged = previous != HardwareSafetyState::Engaged &&
+@@ -443,6 +544,18 @@ void MavrosHardwareBridgeNode::on_esc_telemetry(
+   if (mavros_state_.connected)
+   {
+     esc_tracker_.observe(*msg, receipt_ns);
++    if (blade_esc_slot_ >= 0 && msg->esc_index == blade_esc_slot_)
++    {
++      const auto state = esc_tracker_.project(msg->esc_index, receipt_ns);
++      blade_control_.sample(state.sample.source,
++                            state.last_update_ns,
++                            state.sample.count,
++                            state.sample.count_valid,
++                            state.online && state.sample.rpm_valid,
++                            state.sample.rpm,
++                            blade_steady_ms());
++      drive_blade_locked();
++    }
+   }
+ }
+ 
+@@ -463,18 +576,155 @@ void MavrosHardwareBridgeNode::on_wheel_odom(const nav_msgs::msg::Odometry::Shar
+ }
+ 
+ void MavrosHardwareBridgeNode::on_mower_control(
+-    const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
+-    std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response)
++    const std::shared_ptr<rmw_request_id_t> header,
++    const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request)
+ {
+-  bool blade_authorized = false;
++  std::lock_guard<std::mutex> lock(mutex_);
++  drive_blade_locked();
++  if (std::string(firmware_provider_->name()) != "ardupilot" ||
++      !cli_command_long_->service_is_ready() || request->mow_enabled > 1 ||
++      (request->mow_enabled && request->mow_direction > 1))
+   {
+-    std::lock_guard<std::mutex> lock(mutex_);
+-    blade_authorized = request->mow_enabled && mowing_enabled_ &&
+-                       !safety_state_.project(now().nanoseconds()).active_emergency;
+-    mow_enabled_ = blade_authorized;
+-    mow_direction_ = request->mow_direction;
++    reply_blade(header, false);
++    return;
++  }
++  const auto direction = !request->mow_enabled         ? BladeControl::Direction::Off
++                         : request->mow_direction == 0 ? BladeControl::Direction::Forward
++                                                       : BladeControl::Direction::Reverse;
++  const auto result = blade_control_.request(direction, blade_steady_ms());
++  if (result != BladeControl::Result::Pending)
++  {
++    reply_blade(header, result == BladeControl::Result::Confirmed);
++    return;
++  }
++  if (blade_replies_.size() >= 32)
++  {
++    // Never prevent OFF from preempting ON because the response queue is full.
++    drive_blade_locked();
++    reply_blade(header, false);
++    return;
++  }
++  blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
++  drive_blade_locked();
++}
++
++bool MavrosHardwareBridgeNode::request_blade_neutral()
++{
++  std::lock_guard<std::mutex> lock(mutex_);
++  blade_control_.force_off(blade_steady_ms());
++  drive_blade_locked();
++  return std::string(firmware_provider_->name()) == "ardupilot" &&
++         cli_command_long_->service_is_ready();
++}
++
++void MavrosHardwareBridgeNode::reply_blade(const std::shared_ptr<rmw_request_id_t>& header,
++                                           bool success)
++{
++  mowgli_interfaces::srv::MowerControl::Response response;
++  response.success = success;
++  try
++  {
++    srv_mower_control_->send_response(*header, response);
++  }
++  catch (const std::exception& error)
++  {
++    RCLCPP_WARN(get_logger(), "Blade reply failed: %s", error.what());
++  }
++}
++
++void MavrosHardwareBridgeNode::drive_blade_locked()
++{
++  const auto steady = blade_steady_ms();
++  while (!blade_wire_expectations_.empty() && blade_wire_expectations_.front().until_ms < steady)
++    blade_wire_expectations_.pop_front();
++  const auto safety = safety_state_.project(now().nanoseconds());
++  const bool allowed = mowing_enabled_ && mavros_state_.connected && mavros_state_.armed &&
++                       last_fcu_receipt_ms_ >= 0 && steady - last_fcu_receipt_ms_ <= 2500 &&
++                       last_hardware_safety_ms_ >= 0 && steady - last_hardware_safety_ms_ <= 3000 &&
++                       safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
++                       !safety.active_emergency && !safety.latched_emergency &&
++                       blade_esc_slot_ >= 0;
++  blade_control_.permission(allowed, steady);
++  blade_control_.tick(steady);
++  if (!blade_control_.satisfied() && std::any_of(blade_replies_.begin(),
++                                                 blade_replies_.end(),
++                                                 [this, steady](const auto& reply)
++                                                 {
++                                                   return reply.revision ==
++                                                              blade_control_.revision() &&
++                                                          steady - reply.started_ms > 20000;
++                                                 }))
++  {
++    // A failed service deadline must not leave a delayed ON intent alive.
++    blade_control_.service_timeout(steady);
++  }
++  for (auto it = blade_rpc_ids_.begin(); it != blade_rpc_ids_.end();)
++  {
++    if (!blade_control_.current(it->first))
++    {
++      cli_command_long_->remove_pending_request(it->second);
++      it = blade_rpc_ids_.erase(it);
++    }
++    else
++      ++it;
++  }
++  for (auto it = blade_replies_.begin(); it != blade_replies_.end();)
++  {
++    const bool invalid = it->revision != blade_control_.revision() || blade_control_.failed() ||
++                         steady - it->started_ms > 20000;
++    if (invalid || blade_control_.satisfied())
++    {
++      reply_blade(it->header, !invalid);
++      it = blade_replies_.erase(it);
++    }
++    else
++      ++it;
++  }
++  if (std::string(firmware_provider_->name()) != "ardupilot" ||
++      !cli_command_long_->service_is_ready())
++  {
++    return;
++  }
++  const auto command = blade_control_.next(steady);
++  if (!command)
++    return;
++  auto request = std::make_shared<mavros_msgs::srv::CommandLong::Request>();
++  request->broadcast = false;
++  request->command = 183;
++  request->param1 = static_cast<float>(command->channel);
++  request->param2 = static_cast<float>(command->pwm);
++  try
++  {
++    blade_wire_expectations_.push_back({command->pwm, steady + 2000});
++    const auto future_request = cli_command_long_->async_send_request(
++        request,
++        [this,
++         token = command->token](rclcpp::Client<mavros_msgs::srv::CommandLong>::SharedFuture future)
++        {
++          bool accepted = false;
++          try
++          {
++            const auto response = future.get();
++            accepted = response && response->success && response->result == 0;
++          }
++          catch (const std::exception& error)
++          {
++            RCLCPP_ERROR(get_logger(), "Blade ACK failed: %s", error.what());
++          }
++          std::lock_guard<std::mutex> callback_lock(mutex_);
++          blade_rpc_ids_.erase(token);
++          blade_control_.complete(token, accepted, blade_steady_ms());
++          drive_blade_locked();
++        });
++    blade_rpc_ids_[command->token] = future_request.request_id;
++  }
++  catch (const std::exception& error)
++  {
++    if (!blade_wire_expectations_.empty())
++      blade_wire_expectations_.pop_back();
++    blade_control_.complete(command->token, false, blade_steady_ms());
++    RCLCPP_ERROR(get_logger(), "Blade send failed: %s", error.what());
+   }
+-  response->success = send_arm_command(blade_authorized);
+ }
+ 
+ void MavrosHardwareBridgeNode::on_emergency_stop(
+@@ -552,7 +802,8 @@ void MavrosHardwareBridgeNode::publish_status()
+     msg.sound_module_available = sound_module_available_;
+     msg.sound_module_busy = sound_module_busy_;
+     msg.ui_board_available = ui_board_available_;
+-    msg.mow_enabled = mow_enabled_;
++    msg.mow_enabled = blade_control_.enabled();
++    msg.blade_requested_direction = BladeControl::label(blade_control_.requested());
+ 
+     // ArduPilot armed state is not a mower-controller health report.
+     msg.mower_status = mowgli_interfaces::msg::Status::MOWER_STATUS_INITIALIZING;
+@@ -919,6 +1170,7 @@ void MavrosHardwareBridgeNode::publish_neutral_manual_control()
+ 
+ bool MavrosHardwareBridgeNode::request_blade_disarm()
+ {
++  (void)request_blade_neutral();
+   {
+     std::lock_guard<std::mutex> lock(mutex_);
+     mow_enabled_ = false;
+@@ -928,6 +1180,7 @@ bool MavrosHardwareBridgeNode::request_blade_disarm()
+ 
+ bool MavrosHardwareBridgeNode::request_hold_and_blade_disarm()
+ {
++  (void)request_blade_neutral();
+   {
+     std::lock_guard<std::mutex> lock(mutex_);
+     mow_enabled_ = false;
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py b/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py
+index f7a71aa..ea4b6cf 100644
+--- a/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py
++++ b/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py
+@@ -68,7 +68,7 @@ def main():
+         return response
+ 
+     def command_request(request, response):
+-        requests.append(("command", request.command, request.param1))
++        requests.append(("command", request.command, request.param1, request.param2))
+         response.success = True
+         return response
+ 
+@@ -148,6 +148,9 @@ def main():
+                     lambda: state_publisher.get_subscription_count() == 1
+                     and safety_publisher.get_subscription_count() == 1
+                 )
++                if args.provider == "ardupilot":
++                    wait_for(lambda: ("command", 183, 3.0, 1500.0) in requests)
++                requests.clear()  # Startup neutral is blade-owned, not traction-owned.
+ 
+                 # Traction is forwarded while FCU armed=false. It must not ARM or
+                 # change mode as a side effect of receiving /cmd_vel.
+@@ -167,36 +170,48 @@ def main():
+                 )
+                 wait_for(lambda: ("mode", "MANUAL") in requests)
+ 
+-                # MowgliNext ARM/DISARM maps only from MowerControl. The dry-run
+-                # authorization turns an enable request into a real DISARM.
++                # ON is rejected while the global FCU is disarmed.
++                # Neither ON nor OFF owns the FCU ARM/DISARM authority.
+                 before = len(requests)
+                 response = call(
+                     mower,
+                     MowerControl.Request(mow_enabled=True, mow_direction=1),
+                 )
+-                assert response.success
+-                wait_for(lambda: len(requests) == before + 1)
+-                assert requests[before:] == [("arm", mowing_enabled)]
++                assert not response.success
++                assert requests[before:] == []
+ 
+                 before = len(requests)
+                 response = call(
+                     mower,
+                     MowerControl.Request(mow_enabled=False, mow_direction=0),
+                 )
+-                assert response.success
+-                wait_for(lambda: len(requests) == before + 1)
+-                assert requests[before:] == [("arm", False)]
++                if args.provider == "ardupilot":
++                    assert response.success
++                    assert requests[before:] == []  # Startup neutral already ACKed.
++                    for _ in range(10):
++                        assert call(
++                            mower,
++                            MowerControl.Request(mow_enabled=False, mow_direction=1),
++                        ).success
++                    assert requests[before:] == []
++                else:
++                    # No unsupported PX4 servo primitive or ARM alias fallback.
++                    assert not response.success
++                    assert requests[before:] == []
+ 
+                 # E-stop produces HOLD + immediate neutral + blade DISARM and
+                 # keeps subsequent traction neutral until the stop is released.
+                 before_commands = len(commands)
+                 before_requests = len(requests)
+                 assert call(emergency, EmergencyStop.Request(emergency=1)).success
+-                wait_for(lambda: len(requests) == before_requests + 2)
+-                assert sorted(requests[before_requests:]) == [
++                expected = [
+                     ("arm", False),
+                     ("mode", "HOLD"),
+                 ]
++                if args.provider == "ardupilot":
++                    expected.append(("command", 183, 3.0, 1500.0))
++                wait_for(lambda: len(requests) == before_requests + len(expected))
++                assert sorted(requests[before_requests:]) == sorted(expected)
+                 wait_for(lambda: len(commands) > before_commands)
+                 assert commands[-1].y == commands[-1].z == 0
+                 stopped = send_twist(0.2, 0.0)
+
+diff --git a/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_control.hpp b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_control.hpp
+new file mode 100644
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_control.hpp
+@@ -0,0 +1,337 @@
++#pragma once
++
++#include <cmath>
++#include <cstdint>
++#include <optional>
++#include <stdexcept>
++
++namespace mowgli_mavros_bridge
++{
++
++// Caller supplies monotonic milliseconds. Observation identity is independent of
++// delivery liveness; replaying a stamp/counter never advances the stop proof.
++class BladeControl
++{
++public:
++  enum class Direction
++  {
++    Off,
++    Forward,
++    Reverse,
++    Unknown
++  };
++  enum class State
++  {
++    OFF,
++    FWD,
++    REV,
++    TRANSITION_TO_OFF,
++    WAIT_STOP_BEFORE_REVERSE,
++    FAILED
++  };
++  enum class Result
++  {
++    Rejected,
++    Pending,
++    Confirmed
++  };
++  struct Config
++  {
++    int channel{3}, neutral{1500}, forward{1450}, reverse{1550};
++    int64_t ack_timeout_ms{3000}, stop_timeout_ms{15000}, freshness_ms{1000}, coast_ms{1000};
++  };
++  struct Command
++  {
++    uint64_t token;
++    int channel, pwm;
++    Direction direction;
++  };
++  BladeControl() : BladeControl(Config{})
++  {
++  }
++  explicit BladeControl(Config config) : config_(config)
++  {
++    if (config.channel < 1 || config.channel > 32 || config.neutral < 1000 ||
++        config.neutral > 2000 || config.forward < 1000 || config.forward > 2000 ||
++        config.reverse < 1000 || config.reverse > 2000 ||
++        !((config.forward < config.neutral && config.reverse > config.neutral) ||
++          (config.reverse < config.neutral && config.forward > config.neutral)) ||
++        config.ack_timeout_ms <= 0 || config.stop_timeout_ms <= config.coast_ms ||
++        config.freshness_ms <= 0 || config.coast_ms < 1000)
++    {
++      throw std::invalid_argument("Invalid blade PWM/timing configuration");
++    }
++  }
++
++  void connection(bool connected, int64_t now)
++  {
++    if (connected != connected_)
++    {
++      connected_ = connected;
++      sample_stamp_ = 0;
++      sample_source_ = -1;
++      sample_receipt_ = -1;
++      force_off(now);
++    }
++  }
++  void permission(bool allowed, int64_t now)
++  {
++    if (allowed_ && !allowed)
++      force_off(now);
++    allowed_ = allowed;
++  }
++  Result request(Direction direction, int64_t now)
++  {
++    if (!connected_ || direction == Direction::Unknown ||
++        (direction != Direction::Off && (!allowed_ || fault_ || sample_receipt_ < 0 ||
++                                         now - sample_receipt_ > config_.freshness_ms)))
++      return Result::Rejected;
++    if (fault_)
++      return Result::Rejected;
++    if (direction == requested_)
++      return satisfied() ? Result::Confirmed : Result::Pending;
++    ++revision_;
++    requested_ = direction;
++    if (direction == Direction::Off)
++    {
++      // A neutral must supersede an ON already handed to the transport.
++      force_off(now);
++    }
++    else if (confirmed_ != Direction::Off || in_flight_ || queued_neutral_)
++    {
++      if (in_flight_ && in_flight_->direction != Direction::Off)
++      {
++        force_off(now);
++        requested_ = direction;
++      }
++      queued_neutral_ = true;
++      state_ = State::TRANSITION_TO_OFF;
++    }
++    else
++    {
++      state_ = State::WAIT_STOP_BEFORE_REVERSE;
++      wait_since_ = now;
++    }
++    return Result::Pending;
++  }
++  void force_off(int64_t now)
++  {
++    ++revision_;
++    requested_ = Direction::Off;
++    confirmed_ = Direction::Unknown;
++    // Fence old replies without claiming the transport can cancel an emitted PWM.
++    in_flight_.reset();
++    ++token_;
++    queued_neutral_ = true;
++    fault_ = false;
++    stop_since_ = -1;
++    stop_samples_ = 0;
++    neutral_since_ = now;
++    state_ = State::TRANSITION_TO_OFF;
++  }
++  void service_timeout(int64_t now)
++  {
++    force_off(now);
++    fault_ = true;
++    state_ = State::FAILED;
++  }
++  void sample(int source,
++              int64_t stamp,
++              uint32_t count,
++              bool count_valid,
++              bool valid,
++              int32_t rpm,
++              int64_t now)
++  {
++    if (!valid || (source != 1 && source != 2) || (source == 2 && !count_valid) || stamp <= 0 ||
++        stamp <= sample_stamp_ ||
++        (sample_source_ == source && source == 2 && (!count_valid || count == sample_count_)))
++      return;
++    if (sample_source_ != source)
++    {
++      stop_since_ = -1;
++      stop_samples_ = 0;
++    }
++    sample_source_ = source;
++    sample_stamp_ = stamp;
++    sample_count_ = count;
++    if (sample_receipt_ >= 0 && now - sample_receipt_ > config_.freshness_ms)
++    {
++      stop_since_ = -1;
++      stop_samples_ = 0;
++    }
++    sample_receipt_ = now;
++    sample_zero_ = rpm == 0;
++    if (sample_zero_ && now >= neutral_since_ && confirmed_ == Direction::Off)
++    {
++      if (stop_since_ < 0)
++        stop_since_ = now;
++      ++stop_samples_;
++    }
++    else
++    {
++      stop_since_ = -1;
++      stop_samples_ = 0;
++    }
++  }
++  bool stopped(int64_t now) const
++  {
++    return sample_zero_ && sample_receipt_ >= 0 && now >= sample_receipt_ &&
++           now - sample_receipt_ <= config_.freshness_ms && stop_since_ >= 0 &&
++           now - stop_since_ >= config_.coast_ms && stop_samples_ >= 5;
++  }
++  void tick(int64_t now)
++  {
++    if (in_flight_ && now - sent_at_ >= config_.ack_timeout_ms)
++    {
++      const bool was_on = in_flight_->direction != Direction::Off;
++      in_flight_.reset();
++      fail(was_on);
++    }
++    if (requested_ != Direction::Off &&
++        (sample_receipt_ < 0 || now - sample_receipt_ > config_.freshness_ms))
++      fail(true);
++    if (state_ == State::WAIT_STOP_BEFORE_REVERSE && !in_flight_ &&
++        now - wait_since_ >= config_.stop_timeout_ms)
++      fail(false);
++  }
++  std::optional<Command> next(int64_t now)
++  {
++    tick(now);
++    if (in_flight_)
++      return std::nullopt;
++    Direction target = Direction::Unknown;
++    if (queued_neutral_)
++    {
++      queued_neutral_ = false;
++      target = Direction::Off;
++    }
++    else if (!fault_ && connected_ && allowed_ && requested_ != Direction::Off &&
++             confirmed_ == Direction::Off && stopped(now))
++      target = requested_;
++    if (target == Direction::Unknown)
++      return std::nullopt;
++    Command command{++token_, config_.channel, pwm(target), target};
++    in_flight_ = command;
++    sent_at_ = now;
++    return command;
++  }
++  void complete(uint64_t token, bool accepted, int64_t now)
++  {
++    if (!in_flight_ || in_flight_->token != token)
++      return;
++    const auto direction = in_flight_->direction;
++    in_flight_.reset();
++    if (!accepted)
++    {
++      fail(direction != Direction::Off);
++      return;
++    }
++    confirmed_ = direction;
++    if (direction == Direction::Off)
++    {
++      neutral_since_ = now;
++      stop_since_ = -1;
++      stop_samples_ = 0;
++      wait_since_ = now;
++      state_ = fault_                         ? State::FAILED
++               : requested_ == Direction::Off ? State::OFF
++                                              : State::WAIT_STOP_BEFORE_REVERSE;
++    }
++    else if (requested_ == direction && !queued_neutral_)
++      state_ = direction == Direction::Forward ? State::FWD : State::REV;
++  }
++  void output(int pwm_value, int64_t now)
++  {
++    if (in_flight_ || queued_neutral_ || confirmed_ == Direction::Unknown)
++      return;
++    if (pwm_value != pwm(confirmed_))
++      force_off(now);
++  }
++  bool satisfied() const
++  {
++    return !fault_ && !in_flight_ && !queued_neutral_ && confirmed_ == requested_;
++  }
++  bool failed() const
++  {
++    return fault_;
++  }
++  bool current(uint64_t token) const
++  {
++    return in_flight_ && in_flight_->token == token;
++  }
++  uint64_t revision() const
++  {
++    return revision_;
++  }
++  Direction requested() const
++  {
++    return requested_;
++  }
++  Direction confirmed() const
++  {
++    return confirmed_;
++  }
++  State state() const
++  {
++    return state_;
++  }
++  int channel() const
++  {
++    return config_.channel;
++  }
++  bool enabled() const
++  {
++    return allowed_ && satisfied() && confirmed_ != Direction::Off;
++  }
++  static const char* label(Direction direction)
++  {
++    switch (direction)
++    {
++      case Direction::Off:
++        return "off";
++      case Direction::Forward:
++        return "forward";
++      case Direction::Reverse:
++        return "reverse";
++      default:
++        return "unknown";
++    }
++  }
++
++private:
++  int pwm(Direction direction) const
++  {
++    return direction == Direction::Forward   ? config_.forward
++           : direction == Direction::Reverse ? config_.reverse
++                                             : config_.neutral;
++  }
++  void fail(bool send_neutral)
++  {
++    const bool neutral_pending = in_flight_ && in_flight_->direction == Direction::Off;
++    if (in_flight_ && !neutral_pending)
++    {
++      in_flight_.reset();
++      ++token_;
++    }
++    ++revision_;
++    fault_ = true;
++    requested_ = Direction::Off;
++    state_ = State::FAILED;
++    queued_neutral_ = queued_neutral_ || (send_neutral && !neutral_pending);
++  }
++  Config config_;
++  State state_{State::TRANSITION_TO_OFF};
++  Direction requested_{Direction::Off}, confirmed_{Direction::Unknown};
++  bool connected_{false}, allowed_{false}, fault_{false}, queued_neutral_{true};
++  std::optional<Command> in_flight_;
++  uint64_t token_{0}, revision_{0};
++  int64_t sent_at_{0}, neutral_since_{0}, wait_since_{0}, stop_since_{-1};
++  unsigned stop_samples_{0};
++  int sample_source_{-1};
++  int64_t sample_stamp_{0}, sample_receipt_{-1};
++  uint32_t sample_count_{0};
++  bool sample_zero_{false};
++};
++
++}  // namespace mowgli_mavros_bridge
+
+diff --git a/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_off_control.hpp b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_off_control.hpp
+new file mode 100644
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/blade_off_control.hpp
+@@ -0,0 +1,87 @@
++#pragma once
++
++#include <cstdint>
++#include <stdexcept>
++
++namespace mowgli_mavros_bridge
++{
++
++// OFF-only preparation patch. No ARM, direction inference or ON command.
++class BladeOffControl
++{
++public:
++  enum class Decision
++  {
++    SendNeutral,
++    AlreadyAccepted,
++    Failed,
++    OnInhibited
++  };
++  struct Command
++  {
++    uint16_t id{183};  // MAV_CMD_DO_SET_SERVO
++    float channel;
++    float pwm;
++  };
++
++  explicit BladeOffControl(int64_t channel = 3, int64_t neutral_pwm = 1500)
++      : channel_(channel), neutral_pwm_(neutral_pwm)
++  {
++    if (channel < 1 || channel > 32 || neutral_pwm < 1000 || neutral_pwm > 2000)
++    {
++      throw std::invalid_argument("Invalid blade servo channel or neutral PWM");
++    }
++  }
++
++  Decision decide(bool enabled) const
++  {
++    if (enabled)
++    {
++      return Decision::OnInhibited;
++    }
++    if (state_ == State::Failed)
++    {
++      return Decision::Failed;
++    }
++    return state_ == State::Idle ? Decision::SendNeutral : Decision::AlreadyAccepted;
++  }
++
++  uint64_t begin()
++  {
++    state_ = State::Pending;
++    return generation_;
++  }
++
++  void complete(uint64_t generation, bool accepted)
++  {
++    if (generation == generation_ && state_ == State::Pending)
++    {
++      state_ = accepted ? State::Confirmed : State::Failed;
++    }
++  }
++
++  void reset_connection()
++  {
++    ++generation_;
++    state_ = State::Idle;
++  }
++
++  Command command() const
++  {
++    return {183, static_cast<float>(channel_), static_cast<float>(neutral_pwm_)};
++  }
++
++private:
++  enum class State
++  {
++    Idle,
++    Pending,
++    Confirmed,
++    Failed
++  };
++  int64_t channel_, neutral_pwm_;
++  uint64_t generation_{0};
++  State state_{State::Idle};
++};
++
++}  // namespace mowgli_mavros_bridge
+
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_blade_control.cpp b/ros2/src/mowgli_mavros_bridge/test/test_blade_control.cpp
+new file mode 100644
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/test/test_blade_control.cpp
+@@ -0,0 +1,270 @@
++#include "mowgli_mavros_bridge/blade_control.hpp"
++#include <gtest/gtest.h>
++
++using B = mowgli_mavros_bridge::BladeControl;
++
++class BladeTest : public ::testing::Test
++{
++protected:
++  B b;
++  int64_t time{10};
++  uint32_t counter{0};
++  void ack(int expected)
++  {
++    const auto command = b.next(time);
++    ASSERT_TRUE(command);
++    EXPECT_EQ(command->channel, 3);
++    EXPECT_EQ(command->pwm, expected);
++    b.complete(command->token, true, time);
++  }
++  void zeros()
++  {
++    for (int i = 0; i != 6; ++i)
++    {
++      time += 250;
++      b.sample(2, time * 1000000, ++counter, true, true, 0, time);
++    }
++    ASSERT_TRUE(b.stopped(time));
++  }
++  void setup()
++  {
++    b.connection(true, time);
++    b.permission(true, time);
++    ack(1500);
++    zeros();
++  }
++};
++
++TEST_F(BladeTest, StartupAndOffDedup)
++{
++  setup();
++  EXPECT_EQ(b.request(B::Direction::Off, time), B::Result::Confirmed);
++  for (int i = 0; i < 10; ++i)
++    EXPECT_FALSE(b.next(time));
++  EXPECT_FALSE(b.enabled());
++}
++TEST_F(BladeTest, ForwardAndReverseConfigAndDedup)
++{
++  setup();
++  EXPECT_EQ(b.request(B::Direction::Forward, time), B::Result::Pending);
++  ack(1450);
++  EXPECT_TRUE(b.enabled());
++  EXPECT_EQ(b.request(B::Direction::Forward, time), B::Result::Confirmed);
++  EXPECT_FALSE(b.next(time));
++  b.request(B::Direction::Off, time);
++  ack(1500);
++  zeros();
++  b.request(B::Direction::Reverse, time);
++  ack(1550);
++  EXPECT_TRUE(b.enabled());
++  EXPECT_EQ(b.request(B::Direction::Reverse, time), B::Result::Confirmed);
++  EXPECT_FALSE(b.next(time));
++}
++TEST_F(BladeTest, BothInversionsRequireNeutralAndRealStop)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  ack(1450);
++  for (const auto target : {B::Direction::Reverse, B::Direction::Forward})
++  {
++    b.request(target, time);
++    ack(1500);
++    EXPECT_EQ(b.state(), B::State::WAIT_STOP_BEFORE_REVERSE);
++    EXPECT_FALSE(b.enabled());
++    time += 100;
++    b.sample(2, time * 1000000, ++counter, true, true, 100, time);
++    EXPECT_FALSE(b.next(time));
++    zeros();
++    ack(target == B::Direction::Reverse ? 1550 : 1450);
++  }
++}
++TEST_F(BladeTest, ReplayDoesNotProveStop)
++{
++  setup();
++  b.force_off(time);
++  ack(1500);
++  const auto stamp = time * 1000000 + 1;
++  b.sample(2, stamp, ++counter, true, true, 0, time);
++  for (int i = 0; i < 20; ++i)
++  {
++    time += 100;
++    b.sample(2, stamp, counter, true, true, 0, time);
++  }
++  EXPECT_FALSE(b.stopped(time));
++  b.request(B::Direction::Forward, time);
++  EXPECT_FALSE(b.next(time));
++}
++TEST_F(BladeTest, StaleGapAndWaitTimeoutNeverAllowOpposite)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  ack(1450);
++  b.request(B::Direction::Reverse, time);
++  ack(1500);
++  time += 15100;
++  b.tick(time);
++  EXPECT_TRUE(b.failed());
++  ack(1500);  // stale observation triggers a neutral, never the opposite PWM
++  EXPECT_FALSE(b.next(time));
++  EXPECT_EQ(b.requested(), B::Direction::Off);
++}
++TEST_F(BladeTest, RejectedOnAndAckTimeoutQueueSingleNeutral)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  auto command = b.next(time);
++  ASSERT_TRUE(command);
++  b.complete(command->token, false, time);
++  EXPECT_TRUE(b.failed());
++  ack(1500);
++  EXPECT_FALSE(b.next(time));
++  EXPECT_EQ(b.request(B::Direction::Forward, time), B::Result::Rejected);
++  b.force_off(time);
++  ack(1500);
++  zeros();
++  b.request(B::Direction::Forward, time);
++  command = b.next(time);
++  ASSERT_TRUE(command);
++  time += 3001;
++  b.tick(time);
++  EXPECT_TRUE(b.failed());
++  b.complete(command->token, true, time);
++  EXPECT_TRUE(b.failed());
++  ack(1500);
++}
++TEST_F(BladeTest, SafetyAndConnectionFenceOldCallbacks)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  auto command = b.next(time);
++  ASSERT_TRUE(command);
++  b.permission(false, time);
++  b.complete(command->token, true, time);
++  ack(1500);
++  EXPECT_FALSE(b.enabled());
++  EXPECT_EQ(b.request(B::Direction::Forward, time), B::Result::Rejected);
++  b.connection(false, time);
++  ack(1500);  // attempted neutral independently of connection availability
++  EXPECT_EQ(b.request(B::Direction::Off, time), B::Result::Rejected);
++  b.connection(true, time);
++  ack(1500);
++}
++TEST_F(BladeTest, ExternalOutputInvalidatesConfirmation)
++{
++  setup();
++  b.output(1550, time);
++  EXPECT_FALSE(b.satisfied());
++  ack(1500);
++}
++
++TEST_F(BladeTest, OffPreemptsPendingOnWithoutWaitingForItsAck)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  const auto on = b.next(time);
++  ASSERT_TRUE(on);
++  b.request(B::Direction::Off, time);
++  const auto off = b.next(time);
++  ASSERT_TRUE(off);
++  EXPECT_EQ(off->pwm, 1500);
++  b.complete(on->token, true, time);
++  EXPECT_FALSE(b.enabled());
++  b.complete(off->token, true, time);
++  EXPECT_TRUE(b.satisfied());
++}
++
++TEST_F(BladeTest, StalePendingOnImmediatelyNeutralizesAndFencesItsAck)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  const auto on = b.next(time);
++  ASSERT_TRUE(on);
++  time += 1001;
++  b.tick(time);
++  EXPECT_TRUE(b.failed());
++  const auto off = b.next(time);
++  ASSERT_TRUE(off);
++  EXPECT_EQ(off->pwm, 1500);
++  b.complete(on->token, true, time);
++  EXPECT_FALSE(b.enabled());
++  b.complete(off->token, true, time);
++}
++
++TEST_F(BladeTest, StopDeadlineCannotCancelAProvenStopWhileOnAckIsPending)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  ack(1450);
++  b.request(B::Direction::Reverse, time);
++  ack(1500);
++  for (int i = 0; i < 150; ++i)
++  {
++    time += 90;
++    b.sample(2, time * 1000000, ++counter, true, true, 200, time);
++  }
++  for (int i = 0; i < 6; ++i)
++  {
++    time += 200;
++    b.sample(2, time * 1000000, ++counter, true, true, 0, time);
++  }
++  const auto on = b.next(time);
++  ASSERT_TRUE(on);
++  EXPECT_EQ(on->pwm, 1550);
++  time += 400;
++  b.tick(time);
++  EXPECT_FALSE(b.failed());
++  b.complete(on->token, true, time);
++  EXPECT_TRUE(b.enabled());
++}
++TEST_F(BladeTest, ConfigurableNoDirectionInference)
++{
++  B::Config c;
++  c.forward = 1600;
++  c.reverse = 1400;
++  B other(c);
++  other.connection(true, time);
++  other.permission(true, time);
++  auto command = other.next(time);
++  other.complete(command->token, true, time);
++  for (int i = 0; i < 6; ++i)
++  {
++    time += 250;
++    other.sample(1, time * 1000000, 0, false, true, 0, time);
++  }
++  other.request(B::Direction::Forward, time);
++  command = other.next(time);
++  ASSERT_TRUE(command);
++  EXPECT_EQ(command->pwm, 1600);
++  c.forward = 1500;
++  EXPECT_THROW(B invalid(c), std::invalid_argument);
++}
++
++TEST_F(BladeTest, ServiceDeadlineNeutralizesAndKeepsFailureLatched)
++{
++  setup();
++  b.request(B::Direction::Forward, time);
++  const auto on = b.next(time);
++  ASSERT_TRUE(on);
++  b.service_timeout(time);
++  ack(1500);
++  b.complete(on->token, true, time);
++  EXPECT_TRUE(b.failed());
++  EXPECT_FALSE(b.enabled());
++  EXPECT_EQ(b.request(B::Direction::Forward, time), B::Result::Rejected);
++  EXPECT_FALSE(b.next(time));
++}
++
++TEST_F(BladeTest, UnknownSourceAndCounterlessLegacyCannotEstablishStop)
++{
++  b.connection(true, time);
++  b.permission(true, time);
++  ack(1500);
++  for (int i = 0; i < 6; ++i)
++  {
++    time += 250;
++    b.sample(0, time * 1000000, ++counter, true, true, 0, time);
++    b.sample(2, time * 1000000, counter, false, true, 0, time);
++  }
++  EXPECT_FALSE(b.stopped(time));
++  EXPECT_EQ(b.request(B::Direction::Forward, time), B::Result::Rejected);
++}
+
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py b/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py
+new file mode 100644
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py
+@@ -0,0 +1,220 @@
++#!/usr/bin/env python3
++"""Real compiled bridge, mocked FCU services: never connects to hardware."""
++import argparse
++import os
++from pathlib import Path
++import signal
++import struct
++import subprocess
++import tempfile
++import time
++
++import rclpy
++from std_msgs.msg import Header
++from mavros_msgs.msg import State, SysStatus, RCOut
++from mavros_msgs.msg import Mavlink
++from sensor_msgs.msg import Imu
++from geometry_msgs.msg import Quaternion
++from mavros_msgs.srv import CommandBool, CommandLong, SetMode
++from mavros_esc_wheel_odometry.msg import EscObservation
++from mowgli_interfaces.msg import Status
++from mowgli_interfaces.srv import MowerControl, EmergencyStop
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    parser.add_argument("--bridge-executable", required=True)
++    args = parser.parse_args()
++    rclpy.init()
++    node = rclpy.create_node("blade_contract_mock")
++    commands, statuses, authority = [], [], []
++    pwm, rpm, count = 1500, 0, 0
++    freeze, reject = False, False
++    state = State(connected=True, armed=True)
++    tilted = False
++    safety = SysStatus(sensors_present=1 << 15, sensors_enabled=1 << 15)
++
++    def command(req, res):
++        nonlocal pwm, rpm
++        commands.append((req.command, req.param1, req.param2))
++        assert req.command == 183 and req.param1 == 3
++        res.success, res.result = not reject, 4 if reject else 0
++        if not reject:
++            pwm = int(req.param2)
++            rpm = 0 if pwm == 1500 else 500  # unsigned legacy; no sign inference
++        return res
++
++    def arm(req, res):
++        authority.append(("arm", req.value))
++        res.success = True
++        return res
++
++    def mode(req, res):
++        authority.append(("mode", req.custom_mode))
++        res.mode_sent = True
++        return res
++
++    services = [node.create_service(CommandLong, "/mavros/cmd/command", command),
++                node.create_service(CommandBool, "/mavros/cmd/arming", arm),
++                node.create_service(SetMode, "/mavros/set_mode", mode)]
++    pubs = [node.create_publisher(State, "/mavros/state", 10),
++            node.create_publisher(SysStatus, "/mavros/sys_status", 10),
++            node.create_publisher(EscObservation, "/mavros/esc_wheel_odometry/esc_observation", 10),
++            node.create_publisher(RCOut, "/mavros/rc/out", 10)]
++    raw_pub = node.create_publisher(Mavlink, "/uas1/mavlink_source", 10)
++    outgoing = node.create_publisher(Mavlink, "/uas1/mavlink_sink", 10)
++    imu_pub = node.create_publisher(Imu, "/mavros/imu/data", 10)
++
++    def frame(msgid, payload):
++        m = Mavlink(framing_status=Mavlink.FRAMING_OK, magic=Mavlink.MAVLINK_V20,
++                    len=len(payload), sysid=1, compid=1, msgid=msgid)
++        padded = payload + bytes((-len(payload)) % 8)
++        m.payload64 = list(struct.unpack('<' + 'Q' * (len(padded) // 8), padded))
++        return m
++    subscription = node.create_subscription(Status, "/hardware_bridge/status", statuses.append, 10)
++
++    def publish():
++        nonlocal count
++        if not freeze:
++            count += 1
++        stamp = node.get_clock().now().to_msg()
++        pubs[0].publish(state)
++        pubs[1].publish(safety)
++        pubs[2].publish(EscObservation(header=Header(stamp=stamp), metadata_stamp=stamp,
++            source=2, esc_index=2, valid=True, rpm=rpm, rpm_valid=True,
++            count=count, count_valid=True, current=0.8, current_valid=True,
++            temperature=32.0, temperature_valid=True))
++        pubs[3].publish(RCOut(header=Header(stamp=stamp), channels=[1500, 1500, pwm]))
++        imu_pub.publish(Imu(orientation=Quaternion(x=.70710678 if tilted else 0.,
++                                                   w=.70710678 if tilted else 1.)))
++
++    timer = node.create_timer(.04, publish)
++    mower = node.create_client(MowerControl, "/hardware_bridge/mower_control")
++    emergency = node.create_client(EmergencyStop, "/hardware_bridge/emergency_stop")
++
++    def wait(pred, timeout=8):
++        end = time.monotonic() + timeout
++        while not pred() and time.monotonic() < end:
++            rclpy.spin_once(node, timeout_sec=.02)
++        assert pred(), "blade graph timeout"
++
++    def spin(sec):
++        end = time.monotonic() + sec
++        while time.monotonic() < end:
++            rclpy.spin_once(node, timeout_sec=.02)
++
++    def call(client, req):
++        f = client.call_async(req)
++        wait(f.done)
++        return f.result()
++
++    def mow(enabled, direction=0):
++        return call(mower, MowerControl.Request(mow_enabled=enabled, mow_direction=direction)).success
++
++    def neutral_reconnect():
++        nonlocal rpm, pwm, freeze, reject
++        state.connected = False
++        freeze = reject = False
++        rpm, pwm = 0, 1500
++        spin(.3)
++        state.connected = True
++        spin(1.5)
++
++    with tempfile.TemporaryDirectory(prefix="blade-graph-") as directory:
++        with open(Path(directory) / "bridge.log", "w+") as log:
++            process = subprocess.Popen([args.bridge_executable], stdout=log, stderr=log,
++                env=dict(os.environ, MAVROS_RESOLVED_FIRMWARE="ardupilot"))
++            try:
++                wait(lambda: mower.service_is_ready() and emergency.service_is_ready())
++                wait(lambda: (183, 3., 1500.) in commands)
++                spin(1.5)
++                initial = len(commands)
++                assert mow(False)
++                for _ in range(10):
++                    assert mow(False)
++                assert len(commands) == initial
++                for direction, target in ((0, 1450), (1, 1550), (0, 1450)):
++                    before = len(commands)
++                    assert mow(True, direction)
++                    expected = [(183, 3., float(target))]
++                    if before > initial:
++                        expected.insert(0, (183, 3., 1500.))
++                    assert commands[before:] == expected
++                    assert authority == []  # ON and inversion do not ARM/DISARM.
++                    wait(lambda: statuses and statuses[-1].mow_enabled)
++                    assert statuses[-1].blade_requested_direction == ("forward" if direction == 0 else "reverse")
++                    assert statuses[-1].mower_motor_rpm == 500
++                    assert statuses[-1].mower_esc_current == 0.8 or abs(statuses[-1].mower_esc_current - .8) < 1e-5
++                    before = len(commands)
++                    for _ in range(3):
++                        assert mow(True, direction)
++                    assert len(commands) == before
++                assert mow(False)
++                wait(lambda: statuses[-1].blade_requested_direction == "off" and not statuses[-1].mow_enabled)
++                spin(1.5)
++                assert mow(True)
++                before = len(commands)
++                assert call(emergency, EmergencyStop.Request(emergency=1)).success
++                wait(lambda: (183, 3., 1500.) in commands[before:])
++                assert not mow(True)
++                assert ("mode", "HOLD") in authority and ("arm", False) in authority
++                assert call(emergency, EmergencyStop.Request(emergency=0)).success
++                spin(1.5)
++                assert mow(True)
++                freeze = True
++                before = len(commands)
++                wait(lambda: (183, 3., 1500.) in commands[before:])
++                wait(lambda: statuses and not statuses[-1].mow_enabled)
++                neutral_reconnect()
++                reject = True
++                assert not mow(True)  # actual result4, not enqueue=true
++                reject = False
++                spin(.3)
++                assert not mow(True)  # failure retained, not retried at each tick
++                neutral_reconnect()
++                assert mow(True, 1)
++                before = len(commands)
++                safety.sensors_enabled = 0
++                wait(lambda: (183, 3., 1500.) in commands[before:])
++                assert not mow(True)
++                safety.sensors_enabled = 1 << 15
++                neutral_reconnect()
++                assert mow(False)
++                assert mow(True)
++                spin(2.2)  # no outstanding own-wire expectation
++                before = len(commands)
++                outgoing.publish(frame(76, struct.pack('<7fHBBB',3.,1450.,0.,0.,0.,0.,0.,183,1,1,0)))
++                wait(lambda: (183,3.,1500.) in commands[before:])
++                spin(1.5)
++                assert mow(True)
++                before = len(commands)
++                raw_pub.publish(frame(257, struct.pack('<IIB',100,90,3)))
++                wait(lambda: (183,3.,1500.) in commands[before:])
++                assert not mow(True)
++                raw_pub.publish(frame(257, struct.pack('<IIB',101,91,0)))
++                spin(.3)
++                assert call(emergency, EmergencyStop.Request(emergency=0)).success
++                neutral_reconnect()
++                assert mow(True)
++                before = len(commands)
++                tilted = True
++                wait(lambda: (183,3.,1500.) in commands[before:])
++                assert not mow(True)
++                tilted = False
++                spin(.3)
++                assert call(emergency, EmergencyStop.Request(emergency=0)).success
++                neutral_reconnect()
++                assert mow(False)
++                print("PASS blade startup/OFF/FWD/REV/inversion/safety/stale/reject/reconnect/status")
++            finally:
++                process.send_signal(signal.SIGINT)
++                process.wait(timeout=5)
++                if process.returncode not in (0, -signal.SIGINT):
++                    log.seek(0)
++                    print(log.read())
++    node.destroy_node()
++    rclpy.shutdown()
++
++
++if __name__ == "__main__":
++    main()
+
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp b/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp
+new file mode 100644
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp
+@@ -0,0 +1,67 @@
++#include "mowgli_mavros_bridge/blade_off_control.hpp"
++#include <gtest/gtest.h>
++
++using mowgli_mavros_bridge::BladeOffControl;
++using Decision = BladeOffControl::Decision;
++
++TEST(BladeOff, NativeNeutralCommandOnly)
++{
++  BladeOffControl control;
++  const auto command = control.command();
++  EXPECT_EQ(command.id, 183);
++  EXPECT_FLOAT_EQ(command.channel, 3);
++  EXPECT_FLOAT_EQ(command.pwm, 1500);
++  EXPECT_EQ(control.decide(false), Decision::SendNeutral);
++  EXPECT_EQ(control.decide(true), Decision::OnInhibited);
++}
++
++TEST(BladeOff, ConfigurableWithoutDirectionOrArming)
++{
++  const auto command = BladeOffControl(4, 1490).command();
++  EXPECT_FLOAT_EQ(command.channel, 4);
++  EXPECT_FLOAT_EQ(command.pwm, 1490);
++  EXPECT_THROW(BladeOffControl(0, 1500), std::invalid_argument);
++  EXPECT_THROW(BladeOffControl(33, 1500), std::invalid_argument);
++  EXPECT_THROW(BladeOffControl(3, 999), std::invalid_argument);
++  EXPECT_THROW(BladeOffControl(3, 2001), std::invalid_argument);
++}
++
++TEST(BladeOff, NoSpamPendingOrConfirmed)
++{
++  BladeOffControl control;
++  const auto generation = control.begin();
++  for (unsigned tick = 0; tick < 100; ++tick)
++  {
++    EXPECT_EQ(control.decide(false), Decision::AlreadyAccepted);
++    EXPECT_EQ(control.decide(true), Decision::OnInhibited);
++  }
++  control.complete(generation, true);
++  EXPECT_EQ(control.decide(false), Decision::AlreadyAccepted);
++}
++
++TEST(BladeOff, RejectionDoesNotBecomeACommandLoop)
++{
++  BladeOffControl control;
++  control.complete(control.begin(), false);
++  for (unsigned tick = 0; tick < 100; ++tick)
++  {
++    EXPECT_EQ(control.decide(false), Decision::Failed);
++  }
++  EXPECT_EQ(control.decide(true), Decision::OnInhibited);
++}
++
++TEST(BladeOff, ReconnectInvalidatesOldAckAndAllowsFreshNeutral)
++{
++  BladeOffControl control;
++  const auto old_generation = control.begin();
++  control.reset_connection();
++  const auto new_generation = control.begin();
++  control.complete(old_generation, false);
++  EXPECT_EQ(control.decide(false), Decision::AlreadyAccepted);
++  control.complete(new_generation, true);
++  EXPECT_EQ(control.decide(false), Decision::AlreadyAccepted);
++  control.reset_connection();
++  EXPECT_EQ(control.decide(false), Decision::SendNeutral);
++  control.complete(old_generation, true);
++  EXPECT_EQ(control.decide(false), Decision::SendNeutral);
++}
+
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py b/ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py
+new file mode 100644
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py
+@@ -0,0 +1,31 @@
++#!/usr/bin/env python3
++"""Static guardrails complement the C++ state and mocked ROS graph tests."""
++from pathlib import Path
++import unittest
++
++
++class BladeOffContract(unittest.TestCase):
++    def test_mower_service_has_no_arming_or_mode_side_effect(self):
++        source = (Path(__file__).parents[1] / "src/mavros_hardware_bridge_node.cpp").read_text()
++        body = source.split("void MavrosHardwareBridgeNode::on_mower_control(", 1)[1]
++        body = body.split("bool MavrosHardwareBridgeNode::request_blade_neutral()", 1)[0]
++        self.assertNotIn("send_arm_command", body)
++        self.assertNotIn("send_mode_command", body)
++        self.assertIn("BladeControl::Direction::Off", body)
++        self.assertIn("BladeControl::Direction::Forward", body)
++        self.assertIn("BladeControl::Direction::Reverse", body)
++
++    def test_neutral_transport_has_no_arm_fallback(self):
++        source = (Path(__file__).parents[1] / "src/mavros_hardware_bridge_node.cpp").read_text()
++        body = source.split("bool MavrosHardwareBridgeNode::request_blade_neutral()", 1)[1]
++        body = body.split("void MavrosHardwareBridgeNode::on_emergency_stop(", 1)[0]
++        self.assertNotIn("send_arm_command", body)
++        self.assertNotIn("cli_arm_", body)
++        self.assertIn("request->command = 183", body)
++        self.assertIn("command->channel", body)
++        self.assertIn("command->pwm", body)
++        self.assertIn("response->result == 0", body)
++
++
++if __name__ == "__main__":
++    unittest.main()
+
+diff --git a/ros2/src/mavros_esc_wheel_odometry/test/test_signed_esc_contract.cpp b/ros2/src/mavros_esc_wheel_odometry/test/test_signed_esc_contract.cpp
+new file mode 100644
+--- /dev/null
++++ b/ros2/src/mavros_esc_wheel_odometry/test/test_signed_esc_contract.cpp
+@@ -0,0 +1,48 @@
++#include "mavros_esc_wheel_odometry/observation_engine.hpp"
++#include <gtest/gtest.h>
++
++using namespace mavros_esc_wheel_odometry;
++
++TEST(SignedEscContract, CommonPreservesBothSignsForEveryEsc)
++{
++  ObservationEngine engine(ObservationConfig{});
++  engine.connection(true);
++  for (int direction : {1, -1})
++  {
++    const int64_t stamp = direction == 1 ? 1000000000LL : 2000000000LL;
++    CommonStatusPacket packet;
++    packet.time_us = stamp / 1000;
++    packet.rpm = {direction * 120, direction * 240, direction * 360, 0};
++    packet.voltage.fill(24);
++    packet.current.fill(1);
++    engine.common_status(packet, stamp);
++    for (unsigned slot = 0; slot < 3; ++slot)
++    {
++      const auto observation = engine.esc(slot, stamp);
++      EXPECT_TRUE(observation.valid);
++      EXPECT_TRUE(observation.rpm_valid);
++      EXPECT_TRUE(observation.rpm_direction_valid);
++      EXPECT_EQ(observation.rpm, packet.rpm[slot]);
++    }
++  }
++}
++
++TEST(SignedEscContract, LegacyNeverInventsDirectionForAnyEsc)
++{
++  ObservationEngine engine(ObservationConfig{});
++  engine.connection(true);
++  LegacyEscPacket packet;
++  packet.counts = {1, 1, 1, 0};
++  packet.rpm = {120, 240, 360, 0};
++  packet.voltage.fill(24);
++  packet.current.fill(1);
++  engine.legacy_esc(packet, 1000000000LL);
++  for (unsigned slot = 0; slot < 3; ++slot)
++  {
++    const auto observation = engine.esc(slot, 1000000000LL);
++    EXPECT_TRUE(observation.valid);
++    EXPECT_TRUE(observation.rpm_valid);
++    EXPECT_FALSE(observation.rpm_direction_valid);
++    EXPECT_EQ(observation.rpm, packet.rpm[slot]);
++  }
++}

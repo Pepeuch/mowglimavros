@@ -1,0 +1,8 @@
+# Preserve byte-exact historical evidence. Unified-diff context uses a literal
+# space on blank lines; the four frozen audit artifacts retain their original EOF.
+# Exceptions apply only to these artifacts, never product code or general docs.
+docs/investigations/2026-10-07-runtime-bringup/blade-oct09-recovered-review/blade-product-exact-stash.diff whitespace=-blank-at-eol
+docs/investigations/2026-10-07-runtime-bringup/mavlink-passive-rates-20261010.py whitespace=-blank-at-eof
+docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit-20261009-original.md whitespace=-blank-at-eof
+docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit.md whitespace=-blank-at-eof
+docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-results.md whitespace=-blank-at-eof

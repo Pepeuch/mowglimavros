@@ -4,6 +4,33 @@ Canonical work queue for `mowglimavros`.
 
 This file answers: **what remains to be done and in what order?**
 
+## Complete session recovery — 10 October 2026
+
+- [x] Review the full47-file Oct9 stash restoration plus preserved Oct10 audit
+      and historical build/audit tools, in a standalone MowgliMAVROS worktree.
+      Historical statements below describe their exact Oct9 baseline, not the
+      current deployed image. The recovered/adapted source is not deployed.
+      Main integration authorized10October; GHCR publication guarded at both
+      build and manifest tiers, default-off manual release with baseline-bound
+      acceptance records. No actual hardware acceptance inferred from flags.
+- [x] Validate the recovered source with the pinned SDK and isolated FCU mocks,
+      including10Hz OFF/refused-ON and explicit safety neutralization.
+      Final build6/6, bridge16/16 suites, ESC5/5, power1/1, GNSS1/1 and
+      interface/backend contracts3+10 PASS. Known intermittent ESC graph
+      left_raw_ticks failure retained as WARN despite final PASS.
+- [ ] Complete product physical FWD/REV/inversion/safety acceptance only after
+      separately authorized deployment and fresh operator safety confirmation.
+- [ ] Resolve FCU failsafe for total companion loss and exclusive command
+      ownership; the host freshness watchdog does not prove either property.
+
+Oct10 passive audit supersedes the old frequency deficit below: ESC and RPM20Hz,
+SYS_STATUS5Hz, ATTITUDE20Hz, batteries5Hz per instance. No additional MAVLink
+rate setting is justified by that audit. Metric ticks_per_meter343 remains
+provisional; signed ESC transport validity and complete blade product physical
+acceptance are separate unresolved questions. Preserve the original9October
+report under mavlink-runtime-frequency-audit-20261009-original.md; current
+mavlink-runtime-frequency-audit.md retains the later dated optimization section.
+
 Shared checkpoints under `.agent/shared/checkpoints/` preserve evidence,
 decisions and resumable state. They are not the backlog.
 
@@ -423,6 +450,33 @@ Document the software contract that MowgliNext may depend on:
 - [ ] status semantics;
 - [ ] power/battery semantics;
 - [ ] command semantics;
+      P0 OFF-only preparation (2026-10-08): MowerControl OFF now queues native
+      ArduPilot servo neutral without DISARM; ON is inhibited without ARM.
+      No command/mode authority redesign. Pure state/contract
+      validation recorded in docs/investigations/2026-10-07-runtime-bringup/blade-off-only-patch.md;
+      native build/ROS graph and OFF-only deployment are now recorded in
+      blade-off-build-validation.md and blade-off-deployment-runtime.md in that folder.
+      Passive CAN renewal (17 s) and separate-container rescue surviving principal
+      SIGKILL passed; see can-renewal-independent-rescue-validation.md.
+      Subsequent blade A/B bench passed: opposite signed DroneCAN1034 ESC2 RPM,
+      operator mechanical direction recorded, CHARGE_NO_EFFECT limited to the
+      native low-excursion bench. See blade-charge-ab-acceptance.md; no software
+      direction inversion requested (operator will configure VESC after tests).
+      The subsequent software-only product patch now implements configurable
+      OFF/FWD/REV, neutral-before-inversion with real ESC stop proof, deferred ACK
+      responses, safety/startup/reconnection neutral, anti-spam and intention Status.
+      See blade-product-fwd-rev-implementation.md. ARM64 build and isolated graphs
+      passed, deployed2026-10-09. Corrected target startup/OFF capture now PASS.
+      Explicit bench ARM accepted, first product FWD refused before1450;
+      STOP, neutral/disarmed/RPMzero/CANoff restored, no REV/inversion/safety trial. See
+      blade-product-arm64-deployment.md. Its low-excursion
+      defaults apply only to the recorded baseline, never inferred from RPM.
+      Passive runtime-rate audit2026-10-09: distinct ESC samples1Hz versus
+      BladeControl freshness1000ms (FREQ-001 OPEN); initial diagnostic depth5
+      undercount excluded. See mavlink-runtime-frequency-audit.md and its
+      per-message proposals. No FCU interval or parameter change performed.
+      Signed transport through EscObservation, target acceptance of this new patch and
+      total-companion-loss failsafe remain pending. No nominal-speed acceptance.
 - [ ] startup behaviour;
 - [ ] shutdown behaviour;
 - [ ] reconnect/degraded behaviour;
