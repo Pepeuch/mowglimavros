@@ -68,6 +68,10 @@ if(BUILD_TESTING)
   find_package(ament_cmake_gtest REQUIRED)
   find_package(ament_cmake_test REQUIRED)
   find_package(mavros_gnss_adapter QUIET)
+  ament_add_test(test_blade_off_contract
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_blade_off_contract.py"
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
   ament_add_test(test_gnss_launch
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_gnss_launch.py"
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
@@ -86,6 +90,13 @@ if(BUILD_TESTING)
     COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_provider_graph.py"
       --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
     TIMEOUT 180
+    GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+  )
+  ament_add_test(test_blade_graph
+    COMMAND "${Python3_EXECUTABLE}" "${CMAKE_CURRENT_SOURCE_DIR}/test/test_blade_graph.py"
+      --bridge-executable $<TARGET_FILE:mavros_hardware_bridge_node>
+    ENV ROS_DOMAIN_ID=197 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+    TIMEOUT 120
     GENERATE_RESULT_FOR_RETURN_CODE_ZERO
   )
   ament_add_test(test_esc_graph
@@ -113,6 +124,10 @@ if(BUILD_TESTING)
     )
   endif()
   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
+  ament_add_gtest(test_blade_off_control test/test_blade_off_control.cpp)
+  target_include_directories(test_blade_off_control PRIVATE include)
+  ament_add_gtest(test_blade_control test/test_blade_control.cpp)
+  target_include_directories(test_blade_control PRIVATE include)
   ament_add_gtest(test_esc_telemetry_tracker test/test_esc_telemetry_tracker.cpp)
   target_include_directories(test_esc_telemetry_tracker PRIVATE include)
   target_link_libraries(test_esc_telemetry_tracker ${mavros_esc_wheel_odometry_TARGETS})

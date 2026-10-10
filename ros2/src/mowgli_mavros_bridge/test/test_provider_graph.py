@@ -68,7 +68,7 @@ def main():
         return response
 
     def command_request(request, response):
-        requests.append(("command", request.command, request.param1))
+        requests.append(("command", request.command, request.param1, request.param2))
         response.success = True
         return response
 
@@ -148,6 +148,9 @@ def main():
                     lambda: state_publisher.get_subscription_count() == 1
                     and safety_publisher.get_subscription_count() == 1
                 )
+                if args.provider == "ardupilot":
+                    wait_for(lambda: ("command", 183, 3.0, 1500.0) in requests)
+                requests.clear()  # Startup neutral is blade-owned, not traction-owned.
 
                 # Traction is forwarded while FCU armed=false. It must not ARM or
                 # change mode as a side effect of receiving /cmd_vel.
@@ -167,36 +170,48 @@ def main():
                 )
                 wait_for(lambda: ("mode", "MANUAL") in requests)
 
-                # MowgliNext ARM/DISARM maps only from MowerControl. The dry-run
-                # authorization turns an enable request into a real DISARM.
+                # ON is rejected while the global FCU is disarmed.
+                # Neither ON nor OFF owns the FCU ARM/DISARM authority.
                 before = len(requests)
                 response = call(
                     mower,
                     MowerControl.Request(mow_enabled=True, mow_direction=1),
                 )
-                assert response.success
-                wait_for(lambda: len(requests) == before + 1)
-                assert requests[before:] == [("arm", mowing_enabled)]
+                assert not response.success
+                assert requests[before:] == []
 
                 before = len(requests)
                 response = call(
                     mower,
                     MowerControl.Request(mow_enabled=False, mow_direction=0),
                 )
-                assert response.success
-                wait_for(lambda: len(requests) == before + 1)
-                assert requests[before:] == [("arm", False)]
+                if args.provider == "ardupilot":
+                    assert response.success
+                    assert requests[before:] == []  # Startup neutral already ACKed.
+                    for _ in range(10):
+                        assert call(
+                            mower,
+                            MowerControl.Request(mow_enabled=False, mow_direction=1),
+                        ).success
+                    assert requests[before:] == []
+                else:
+                    # No unsupported PX4 servo primitive or ARM alias fallback.
+                    assert not response.success
+                    assert requests[before:] == []
 
                 # E-stop produces HOLD + immediate neutral + blade DISARM and
                 # keeps subsequent traction neutral until the stop is released.
                 before_commands = len(commands)
                 before_requests = len(requests)
                 assert call(emergency, EmergencyStop.Request(emergency=1)).success
-                wait_for(lambda: len(requests) == before_requests + 2)
-                assert sorted(requests[before_requests:]) == [
+                expected = [
                     ("arm", False),
                     ("mode", "HOLD"),
                 ]
+                if args.provider == "ardupilot":
+                    expected.append(("command", 183, 3.0, 1500.0))
+                wait_for(lambda: len(requests) == before_requests + len(expected))
+                assert sorted(requests[before_requests:]) == sorted(expected)
                 wait_for(lambda: len(commands) > before_commands)
                 assert commands[-1].y == commands[-1].z == 0
                 stopped = send_twist(0.2, 0.0)

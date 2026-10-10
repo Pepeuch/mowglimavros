@@ -1,14 +1,18 @@
 #pragma once
 
+#include <deque>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include <geometry_msgs/msg/twist_stamped.hpp>
 #include <nav_msgs/msg/odometry.hpp>
 #include <rclcpp/rclcpp.hpp>
 #include <sensor_msgs/msg/imu.hpp>
 
+#include "mowgli_mavros_bridge/blade_control.hpp"
 #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
 #include "mowgli_mavros_bridge/firmware_provider.hpp"
 #include "mowgli_mavros_bridge/readiness_state.hpp"
@@ -17,6 +21,7 @@
 #include <mavros_esc_wheel_odometry/msg/esc_observation.hpp>
 #include <mavros_msgs/msg/manual_control.hpp>
 #include <mavros_msgs/msg/mavlink.hpp>
+#include <mavros_msgs/msg/rc_out.hpp>
 #include <mavros_msgs/msg/state.hpp>
 #include <mavros_msgs/msg/sys_status.hpp>
 #include <mavros_msgs/srv/command_bool.hpp>
@@ -59,8 +64,8 @@ private:
   void on_wheel_odom(const nav_msgs::msg::Odometry::SharedPtr msg);
 
   void on_mower_control(
-      const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
-      std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response);
+      const std::shared_ptr<rmw_request_id_t> header,
+      const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request);
 
   void on_emergency_stop(
       const std::shared_ptr<mowgli_interfaces::srv::EmergencyStop::Request> request,
@@ -73,6 +78,9 @@ private:
   void publish_readiness();
 
   bool send_arm_command(bool arm);
+  bool request_blade_neutral();
+  void drive_blade_locked();
+  void reply_blade(const std::shared_ptr<rmw_request_id_t>& header, bool success);
   bool send_mode_command(const std::string& mode);
   bool request_blade_disarm();
   void publish_neutral_manual_control();
@@ -104,6 +112,23 @@ private:
   bool ui_board_available_{false};
 
   bool mow_enabled_{false};
+  BladeControl blade_control_;
+  struct BladeReply
+  {
+    std::shared_ptr<rmw_request_id_t> header;
+    uint64_t revision;
+    int64_t started_ms;
+  };
+  std::vector<BladeReply> blade_replies_;
+  std::map<uint64_t, int64_t> blade_rpc_ids_;
+  int64_t last_fcu_receipt_ms_{-1}, last_hardware_safety_ms_{-1};
+  int64_t last_blade_output_stamp_{0};
+  struct BladeWireExpectation
+  {
+    int pwm;
+    int64_t until_ms;
+  };
+  std::deque<BladeWireExpectation> blade_wire_expectations_;
   uint8_t mow_direction_{0};
 
   SafetyState safety_state_;
@@ -140,6 +165,8 @@ private:
   rclcpp::Subscription<mowgli_interfaces::msg::HighLevelStatus>::SharedPtr sub_hl_status_;
   rclcpp::Subscription<mavros_msgs::msg::State>::SharedPtr sub_mavros_state_;
   rclcpp::Subscription<mavros_msgs::msg::SysStatus>::SharedPtr sub_mavros_sys_status_;
+  rclcpp::Subscription<mavros_msgs::msg::RCOut>::SharedPtr sub_blade_output_;
+  rclcpp::Subscription<mavros_msgs::msg::Mavlink>::SharedPtr sub_blade_wire_;
   rclcpp::Subscription<mavros_msgs::msg::Mavlink>::SharedPtr sub_mavlink_source_;
   rclcpp::Subscription<sensor_msgs::msg::Imu>::SharedPtr sub_mavros_imu_;
   rclcpp::Subscription<mowgli_interfaces::msg::Power>::SharedPtr sub_power_;
@@ -158,6 +185,7 @@ private:
 
   rclcpp::TimerBase::SharedPtr timer_status_;
   rclcpp::TimerBase::SharedPtr timer_diagnostics_;
+  rclcpp::TimerBase::SharedPtr timer_blade_;
 };
 
 }  // namespace mowgli_mavros_bridge

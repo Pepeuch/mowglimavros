@@ -5,6 +5,12 @@ hardware_bridge:
     manual_control_linear_scale: 1000.0
     manual_control_yaw_scale: 1000.0
     mowing_enabled: true
+    # OFF-only ArduPilot contract; ON remains inhibited. Read-only after startup.
+    blade_servo_channel: 3
+    blade_neutral_pwm: 1500
+    # Low-excursion acceptance baseline only; validate configuration per installation.
+    blade_forward_pwm: 1450
+    blade_reverse_pwm: 1550
 
     # Canonical Power is produced by the MAVROS battery_observer plugin.
     # This timeout is used only for bridge readiness/diagnostic freshness.

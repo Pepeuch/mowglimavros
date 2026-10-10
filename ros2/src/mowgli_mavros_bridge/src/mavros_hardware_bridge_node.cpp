@@ -13,10 +13,18 @@
 #include "mowgli_mavros_bridge/button_change_decoder.hpp"
 #include "mowgli_mavros_bridge/rover_manual_control.hpp"
 #include "mowgli_mavros_bridge/vesc_telemetry_projection.hpp"
+#include <rcl_interfaces/msg/parameter_descriptor.hpp>
 namespace mowgli_mavros_bridge
 {
 
 using namespace std::chrono_literals;
+
+static int64_t blade_steady_ms()
+{
+  return std::chrono::duration_cast<std::chrono::milliseconds>(
+             std::chrono::steady_clock::now().time_since_epoch())
+      .count();
+}
 
 MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& options)
     : rclcpp::Node("hardware_bridge", options)
@@ -30,6 +38,24 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
   manual_control_linear_scale_ = declare_parameter<double>("manual_control_linear_scale", 1000.0);
   manual_control_yaw_scale_ = declare_parameter<double>("manual_control_yaw_scale", 1000.0);
   mowing_enabled_ = declare_parameter<bool>("mowing_enabled", true);
+  // Fixed during a connection: never redirect an in-flight OFF to another ESC.
+  rcl_interfaces::msg::ParameterDescriptor blade_parameter;
+  blade_parameter.read_only = true;
+  const auto blade_channel = declare_parameter<int64_t>("blade_servo_channel", 3, blade_parameter);
+  const auto blade_neutral = declare_parameter<int64_t>("blade_neutral_pwm", 1500, blade_parameter);
+  const auto blade_forward = declare_parameter<int64_t>("blade_forward_pwm", 1450, blade_parameter);
+  const auto blade_reverse = declare_parameter<int64_t>("blade_reverse_pwm", 1550, blade_parameter);
+  if (blade_channel < 1 || blade_channel > 32 || blade_neutral < 1000 || blade_neutral > 2000 ||
+      blade_forward < 1000 || blade_forward > 2000 || blade_reverse < 1000 || blade_reverse > 2000)
+  {
+    throw std::invalid_argument("Blade channel/PWM is out of range");
+  }
+  BladeControl::Config blade_config;
+  blade_config.channel = static_cast<int>(blade_channel);
+  blade_config.neutral = static_cast<int>(blade_neutral);
+  blade_config.forward = static_cast<int>(blade_forward);
+  blade_config.reverse = static_cast<int>(blade_reverse);
+  blade_control_ = BladeControl(blade_config);
   battery_observation_timeout_s_ = declare_parameter<double>("battery_observation_timeout_s", 5.0);
   const auto readiness_timeout_s =
       declare_parameter<double>("readiness_observation_timeout_s", 5.0);
@@ -142,6 +168,8 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
         if (changed)
         {
           esc_tracker_.reset();
+          blade_control_.force_off(blade_steady_ms());
+          drive_blade_locked();
         }
       });
   rain_detected_ = declare_parameter<bool>("rain_detected_default", false);
@@ -171,6 +199,64 @@ void MavrosHardwareBridgeNode::create_subscriptions()
 {
   auto default_qos = rclcpp::SystemDefaultsQoS();
   auto sensor_qos = rclcpp::SensorDataQoS();
+
+  sub_blade_wire_ = create_subscription<mavros_msgs::msg::Mavlink>(
+      "/uas1/mavlink_sink",
+      sensor_qos,
+      [this](mavros_msgs::msg::Mavlink::SharedPtr message)
+      {
+        using Command = mavlink::common::msg::COMMAND_LONG;
+        if (message->framing_status != mavros_msgs::msg::Mavlink::FRAMING_OK ||
+            message->msgid != Command::MSG_ID)
+          return;
+        mavlink::mavlink_message_t raw{};
+        if (!mavros_msgs::mavlink::convert(*message, raw))
+          return;
+        mavlink::MsgMap map(&raw);
+        Command command;
+        command.deserialize(map);
+        std::lock_guard<std::mutex> lock(mutex_);
+        if (command.command != 183 || command.param1 != blade_control_.channel())
+          return;
+        const auto steady = blade_steady_ms();
+        while (!blade_wire_expectations_.empty() &&
+               blade_wire_expectations_.front().until_ms < steady)
+          blade_wire_expectations_.pop_front();
+        const auto own = std::find_if(blade_wire_expectations_.begin(),
+                                      blade_wire_expectations_.end(),
+                                      [&command](const auto& expected)
+                                      {
+                                        return expected.pwm == command.param2;
+                                      });
+        if (own != blade_wire_expectations_.end())
+        {
+          blade_wire_expectations_.erase(own);
+          return;
+        }
+        // An unmatched outgoing blade command invalidates local ownership/cache,
+        // even if its value happens to equal the cached command.
+        blade_control_.force_off(steady);
+        drive_blade_locked();
+      });
+
+  sub_blade_output_ = create_subscription<mavros_msgs::msg::RCOut>(
+      "/mavros/rc/out",
+      sensor_qos,
+      [this](mavros_msgs::msg::RCOut::SharedPtr message)
+      {
+        std::lock_guard<std::mutex> lock(mutex_);
+        const auto channel = static_cast<size_t>(blade_control_.channel() - 1);
+        if (message->header.stamp.sec < 0 || message->header.stamp.nanosec >= 1000000000U)
+          return;
+        const auto stamp = rclcpp::Time(message->header.stamp).nanoseconds();
+        if (mavros_state_.connected && channel < message->channels.size() &&
+            stamp > last_blade_output_stamp_)
+        {
+          last_blade_output_stamp_ = stamp;
+          blade_control_.output(message->channels[channel], blade_steady_ms());
+          drive_blade_locked();
+        }
+      });
 
   sub_cmd_vel_ = create_subscription<geometry_msgs::msg::TwistStamped>(
       "/cmd_vel",
@@ -254,6 +340,12 @@ void MavrosHardwareBridgeNode::create_clients()
 
 void MavrosHardwareBridgeNode::create_timers()
 {
+  timer_blade_ = create_wall_timer(50ms,
+                                   [this]()
+                                   {
+                                     std::lock_guard<std::mutex> lock(mutex_);
+                                     drive_blade_locked();
+                                   });
   const auto period = std::chrono::duration<double>(1.0 / std::max(1.0, status_publish_rate_hz_));
 
   timer_status_ = create_wall_timer(std::chrono::duration_cast<std::chrono::milliseconds>(period),
@@ -310,6 +402,13 @@ void MavrosHardwareBridgeNode::on_high_level_status(
 void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
+  if (mavros_state_.connected != msg->connected)
+  {
+    last_blade_output_stamp_ = 0;
+    blade_wire_expectations_.clear();
+  }
+  blade_control_.connection(msg->connected, blade_steady_ms());
+  last_fcu_receipt_ms_ = blade_steady_ms();
   if (mavros_state_.connected && !msg->connected)
   {
     last_power_receipt_ns_ = 0;
@@ -325,6 +424,7 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
   }
   readiness_.connection(msg->connected);
   mavros_state_ = *msg;
+  drive_blade_locked();
 }
 
 void MavrosHardwareBridgeNode::on_mavros_sys_status(
@@ -338,6 +438,7 @@ void MavrosHardwareBridgeNode::on_mavros_sys_status(
     const auto previous = safety_state_.hardware_safety_state();
     if (mavros_state_.connected)
     {
+      last_hardware_safety_ms_ = blade_steady_ms();
       safety_state_.observe_motor_outputs((msg->sensors_present & kMotorOutputs) != 0U,
                                           (msg->sensors_enabled & kMotorOutputs) != 0U);
       safety_engaged = previous != HardwareSafetyState::Engaged &&
@@ -443,6 +544,19 @@ void MavrosHardwareBridgeNode::on_esc_telemetry(
   if (mavros_state_.connected)
   {
     esc_tracker_.observe(*msg, receipt_ns);
+    if (blade_esc_slot_ >= 0 && msg->esc_index == blade_esc_slot_)
+    {
+      const auto state = esc_tracker_.project(msg->esc_index, receipt_ns);
+      blade_control_.sample(state.sample.source,
+                            state.last_update_ns,
+                            state.sample.count,
+                            state.sample.count_valid,
+                            state.online && state.sample.rpm_valid && state.age_ms >= 0 &&
+                                state.age_ms <= 1000,
+                            state.sample.rpm,
+                            blade_steady_ms());
+      drive_blade_locked();
+    }
   }
 }
 
@@ -463,18 +577,169 @@ void MavrosHardwareBridgeNode::on_wheel_odom(const nav_msgs::msg::Odometry::Shar
 }
 
 void MavrosHardwareBridgeNode::on_mower_control(
-    const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request,
-    std::shared_ptr<mowgli_interfaces::srv::MowerControl::Response> response)
+    const std::shared_ptr<rmw_request_id_t> header,
+    const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request)
 {
-  bool blade_authorized = false;
+  std::lock_guard<std::mutex> lock(mutex_);
+  drive_blade_locked();
+  if (request->mow_enabled > 1 || (request->mow_enabled && request->mow_direction > 1))
   {
-    std::lock_guard<std::mutex> lock(mutex_);
-    blade_authorized = request->mow_enabled && mowing_enabled_ &&
-                       !safety_state_.project(now().nanoseconds()).active_emergency;
-    mow_enabled_ = blade_authorized;
-    mow_direction_ = request->mow_direction;
+    reply_blade(header, false);
+    return;
   }
-  response->success = send_arm_command(blade_authorized);
+  const auto direction = !request->mow_enabled         ? BladeControl::Direction::Off
+                         : request->mow_direction == 0 ? BladeControl::Direction::Forward
+                                                       : BladeControl::Direction::Reverse;
+  const bool transport_available = std::string(firmware_provider_->name()) == "ardupilot" &&
+                                   cli_command_long_->service_is_ready();
+  if (!transport_available && direction != BladeControl::Direction::Off)
+  {
+    reply_blade(header, false);
+    return;
+  }
+  // OFF cancels a deferred ON even while the transport is absent. A queued
+  // neutral is not an ACK: fail this caller, but retain the OFF intent so that
+  // service recovery can never launch the superseded ON.
+  const auto result = blade_control_.request(direction, blade_steady_ms());
+  if (!transport_available)
+  {
+    drive_blade_locked();
+    reply_blade(header, false);
+    return;
+  }
+  if (result != BladeControl::Result::Pending)
+  {
+    reply_blade(header, result == BladeControl::Result::Confirmed);
+    return;
+  }
+  if (blade_replies_.size() >= 32)
+  {
+    // Never prevent OFF from preempting ON because the response queue is full.
+    drive_blade_locked();
+    reply_blade(header, false);
+    return;
+  }
+  blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
+  drive_blade_locked();
+}
+
+bool MavrosHardwareBridgeNode::request_blade_neutral()
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  blade_control_.force_off(blade_steady_ms());
+  drive_blade_locked();
+  return std::string(firmware_provider_->name()) == "ardupilot" &&
+         cli_command_long_->service_is_ready();
+}
+
+void MavrosHardwareBridgeNode::reply_blade(const std::shared_ptr<rmw_request_id_t>& header,
+                                           bool success)
+{
+  mowgli_interfaces::srv::MowerControl::Response response;
+  response.success = success;
+  try
+  {
+    srv_mower_control_->send_response(*header, response);
+  }
+  catch (const std::exception& error)
+  {
+    RCLCPP_WARN(get_logger(), "Blade reply failed: %s", error.what());
+  }
+}
+
+void MavrosHardwareBridgeNode::drive_blade_locked()
+{
+  const auto steady = blade_steady_ms();
+  while (!blade_wire_expectations_.empty() && blade_wire_expectations_.front().until_ms < steady)
+    blade_wire_expectations_.pop_front();
+  const auto safety = safety_state_.project(now().nanoseconds());
+  const bool allowed = mowing_enabled_ && mavros_state_.connected && mavros_state_.armed &&
+                       last_fcu_receipt_ms_ >= 0 && steady - last_fcu_receipt_ms_ <= 2500 &&
+                       last_hardware_safety_ms_ >= 0 && steady - last_hardware_safety_ms_ <= 3000 &&
+                       safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
+                       !safety.active_emergency && !safety.latched_emergency &&
+                       blade_esc_slot_ >= 0;
+  blade_control_.permission(allowed, steady);
+  blade_control_.tick(steady);
+  if (!blade_control_.satisfied() && std::any_of(blade_replies_.begin(),
+                                                 blade_replies_.end(),
+                                                 [this, steady](const auto& reply)
+                                                 {
+                                                   return reply.revision ==
+                                                              blade_control_.revision() &&
+                                                          steady - reply.started_ms > 20000;
+                                                 }))
+  {
+    // A failed service deadline must not leave a delayed ON intent alive.
+    blade_control_.service_timeout(steady);
+  }
+  for (auto it = blade_rpc_ids_.begin(); it != blade_rpc_ids_.end();)
+  {
+    if (!blade_control_.current(it->first))
+    {
+      cli_command_long_->remove_pending_request(it->second);
+      it = blade_rpc_ids_.erase(it);
+    }
+    else
+      ++it;
+  }
+  for (auto it = blade_replies_.begin(); it != blade_replies_.end();)
+  {
+    const bool invalid = it->revision != blade_control_.revision() || blade_control_.failed() ||
+                         steady - it->started_ms > 20000;
+    if (invalid || blade_control_.satisfied())
+    {
+      reply_blade(it->header, !invalid);
+      it = blade_replies_.erase(it);
+    }
+    else
+      ++it;
+  }
+  if (std::string(firmware_provider_->name()) != "ardupilot" ||
+      !cli_command_long_->service_is_ready())
+  {
+    return;
+  }
+  const auto command = blade_control_.next(steady);
+  if (!command)
+    return;
+  auto request = std::make_shared<mavros_msgs::srv::CommandLong::Request>();
+  request->broadcast = false;
+  request->command = 183;
+  request->param1 = static_cast<float>(command->channel);
+  request->param2 = static_cast<float>(command->pwm);
+  try
+  {
+    blade_wire_expectations_.push_back({command->pwm, steady + 2000});
+    const auto future_request = cli_command_long_->async_send_request(
+        request,
+        [this,
+         token = command->token](rclcpp::Client<mavros_msgs::srv::CommandLong>::SharedFuture future)
+        {
+          bool accepted = false;
+          try
+          {
+            const auto response = future.get();
+            accepted = response && response->success && response->result == 0;
+          }
+          catch (const std::exception& error)
+          {
+            RCLCPP_ERROR(get_logger(), "Blade ACK failed: %s", error.what());
+          }
+          std::lock_guard<std::mutex> callback_lock(mutex_);
+          blade_rpc_ids_.erase(token);
+          blade_control_.complete(token, accepted, blade_steady_ms());
+          drive_blade_locked();
+        });
+    blade_rpc_ids_[command->token] = future_request.request_id;
+  }
+  catch (const std::exception& error)
+  {
+    if (!blade_wire_expectations_.empty())
+      blade_wire_expectations_.pop_back();
+    blade_control_.complete(command->token, false, blade_steady_ms());
+    RCLCPP_ERROR(get_logger(), "Blade send failed: %s", error.what());
+  }
 }
 
 void MavrosHardwareBridgeNode::on_emergency_stop(
@@ -552,7 +817,8 @@ void MavrosHardwareBridgeNode::publish_status()
     msg.sound_module_available = sound_module_available_;
     msg.sound_module_busy = sound_module_busy_;
     msg.ui_board_available = ui_board_available_;
-    msg.mow_enabled = mow_enabled_;
+    msg.mow_enabled = blade_control_.enabled();
+    msg.blade_requested_direction = BladeControl::label(blade_control_.requested());
 
     // ArduPilot armed state is not a mower-controller health report.
     msg.mower_status = mowgli_interfaces::msg::Status::MOWER_STATUS_INITIALIZING;
@@ -919,6 +1185,7 @@ void MavrosHardwareBridgeNode::publish_neutral_manual_control()
 
 bool MavrosHardwareBridgeNode::request_blade_disarm()
 {
+  (void)request_blade_neutral();
   {
     std::lock_guard<std::mutex> lock(mutex_);
     mow_enabled_ = false;
@@ -928,6 +1195,7 @@ bool MavrosHardwareBridgeNode::request_blade_disarm()
 
 bool MavrosHardwareBridgeNode::request_hold_and_blade_disarm()
 {
+  (void)request_blade_neutral();
   {
     std::lock_guard<std::mutex> lock(mutex_);
     mow_enabled_ = false;
