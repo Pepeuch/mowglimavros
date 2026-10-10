@@ -13,6 +13,11 @@ This file answers: **what remains to be done and in what order?**
       Main integration authorized10October; GHCR publication guarded at both
       build and manifest tiers, default-off manual release with baseline-bound
       acceptance records. No actual hardware acceptance inferred from flags.
+      Workflow follow-up prepared10October: manual publication_mode=development
+      yields only test-<SHA> images without physical acceptance documents, to
+      enable bench acceptance. publication_mode=production alone requires the
+      flags and baseline-bound evidence. Both default to no publication; neither
+      mode deploys to the robot. See MM-DOCKER-EXPERIMENTAL-20261010.
 - [x] Validate the recovered source with the pinned SDK and isolated FCU mocks,
       including10Hz OFF/refused-ON and explicit safety neutralization.
       Final build6/6, bridge16/16 suites, ESC5/5, power1/1, GNSS1/1 and

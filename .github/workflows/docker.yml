@@ -5,10 +5,11 @@ on:
     branches: [ main, dev ]
   workflow_dispatch:
     inputs:
-      publish_production:
-        description: Publish images only after the blade safety release gates are validated
-        type: boolean
-        default: false
+      publication_mode:
+        description: Compile only, publish an experimental test-SHA image, or promote to production
+        type: choice
+        options: [none, development, production]
+        default: none
         required: true
       failsafe_acceptance_record:
         description: Tracked docs/acceptance/*.md record of physical companion-loss acceptance
@@ -30,7 +31,10 @@ jobs:
   pins:
     runs-on: ubuntu-latest
     outputs:
-      publish_production: ${{ steps.publication.outputs.enabled }}
+      publish_images: ${{ steps.publication.outputs.enabled }}
+      publish_production: ${{ steps.publication.outputs.production }}
+      publish_development: ${{ steps.publication.outputs.development }}
+      image_tag_prefix: ${{ steps.publication.outputs.image_tag_prefix }}
       mavros_version: ${{ steps.pins.outputs.mavros_version }}
       mavros_commit: ${{ steps.pins.outputs.mavros_commit }}
       universal_gnss_repository: ${{ steps.pins.outputs.universal_gnss_repository }}
@@ -46,21 +50,36 @@ jobs:
           python3 tools/test_mowgli_interface_contract.py
           python3 tools/test_external_backend_contract.py
 
-      - name: Resolve production publication gate
+      - name: Resolve publication mode and production gate
         id: publication
         env:
-          ALLOWED: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publish_production == true && vars.ENABLE_PRODUCTION_IMAGE_PUBLICATION == 'true' && vars.BLADE_FAILSAFE_VALIDATED == 'true' && vars.BLADE_EXCLUSIVE_AUTHORITY_VALIDATED == 'true' }}
+          DEVELOPMENT_ALLOWED: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publication_mode == 'development' }}
+          PRODUCTION_ALLOWED: ${{ github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main' && inputs.publication_mode == 'production' && vars.ENABLE_PRODUCTION_IMAGE_PUBLICATION == 'true' && vars.BLADE_FAILSAFE_VALIDATED == 'true' && vars.BLADE_EXCLUSIVE_AUTHORITY_VALIDATED == 'true' }}
           FAILSAFE_RECORD: ${{ inputs.failsafe_acceptance_record }}
           AUTHORITY_RECORD: ${{ inputs.authority_acceptance_record }}
         shell: bash
         run: |
           set -euo pipefail
-          if [ "$ALLOWED" = true ]; then
-            python3 tools/verify_production_acceptance.py
-            echo 'enabled=true' >> "$GITHUB_OUTPUT"
-          else
-            echo 'enabled=false' >> "$GITHUB_OUTPUT"
+          enabled=false
+          production=false
+          development=false
+          image_tag_prefix="ci-${GITHUB_SHA}"
+          if [ "$DEVELOPMENT_ALLOWED" = true ] && [ "$PRODUCTION_ALLOWED" = true ]; then
+            echo 'Conflicting publication modes' >&2
+            exit 1
           fi
+          if [ "$DEVELOPMENT_ALLOWED" = true ]; then
+            enabled=true
+            development=true
+            image_tag_prefix="test-${GITHUB_SHA}"
+          elif [ "$PRODUCTION_ALLOWED" = true ]; then
+            python3 tools/verify_production_acceptance.py
+            enabled=true
+            production=true
+            image_tag_prefix="production-${GITHUB_SHA}"
+          fi
+          printf 'enabled=%s\nproduction=%s\ndevelopment=%s\nimage_tag_prefix=%s\n' \
+            "$enabled" "$production" "$development" "$image_tag_prefix" >> "$GITHUB_OUTPUT"
 
       - id: pins
         shell: bash
@@ -121,7 +140,7 @@ jobs:
           skip-extraction: ${{ steps.ccache.outputs.cache-hit }}
 
       - name: Login to GHCR
-        if: needs.pins.outputs.publish_production == 'true'
+        if: needs.pins.outputs.publish_images == 'true'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io
@@ -135,8 +154,8 @@ jobs:
           file: ros2/Dockerfile
           platforms: ${{ matrix.platform }}
           pull: true
-          push: ${{ needs.pins.outputs.publish_production == 'true' }}
-          tags: ${{ env.IMAGE_NAME }}:build-${{ matrix.ros_distro }}-${{ matrix.architecture }}
+          push: ${{ needs.pins.outputs.publish_images == 'true' }}
+          tags: ${{ env.IMAGE_NAME }}:${{ needs.pins.outputs.image_tag_prefix }}-${{ matrix.ros_distro }}-${{ matrix.architecture }}
           build-args: |
             ROS_DISTRO=${{ matrix.ros_distro }}
             MAVROS_VERSION=${{ needs.pins.outputs.mavros_version }}
@@ -150,7 +169,7 @@ jobs:
 
   publish-manifest:
     needs: [pins, build]
-    if: needs.pins.outputs.publish_production == 'true'
+    if: needs.pins.outputs.publish_images == 'true'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -170,7 +189,28 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Extract metadata
+      - name: Snapshot production tag digests
+        if: needs.pins.outputs.publish_development == 'true'
+        id: production_baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          for publication_tag in latest lyrical; do
+            publication_digest="$(docker buildx imagetools inspect "${IMAGE_NAME}:${publication_tag}" | awk '$1 == "Digest:" && !digest { digest=$2 } END { print digest }')"
+            [[ "$publication_digest" =~ ^sha256:[[:xdigit:]]{64}$ ]]
+            printf '%s=%s\n' "$publication_tag" "$publication_digest" >> "$GITHUB_OUTPUT"
+            printf 'Production baseline %s: %s\n' "$publication_tag" "$publication_digest"
+          done
+
+      - name: Define experimental manifest tag
+        if: needs.pins.outputs.publish_development == 'true'
+        id: development_tag
+        env:
+          TEST_TAG: ${{ env.IMAGE_NAME }}:test-${{ github.sha }}
+        run: echo "tags=${TEST_TAG}" >> "$GITHUB_OUTPUT"
+
+      - name: Extract production metadata
+        if: needs.pins.outputs.publish_production == 'true'
         id: meta
         uses: docker/metadata-action@v5
         with:
@@ -183,13 +223,34 @@ jobs:
 
       - name: Publish multi-architecture manifest
         env:
-          TAGS: ${{ steps.meta.outputs.tags }}
+          TAGS: ${{ needs.pins.outputs.publish_development == 'true' && steps.development_tag.outputs.tags || steps.meta.outputs.tags }}
         run: |
           set -euo pipefail
           while IFS= read -r tag; do
             [ -n "$tag" ] || continue
             docker buildx imagetools create \
               --tag "$tag" \
-              "${IMAGE_NAME}:build-${{ matrix.ros_distro }}-amd64" \
-              "${IMAGE_NAME}:build-${{ matrix.ros_distro }}-arm64"
+              "${IMAGE_NAME}:${{ needs.pins.outputs.image_tag_prefix }}-${{ matrix.ros_distro }}-amd64" \
+              "${IMAGE_NAME}:${{ needs.pins.outputs.image_tag_prefix }}-${{ matrix.ros_distro }}-arm64"
           done <<< "$TAGS"
+
+      - name: Verify experimental manifest and unchanged production tags
+        if: needs.pins.outputs.publish_development == 'true'
+        env:
+          BASELINE_LATEST: ${{ steps.production_baseline.outputs.latest }}
+          BASELINE_LYRICAL: ${{ steps.production_baseline.outputs.lyrical }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          docker buildx imagetools inspect --raw "${IMAGE_NAME}:test-${GITHUB_SHA}" > "$RUNNER_TEMP/experimental-manifest.json"
+          python3 -c 'import json,sys; m=json.load(open(sys.argv[1])); p=sorted({(x.get("platform",{}).get("os"),x.get("platform",{}).get("architecture")) for x in m.get("manifests",[]) if x.get("platform",{}).get("os")=="linux"}); assert p==[("linux","amd64"),("linux","arm64")],p; print("Experimental platforms:",p)' "$RUNNER_TEMP/experimental-manifest.json"
+          for publication_tag in latest lyrical; do
+            publication_digest="$(docker buildx imagetools inspect "${IMAGE_NAME}:${publication_tag}" | awk '$1 == "Digest:" && !digest { digest=$2 } END { print digest }')"
+            if [ "$publication_tag" = latest ]; then
+              test "$publication_digest" = "$BASELINE_LATEST"
+            else
+              test "$publication_digest" = "$BASELINE_LYRICAL"
+            fi
+            printf 'Production unchanged %s: %s\n' "$publication_tag" "$publication_digest"
+          done
+          docker buildx imagetools inspect "${IMAGE_NAME}:test-${GITHUB_SHA}"

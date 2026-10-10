@@ -4,6 +4,10 @@ Navigation only. Not the project backlog.
 
 ## Active
 
+- `MM-DOCKER-EXPERIMENTAL-20261010` — workflow correction prepared: manual
+  test-SHA publication before physical acceptance, production gates retained,
+  automated builds unchanged; no commit/push/publication/deploy in this follow-up.
+
 - `MM-SESSION-RECOVERY-20261010` — complete47-file stash recovery reconciled in
   standalone repository; pinned build/mocks PASS, full review diff available,
   audits preserved, no commit/deploy and physical/failsafe gates still open.
