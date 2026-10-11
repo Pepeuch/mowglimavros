@@ -1,0 +1,12 @@
+{
+  "head": "8eecc57d4866052be102acad91bb357fe07bb938",
+  "branch": "main",
+  "status": " M .agent/shared/checkpoints/INDEX.md\n M docs/architecture/mowglinext-idle-blade-test-follow-up.md\n?? .agent/shared/checkpoints/retained/MM-DOCS-OWNERSHIP-20261011.md\n?? docs/investigations/documentation-ownership-20261011/\n?? docs/validation/gui-idle-blade-20261011-withdrawn/\n?? docs/validation/gui-idle-blade-20261011/\n?? docs/validation/gui-idle-blade-rollback-20261011/\n?? docs/validation/mavros-refresh/\n",
+  "index": "",
+  "input_sha256": {
+    "TODO.md": "dddd7d6e0301a67b6508c50c9a15d5327468b148a5a2fb4e7f461e753fe41983",
+    "README.md": "a7825d577d0dd2f28febe19d7a8a9f3825210ed6580cd24079f919439826158e",
+    "docs/status/mowglimavros_progress.svg": "7faee45707267bea0edd6e5111ba5ab506fa24bcbfd9de52e52837818999077e",
+    ".agent/shared/checkpoints/INDEX.md": "3537f546c47f8585c3ff7390fc2530aa9a2fe6640639316a40d535c8cda9d2fe"
+  }
+}
