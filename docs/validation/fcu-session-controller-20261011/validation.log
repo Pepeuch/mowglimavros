@@ -1,0 +1,623 @@
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [9.96s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [9.48s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [8.80s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [14.3s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [15.5s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [49.2s]
+
+Summary: 6 packages finished [1min 47s]
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [0.40s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [0.16s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [0.13s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [0.39s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [0.16s]
+Starting >>> mowgli_mavros_bridge
+--- stderr: mowgli_mavros_bridge
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp: In lambda function:
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp:326:19: error: ‘using std::__shared_ptr_access<mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >, __gnu_cxx::_S_atomic, false, false>::element_type = struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’ {aka ‘struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’} has no member named ‘session’
+  326 |         response->session = static_cast<uint8_t>(session_control_.session());
+      |                   ^~~~~~~
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp:327:19: error: ‘using std::__shared_ptr_access<mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >, __gnu_cxx::_S_atomic, false, false>::element_type = struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’ {aka ‘struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’} has no member named ‘authorized’
+  327 |         response->authorized = session_control_.active();
+      |                   ^~~~~~~~~~
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp:328:19: error: ‘using std::__shared_ptr_access<mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >, __gnu_cxx::_S_atomic, false, false>::element_type = struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’ {aka ‘struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’} has no member named ‘requested_mode’
+  328 |         response->requested_mode = session_control_.requested_mode();
+      |                   ^~~~~~~~~~~~~~
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp:329:19: error: ‘using std::__shared_ptr_access<mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >, __gnu_cxx::_S_atomic, false, false>::element_type = struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’ {aka ‘struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’} has no member named ‘confirmed_mode’
+  329 |         response->confirmed_mode = session_control_.confirmed_mode();
+      |                   ^~~~~~~~~~~~~~
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp:330:19: error: ‘using std::__shared_ptr_access<mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >, __gnu_cxx::_S_atomic, false, false>::element_type = struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’ {aka ‘struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’} has no member named ‘requested_arm’
+  330 |         response->requested_arm = session_control_.requested_arm();
+      |                   ^~~~~~~~~~~~~
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp:331:19: error: ‘using std::__shared_ptr_access<mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >, __gnu_cxx::_S_atomic, false, false>::element_type = struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’ {aka ‘struct mowgli_mavros_bridge::srv::SessionIntent_Response_<std::allocator<void> >’} has no member named ‘confirmed_arm’
+  331 |         response->confirmed_arm = session_control_.confirmed_arm();
+      |                   ^~~~~~~~~~~~~
+gmake[2]: *** [CMakeFiles/mavros_hardware_bridge_node.dir/build.make:79: CMakeFiles/mavros_hardware_bridge_node.dir/src/mavros_hardware_bridge_node.cpp.o] Error 1
+gmake[1]: *** [CMakeFiles/Makefile2:789: CMakeFiles/mavros_hardware_bridge_node.dir/all] Error 2
+gmake: *** [Makefile:146: all] Error 2
+---
+Failed   <<< mowgli_mavros_bridge [8.44s, exited with code 2]
+
+Summary: 5 packages finished [9.74s]
+  1 package failed: mowgli_mavros_bridge
+  1 package had stderr output: mowgli_mavros_bridge
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [0.44s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [0.17s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [0.14s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [0.34s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [0.14s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [46.6s]
+
+Summary: 6 packages finished [47.9s]
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [0.51s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [0.20s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [0.15s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [0.36s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [0.13s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [1.68s]
+
+Summary: 6 packages finished [3.09s]
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+      Start  1: test_blade_off_contract
+ 1/17 Test  #1: test_blade_off_contract ..........   Passed    0.10 sec
+      Start  2: test_gnss_launch
+ 2/17 Test  #2: test_gnss_launch .................   Passed    0.31 sec
+      Start  3: test_firmware_provider
+ 3/17 Test  #3: test_firmware_provider ...........   Passed    0.08 sec
+      Start  4: test_firmware_detection
+ 4/17 Test  #4: test_firmware_detection ..........   Passed    2.66 sec
+      Start  5: test_provider_graph
+ 5/17 Test  #5: test_provider_graph ..............***Failed    8.01 sec
+-- run_test.py: invoking following command in '/tmp/fcu-state/build/mowgli_mavros_bridge':
+ - /usr/bin/python3 /tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py --bridge-executable /tmp/fcu-state/build/mowgli_mavros_bridge/mavros_hardware_bridge_node
+[INFO] [1791716814.145119786] [hardware_bridge]: MAVROS hardware bridge started.
+
+Traceback (most recent call last):
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 283, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 205, in main
+    assert call(mower, MowerControl.Request(mow_enabled=0)).success
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+Traceback (most recent call last):
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 283, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 22, in main
+    subprocess.run([os.sys.executable, __file__, '--bridge-executable', args.bridge_executable,
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    '--provider', provider], env=env, check=True, timeout=90)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/usr/bin/python3', '/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py', '--bridge-executable', '/tmp/fcu-state/build/mowgli_mavros_bridge/mavros_hardware_bridge_node', '--provider', 'ardupilot']' returned non-zero exit status 1.
+-- run_test.py: return code 1
+-- run_test.py: generate result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_provider_graph.xml' with failed test
+-- run_test.py: verify result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_provider_graph.xml'
+
+      Start  6: test_blade_graph
+ 6/17 Test  #6: test_blade_graph .................***Failed   14.65 sec
+-- run_test.py: extra environment variables:
+ - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+ - ROS_DOMAIN_ID=197
+-- run_test.py: invoking following command in '/tmp/fcu-state/build/mowgli_mavros_bridge':
+ - /usr/bin/python3 /tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py --bridge-executable /tmp/fcu-state/build/mowgli_mavros_bridge/mavros_hardware_bridge_node
+Traceback (most recent call last):
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py", line 285, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py", line 217, in main
+    assert ("mode", "HOLD") in authority and ("arm", False) in authority
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+-- run_test.py: return code 1
+-- run_test.py: generate result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_blade_graph.xml' with failed test
+-- run_test.py: verify result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_blade_graph.xml'
+
+      Start  7: test_esc_graph
+ 7/17 Test  #7: test_esc_graph ...................***Failed   15.29 sec
+-- run_test.py: extra environment variables:
+ - ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST
+ - ROS_DOMAIN_ID=195
+-- run_test.py: invoking following command in '/tmp/fcu-state/build/mowgli_mavros_bridge':
+ - /usr/bin/python3 /tmp/fcu-src/ros2/src/mowgli_mavros_bridge/../mavros_esc_wheel_odometry/test/test_esc_graph.py --bridge-executable /tmp/fcu-state/build/mowgli_mavros_bridge/mavros_hardware_bridge_node
+[INFO] [1791716836.715353171] [mavros_node]: Starting mavros_node container
+[INFO] [1791716836.715389925] [mavros_node]: FCU URL: udp://127.0.0.1:19880@127.0.0.1:19881
+[INFO] [1791716836.715393929] [mavros_node]: GCS URL: 
+[INFO] [1791716836.715396384] [mavros_node]: UAS Prefix: /uas1
+[INFO] [1791716836.715398540] [mavros_node]: Starting mavros router node
+[INFO] [1791716836.721711750] [mavros_router]: Built-in SIMD instructions: SSE, SSE2
+[INFO] [1791716836.721762740] [mavros_router]: Built-in MAVLink package version: 2026.9.9
+[INFO] [1791716836.721766781] [mavros_router]: Known MAVLink dialects: common ardupilotmega ASLUAV AVSSUAS all csAirLink cubepilot development icarous loweheiser marsh paparazzi standard stemstudios storm32 uAvionix
+[INFO] [1791716836.721769974] [mavros_router]: MAVROS Router started
+[INFO] [1791716836.721831928] [mavros_node]: Starting mavros uas node
+[INFO] [1791716836.753338360] [mavros_router]: Requested to add endpoint: type: 0, url: udp://127.0.0.1:19880@127.0.0.1:19881
+[INFO] [1791716836.753483180] [mavros_router]: Endpoint link[1000] created
+[INFO] [1791716836.753987979] [mavros_router]: link[1000] opened successfully
+[INFO] [1791716836.754011233] [mavros_router]: Requested to add endpoint: type: 2, url: /uas1
+[INFO] [1791716836.754049627] [mavros_router]: Endpoint link[1001] created
+[INFO] [1791716836.755054093] [mavros_router]: link[1001] opened successfully
+[INFO] [1791716836.763448318] [mavros]: UAS Executor started, threads: 4
+[INFO] [1791716836.763511738] [mavros]: Plugin actuator_control ignored
+[INFO] [1791716836.763539986] [mavros]: Plugin adsb ignored
+[INFO] [1791716836.763549222] [mavros]: Plugin altitude ignored
+[INFO] [1791716836.763556918] [mavros]: Plugin battery_observer ignored
+[INFO] [1791716836.763564376] [mavros]: Plugin cam_imu_sync ignored
+[INFO] [1791716836.763571758] [mavros]: Plugin camera ignored
+[INFO] [1791716836.763579155] [mavros]: Plugin cellular_status ignored
+[INFO] [1791716836.763586575] [mavros]: Plugin command ignored
+[INFO] [1791716836.763596241] [mavros]: Plugin companion_process_status ignored
+[INFO] [1791716836.763603717] [mavros]: Plugin debug_value ignored
+[INFO] [1791716836.763610986] [mavros]: Plugin distance_sensor ignored
+[INFO] [1791716836.891415454] [mavros]: Plugin esc_status created
+[INFO] [1791716836.891614533] [mavros]: Plugin esc_status initialized
+[INFO] [1791716836.895734598] [mavros]: Plugin esc_telemetry created
+[INFO] [1791716836.895862867] [mavros]: Plugin esc_telemetry initialized
+[INFO] [1791716836.902312005] [mavros]: Plugin esc_wheel_odometry created
+[INFO] [1791716836.902356186] [mavros]: Plugin esc_wheel_odometry initialized
+[INFO] [1791716836.902361579] [mavros]: Plugin fake_gps ignored
+[INFO] [1791716836.902364842] [mavros]: Plugin ftp ignored
+[INFO] [1791716836.902367551] [mavros]: Plugin geofence ignored
+[INFO] [1791716836.902370250] [mavros]: Plugin gimbal_control ignored
+[INFO] [1791716836.902372785] [mavros]: Plugin global_position ignored
+[INFO] [1791716836.902375361] [mavros]: Plugin gps_input ignored
+[INFO] [1791716836.902377914] [mavros]: Plugin gps_rtk ignored
+[INFO] [1791716836.902380408] [mavros]: Plugin gps_status ignored
+[INFO] [1791716836.902382886] [mavros]: Plugin guided_target ignored
+[INFO] [1791716836.902385328] [mavros]: Plugin hil ignored
+[INFO] [1791716836.902390568] [mavros]: Plugin home_position ignored
+[INFO] [1791716836.902393122] [mavros]: Plugin imu ignored
+[INFO] [1791716836.902395690] [mavros]: Plugin landing_target ignored
+[INFO] [1791716836.902398412] [mavros]: Plugin local_position ignored
+[INFO] [1791716836.902401788] [mavros]: Plugin log_transfer ignored
+[INFO] [1791716836.902405034] [mavros]: Plugin mag_calibration_status ignored
+[INFO] [1791716836.902407828] [mavros]: Plugin manual_control ignored
+[INFO] [1791716836.902410349] [mavros]: Plugin mocap_pose_estimate ignored
+[INFO] [1791716836.902412986] [mavros]: Plugin mount_control ignored
+[INFO] [1791716836.902415779] [mavros]: Plugin mowgli_gnss ignored
+[INFO] [1791716836.902418190] [mavros]: Plugin nav_controller_output ignored
+[INFO] [1791716836.902420611] [mavros]: Plugin obstacle_distance ignored
+[INFO] [1791716836.902435213] [mavros]: Plugin obstacle_distance_3d ignored
+[INFO] [1791716836.902439433] [mavros]: Plugin odometry ignored
+[INFO] [1791716836.902441911] [mavros]: Plugin onboard_computer_status ignored
+[INFO] [1791716836.902444287] [mavros]: Plugin open_drone_id ignored
+[INFO] [1791716836.902446776] [mavros]: Plugin optical_flow ignored
+[INFO] [1791716836.902449367] [mavros]: Plugin param ignored
+[INFO] [1791716836.902451807] [mavros]: Plugin play_tune ignored
+[INFO] [1791716836.902454242] [mavros]: Plugin px4flow ignored
+[INFO] [1791716836.902456634] [mavros]: Plugin rallypoint ignored
+[INFO] [1791716836.902459125] [mavros]: Plugin rangefinder ignored
+[INFO] [1791716836.902467600] [mavros]: Plugin rc_io ignored
+[INFO] [1791716836.902471658] [mavros]: Plugin setpoint_accel ignored
+[INFO] [1791716836.902474172] [mavros]: Plugin setpoint_attitude ignored
+[INFO] [1791716836.902476625] [mavros]: Plugin setpoint_position ignored
+[INFO] [1791716836.902479054] [mavros]: Plugin setpoint_raw ignored
+[INFO] [1791716836.902481410] [mavros]: Plugin setpoint_trajectory ignored
+[INFO] [1791716836.902483847] [mavros]: Plugin setpoint_velocity ignored
+[INFO] [1791716836.902486286] [mavros]: Plugin sim_state ignored
+[INFO] [1791716836.997716058] [mavros]: Plugin sys_status created
+[INFO] [1791716836.998331165] [mavros]: Plugin sys_status initialized
+[INFO] [1791716836.998342965] [mavros]: Plugin sys_time ignored
+[INFO] [1791716836.998346650] [mavros]: Plugin tdr_radio ignored
+[INFO] [1791716836.998349597] [mavros]: Plugin terrain ignored
+[INFO] [1791716836.998352386] [mavros]: Plugin trajectory ignored
+[INFO] [1791716836.998355001] [mavros]: Plugin tunnel ignored
+[INFO] [1791716836.998360735] [mavros]: Plugin universal_gnss ignored
+[INFO] [1791716836.998363211] [mavros]: Plugin vfr_hud ignored
+[INFO] [1791716836.998365743] [mavros]: Plugin vibration ignored
+[INFO] [1791716836.998368240] [mavros]: Plugin vision_pose ignored
+[INFO] [1791716836.998370641] [mavros]: Plugin vision_speed ignored
+[INFO] [1791716836.998373098] [mavros]: Plugin waypoint ignored
+[INFO] [1791716836.998375512] [mavros]: Plugin wheel_odometry ignored
+[INFO] [1791716836.998377910] [mavros]: Plugin wind_estimation ignored
+[INFO] [1791716836.999232876] [mavros]: Built-in SIMD instructions: SSE, SSE2
+[INFO] [1791716836.999243827] [mavros]: Built-in MAVLink package version: 2026.9.9
+[INFO] [1791716836.999246522] [mavros]: Known MAVLink dialects: common ardupilotmega ASLUAV AVSSUAS all csAirLink cubepilot development icarous loweheiser marsh paparazzi standard stemstudios storm32 uAvionix
+[INFO] [1791716836.999249556] [mavros]: MAVROS UAS via /uas1 started. MY ID 255.191, TARGET ID 1.1
+[INFO] [1791716837.192226483] [mavros]: CON: Got HEARTBEAT, connected. FCU: ArduPilot
+[INFO] [1791716837.193413967] [mavros_router]: link[1001] detected remote address 255.191
+[ERROR] [1791716839.194659770] [mavros.sys]: VER: autopilot version service timeout
+[ERROR] [1791716839.203047225] [mavros.sys]: VER: command plugin service call failed!
+[ERROR] [1791716840.206889429] [mavros.sys]: VER: autopilot version service timeout
+[ERROR] [1791716840.207043125] [mavros.sys]: VER: command plugin service call failed!
+[WARN] [1791716840.207058447] [mavros.sys]: VER: broadcast request timeout, retries left 4
+[ERROR] [1791716841.210449165] [mavros.sys]: VER: autopilot version service timeout
+[ERROR] [1791716841.210585943] [mavros.sys]: VER: command plugin service call failed!
+[WARN] [1791716841.210601064] [mavros.sys]: VER: broadcast request timeout, retries left 3
+[ERROR] [1791716842.215853420] [mavros.sys]: VER: autopilot version service timeout
+[ERROR] [1791716842.216038621] [mavros.sys]: VER: command plugin service call failed!
+[WARN] [1791716842.216080720] [mavros.sys]: VER: unicast request timeout, retries left 2
+[ERROR] [1791716843.220502522] [mavros.sys]: VER: autopilot version service timeout
+[ERROR] [1791716843.220678244] [mavros.sys]: VER: command plugin service call failed!
+[WARN] [1791716843.220720261] [mavros.sys]: VER: unicast request timeout, retries left 1
+[ERROR] [1791716844.224887804] [mavros.sys]: VER: autopilot version service timeout
+[ERROR] [1791716844.225089036] [mavros.sys]: VER: command plugin service call failed!
+[WARN] [1791716844.225135172] [mavros.sys]: VER: unicast request timeout, retries left 0
+[ERROR] [1791716845.229831561] [mavros.sys]: VER: autopilot version service timeout
+[ERROR] [1791716845.229954884] [mavros.sys]: VER: command plugin service call failed!
+[WARN] [1791716845.229984279] [mavros.sys]: VER: your FCU don't support AUTOPILOT_VERSION, switched to default capabilities
+
+[INFO] [1791716836.715740692] [hardware_bridge]: MAVROS hardware bridge started.
+
+Traceback (most recent call last):
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/../mavros_esc_wheel_odometry/test/test_esc_graph.py", line 270, in <module>
+    if __name__ == '__main__': main()
+                               ~~~~^^
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/../mavros_esc_wheel_odometry/test/test_esc_graph.py", line 229, in main
+    assert float(tick_diagnostics()['ardupilot_legacy/left_raw_ticks']) == left_ticks
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+-- run_test.py: return code 1
+-- run_test.py: generate result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_esc_graph.xml' with failed test
+-- run_test.py: verify result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_esc_graph.xml'
+
+      Start  8: test_safety_graph
+ 8/17 Test  #8: test_safety_graph ................   Passed   18.50 sec
+      Start  9: test_gnss_graph
+ 9/17 Test  #9: test_gnss_graph ..................   Passed   36.94 sec
+      Start 10: test_readiness_state
+10/17 Test #10: test_readiness_state .............   Passed    0.05 sec
+      Start 11: test_fcu_session_controller
+11/17 Test #11: test_fcu_session_controller ......   Passed    0.04 sec
+      Start 12: test_blade_off_control
+12/17 Test #12: test_blade_off_control ...........   Passed    0.04 sec
+      Start 13: test_blade_control
+13/17 Test #13: test_blade_control ...............   Passed    0.05 sec
+      Start 14: test_esc_telemetry_tracker
+14/17 Test #14: test_esc_telemetry_tracker .......   Passed    0.05 sec
+      Start 15: test_command_provider
+15/17 Test #15: test_command_provider ............   Passed    0.05 sec
+      Start 16: test_rover_manual_control
+16/17 Test #16: test_rover_manual_control ........   Passed    0.05 sec
+      Start 17: test_safety_state
+17/17 Test #17: test_safety_state ................   Passed    0.06 sec
+
+82% tests passed, 3 tests failed out of 17
+
+Label Time Summary:
+gtest    =   0.39 sec*proc (8 tests)
+
+Total Test time (real) =  96.94 sec
+
+The following tests FAILED:
+	  5 - test_provider_graph (Failed)
+	  6 - test_blade_graph (Failed)
+	  7 - test_esc_graph (Failed)
+Errors while running CTest
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [0.44s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [0.12s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [0.13s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [0.40s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [0.14s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [45.4s]
+
+Summary: 6 packages finished [46.7s]
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+    Start 5: test_provider_graph
+1/3 Test #5: test_provider_graph ..............   Passed   21.43 sec
+    Start 6: test_blade_graph
+2/3 Test #6: test_blade_graph .................   Passed   38.44 sec
+    Start 7: test_esc_graph
+3/3 Test #7: test_esc_graph ...................   Passed   31.97 sec
+
+100% tests passed, 0 tests failed out of 3
+
+Total Test time (real) =  91.84 sec
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [0.43s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [0.11s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [0.13s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [0.36s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [0.12s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [43.9s]
+
+Summary: 6 packages finished [45.2s]
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+      Start  1: test_blade_off_contract
+ 1/17 Test  #1: test_blade_off_contract ..........   Passed    0.09 sec
+      Start  2: test_gnss_launch
+ 2/17 Test  #2: test_gnss_launch .................   Passed    0.25 sec
+      Start  3: test_firmware_provider
+ 3/17 Test  #3: test_firmware_provider ...........   Passed    0.08 sec
+      Start  4: test_firmware_detection
+ 4/17 Test  #4: test_firmware_detection ..........   Passed    2.65 sec
+      Start  5: test_provider_graph
+ 5/17 Test  #5: test_provider_graph ..............   Passed   29.39 sec
+      Start  6: test_blade_graph
+ 6/17 Test  #6: test_blade_graph .................   Passed   38.43 sec
+      Start  7: test_esc_graph
+ 7/17 Test  #7: test_esc_graph ...................   Passed   32.04 sec
+      Start  8: test_safety_graph
+ 8/17 Test  #8: test_safety_graph ................   Passed   18.51 sec
+      Start  9: test_gnss_graph
+ 9/17 Test  #9: test_gnss_graph ..................   Passed   37.00 sec
+      Start 10: test_readiness_state
+10/17 Test #10: test_readiness_state .............   Passed    0.06 sec
+      Start 11: test_fcu_session_controller
+11/17 Test #11: test_fcu_session_controller ......   Passed    0.05 sec
+      Start 12: test_blade_off_control
+12/17 Test #12: test_blade_off_control ...........   Passed    0.05 sec
+      Start 13: test_blade_control
+13/17 Test #13: test_blade_control ...............   Passed    0.05 sec
+      Start 14: test_esc_telemetry_tracker
+14/17 Test #14: test_esc_telemetry_tracker .......   Passed    0.05 sec
+      Start 15: test_command_provider
+15/17 Test #15: test_command_provider ............   Passed    0.05 sec
+      Start 16: test_rover_manual_control
+16/17 Test #16: test_rover_manual_control ........   Passed    0.04 sec
+      Start 17: test_safety_state
+17/17 Test #17: test_safety_state ................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Label Time Summary:
+gtest    =   0.42 sec*proc (8 tests)
+
+Total Test time (real) = 158.86 sec
+Test project /tmp/fcu-state/build/mavros_esc_wheel_odometry
+    Start 1: test_motor_tick_integrator
+1/5 Test #1: test_motor_tick_integrator .......   Passed    0.05 sec
+    Start 2: test_observation_engine
+2/5 Test #2: test_observation_engine ..........   Passed    0.05 sec
+    Start 3: test_signed_esc_contract
+3/5 Test #3: test_signed_esc_contract .........   Passed    0.05 sec
+    Start 4: test_wheel_odometry_core
+4/5 Test #4: test_wheel_odometry_core .........   Passed    0.05 sec
+    Start 5: test_wheel_tick_projection
+5/5 Test #5: test_wheel_tick_projection .......   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+gtest    =   0.24 sec*proc (5 tests)
+
+Total Test time (real) =   0.24 sec
+Test project /tmp/fcu-state/build/mavros_battery_observer
+    Start 1: test_power_state
+1/1 Test #1: test_power_state .................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gtest    =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.05 sec
+Test project /tmp/fcu-state/build/mavros_gnss_adapter
+    Start 1: test_gnss_adapter
+1/1 Test #1: test_gnss_adapter ................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gtest    =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.05 sec
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+OK
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.033s
+
+OK
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [0.44s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [0.16s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [0.17s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [0.40s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [0.15s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [45.9s]
+
+Summary: 6 packages finished [47.2s]
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+      Start  1: test_blade_off_contract
+ 1/17 Test  #1: test_blade_off_contract ..........   Passed    0.07 sec
+      Start  2: test_gnss_launch
+ 2/17 Test  #2: test_gnss_launch .................   Passed    0.26 sec
+      Start  3: test_firmware_provider
+ 3/17 Test  #3: test_firmware_provider ...........   Passed    0.08 sec
+      Start  4: test_firmware_detection
+ 4/17 Test  #4: test_firmware_detection ..........   Passed    2.68 sec
+      Start  5: test_provider_graph
+ 5/17 Test  #5: test_provider_graph ..............   Passed   32.13 sec
+      Start  6: test_blade_graph
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [0.43s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [0.20s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [0.14s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [0.38s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [0.20s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [45.4s]
+
+Summary: 6 packages finished [46.8s]
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+      Start  1: test_blade_off_contract
+ 1/17 Test  #1: test_blade_off_contract ..........   Passed    0.08 sec
+      Start  2: test_gnss_launch
+ 2/17 Test  #2: test_gnss_launch .................   Passed    0.26 sec
+      Start  3: test_firmware_provider
+ 3/17 Test  #3: test_firmware_provider ...........   Passed    0.08 sec
+      Start  4: test_firmware_detection
+ 4/17 Test  #4: test_firmware_detection ..........   Passed    2.65 sec
+      Start  5: test_provider_graph
+ 5/17 Test  #5: test_provider_graph ..............   Passed   40.50 sec
+      Start  6: test_blade_graph
+ 6/17 Test  #6: test_blade_graph .................   Passed   36.21 sec
+      Start  7: test_esc_graph
+ 7/17 Test  #7: test_esc_graph ...................   Passed   32.10 sec
+      Start  8: test_safety_graph
+ 8/17 Test  #8: test_safety_graph ................   Passed   18.52 sec
+      Start  9: test_gnss_graph
+ 9/17 Test  #9: test_gnss_graph ..................   Passed   36.94 sec
+      Start 10: test_readiness_state
+10/17 Test #10: test_readiness_state .............   Passed    0.07 sec
+      Start 11: test_fcu_session_controller
+11/17 Test #11: test_fcu_session_controller ......   Passed    0.05 sec
+      Start 12: test_blade_off_control
+12/17 Test #12: test_blade_off_control ...........   Passed    0.05 sec
+      Start 13: test_blade_control
+13/17 Test #13: test_blade_control ...............   Passed    0.05 sec
+      Start 14: test_esc_telemetry_tracker
+14/17 Test #14: test_esc_telemetry_tracker .......   Passed    0.04 sec
+      Start 15: test_command_provider
+15/17 Test #15: test_command_provider ............   Passed    0.06 sec
+      Start 16: test_rover_manual_control
+16/17 Test #16: test_rover_manual_control ........   Passed    0.06 sec
+      Start 17: test_safety_state
+17/17 Test #17: test_safety_state ................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 17
+
+Label Time Summary:
+gtest    =   0.43 sec*proc (8 tests)
+
+Total Test time (real) = 167.76 sec
+[ 50%] Building CXX object CMakeFiles/test_fcu_session_controller.dir/test/test_fcu_session_controller.cpp.o
+[100%] Linking CXX executable test_fcu_session_controller
+[100%] Built target test_fcu_session_controller
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+    Start  1: test_blade_off_contract
+1/2 Test  #1: test_blade_off_contract ..........   Passed    0.07 sec
+    Start 11: test_fcu_session_controller
+2/2 Test #11: test_fcu_session_controller ......   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Label Time Summary:
+gtest    =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.13 sec
+Test project /tmp/fcu-state/build/mavros_esc_wheel_odometry
+    Start 1: test_motor_tick_integrator
+1/5 Test #1: test_motor_tick_integrator .......   Passed    0.04 sec
+    Start 2: test_observation_engine
+2/5 Test #2: test_observation_engine ..........   Passed    0.05 sec
+    Start 3: test_signed_esc_contract
+3/5 Test #3: test_signed_esc_contract .........   Passed    0.05 sec
+    Start 4: test_wheel_odometry_core
+4/5 Test #4: test_wheel_odometry_core .........   Passed    0.05 sec
+    Start 5: test_wheel_tick_projection
+5/5 Test #5: test_wheel_tick_projection .......   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+gtest    =   0.24 sec*proc (5 tests)
+
+Total Test time (real) =   0.25 sec
+Test project /tmp/fcu-state/build/mavros_battery_observer
+    Start 1: test_power_state
+1/1 Test #1: test_power_state .................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gtest    =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.05 sec
+Test project /tmp/fcu-state/build/mavros_gnss_adapter
+    Start 1: test_gnss_adapter
+1/1 Test #1: test_gnss_adapter ................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Label Time Summary:
+gtest    =   0.05 sec*proc (1 test)
+
+Total Test time (real) =   0.05 sec
+...
+----------------------------------------------------------------------
+Ran 3 tests in 0.002s
+
+OK
+..........
+----------------------------------------------------------------------
+Ran 10 tests in 0.031s
+
+OK
+[ 25%] Building CXX object CMakeFiles/mavros_hardware_bridge_node.dir/src/mavros_hardware_bridge_node.cpp.o
+[ 50%] Linking CXX executable mavros_hardware_bridge_node
+[100%] Built target mavros_hardware_bridge_node
+[ 50%] Building CXX object CMakeFiles/test_fcu_session_controller.dir/test/test_fcu_session_controller.cpp.o
+[100%] Linking CXX executable test_fcu_session_controller
+[100%] Built target test_fcu_session_controller
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+    Start  5: test_provider_graph
+1/4 Test  #5: test_provider_graph ..............   Passed   40.39 sec
+    Start  6: test_blade_graph
+2/4 Test  #6: test_blade_graph .................   Passed   36.18 sec
+    Start  8: test_safety_graph
+3/4 Test  #8: test_safety_graph ................   Passed   18.46 sec
+    Start 11: test_fcu_session_controller
+4/4 Test #11: test_fcu_session_controller ......   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 4
+
+Label Time Summary:
+gtest    =   0.05 sec*proc (1 test)
+
+Total Test time (real) =  95.07 sec
+[ 25%] Building CXX object CMakeFiles/mavros_hardware_bridge_node.dir/src/mavros_hardware_bridge_node.cpp.o
+[ 50%] Linking CXX executable mavros_hardware_bridge_node
+[100%] Built target mavros_hardware_bridge_node
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+    Start 5: test_provider_graph
+1/2 Test #5: test_provider_graph ..............   Passed   41.44 sec
+    Start 6: test_blade_graph
+2/2 Test #6: test_blade_graph .................   Passed   36.26 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =  77.71 sec
+3cfcc80d2772936a2412e39e17659919d8c22c723e67a19c67c127f68052bca6  /tmp/fcu-state/build/mowgli_mavros_bridge/mavros_hardware_bridge_node
+9ab08c37807c51e6ead04f46b35d02fd72102ab7ccb4d679c4ea6fc84c69d213  /tmp/fcu-state/install/mowgli_mavros_bridge/lib/mowgli_mavros_bridge/mavros_hardware_bridge_node
+/tmp/fcu-state/build.sh: line 13: rg: command not found
+PASS provider=ardupilot mowing_enabled=true: idle/transitions/ARM/FCU-confirmation/GUIDED/blade-test/safety/refusal/reconnect

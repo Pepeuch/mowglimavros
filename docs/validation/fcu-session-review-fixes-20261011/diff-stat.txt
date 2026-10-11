@@ -1,0 +1,24 @@
+ .agent/shared/checkpoints/INDEX.md                 |   7 +
+ .../retained/MM-FCU-ADAPTER-20261011.md            |  72 +++
+ .../retained/MM-FCU-REVIEW-FIXES-20261011.md       |  50 ++
+ AGENTS.md                                          |   6 +
+ README.md                                          |   8 +-
+ TODO.md                                            |  20 +
+ docs/architecture/fcu-session-controller.md        | 168 +++++++
+ .../mowglinext-idle-blade-test-follow-up.md        |  77 ++++
+ docs/status/mowglimavros_progress.svg              |   6 +-
+ ros2/src/mowgli_mavros_bridge/CMakeLists.txt       |  12 +
+ ros2/src/mowgli_mavros_bridge/README.md            |  23 +-
+ .../include/mavros_hardware_bridge_node.hpp        |  22 +-
+ .../fcu_session_controller.hpp                     | 203 ++++++++
+ .../mowgli_mavros_bridge/firmware_provider.hpp     |  26 +-
+ .../mowgli_mavros_bridge/src/firmware_provider.cpp |  20 +
+ .../src/mavros_hardware_bridge_node.cpp            | 456 +++++++++++-------
+ .../mowgli_mavros_bridge/test/test_blade_graph.py  |  43 +-
+ .../test/test_blade_off_contract.py                |   4 +-
+ .../test/test_bridge_regressions.cpp               |  94 ++++
+ .../test/test_command_provider.cpp                 |  19 +
+ .../test/test_fcu_session_controller.cpp           | 318 +++++++++++++
+ .../test/test_provider_graph.py                    | 509 ++++++++++++---------
+ .../mowgli_mavros_bridge/test/test_safety_graph.py |   9 +-
+ 23 files changed, 1768 insertions(+), 404 deletions(-)

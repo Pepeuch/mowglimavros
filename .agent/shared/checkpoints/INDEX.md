@@ -38,6 +38,16 @@ Navigation only. Not the project backlog.
 
 ## Retained
 
+- `MM-FCU-MAIN-COMMIT-20261011` — direct main commit authorization, verified unchanged
+  origin/main, lossless worktree transfer, original safety mode paths restored and mocks.
+
+- `MM-FCU-REVIEW-FIXES-20261011` — isolated blade refusal/expiry cleanup, OFF ordering,
+  priority DISARM without HOLD, regression evidence and real idle GUI blocker follow-up.
+
+- `MM-FCU-ADAPTER-20261011` — minimal MowgliNext-driven MODE/ARM sequencer and
+  direct backend blade test in HOLD (real idle GUI blocker documented); software/mocks PASS, Pixhawk and independent
+  companion-loss failsafe acceptance remain HARDWARE_REQUIRED; no push/deploy.
+
 - `MM-BLADE-HISTORY-RECOVERY-20261010` — Oct9 session remains in stash c93548f;
   no published feature commit; original recovery review retained.
 

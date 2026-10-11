@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="1" failures="0" disabled="0" errors="0" time="0.247" timestamp="2026-10-11T12:42:25.760" name="AllTests">
+  <testsuite name="BridgeRegression" tests="1" failures="0" disabled="0" skipped="0" errors="0" time="0.247" timestamp="2026-10-11T12:42:25.760">
+    <testcase name="OffCancelsReadyQueuedOnBeforeDispatch" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_bridge_regressions.cpp" line="60" status="run" result="completed" time="0.247" timestamp="2026-10-11T12:42:25.760" classname="mowgli_mavros_bridge.BridgeRegression" />
+  </testsuite>
+</testsuites>

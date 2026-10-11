@@ -1,0 +1,3 @@
+[ 20%] Building CXX object CMakeFiles/test_bridge_regressions.dir/test/test_bridge_regressions.cpp.o
+[ 40%] Linking CXX executable test_bridge_regressions
+[100%] Built target test_bridge_regressions

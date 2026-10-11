@@ -1,0 +1,44 @@
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+      Start  1: test_blade_off_contract
+ 1/18 Test  #1: test_blade_off_contract ..........   Passed    0.08 sec
+      Start  2: test_gnss_launch
+ 2/18 Test  #2: test_gnss_launch .................   Passed    0.26 sec
+      Start  3: test_firmware_provider
+ 3/18 Test  #3: test_firmware_provider ...........   Passed    0.08 sec
+      Start  4: test_firmware_detection
+ 4/18 Test  #4: test_firmware_detection ..........   Passed    2.66 sec
+      Start  5: test_provider_graph
+ 5/18 Test  #5: test_provider_graph ..............   Passed   63.84 sec
+      Start  6: test_blade_graph
+ 6/18 Test  #6: test_blade_graph .................   Passed   36.18 sec
+      Start  7: test_esc_graph
+ 7/18 Test  #7: test_esc_graph ...................   Passed   32.08 sec
+      Start  8: test_safety_graph
+ 8/18 Test  #8: test_safety_graph ................   Passed   18.51 sec
+      Start  9: test_gnss_graph
+ 9/18 Test  #9: test_gnss_graph ..................   Passed   37.11 sec
+      Start 10: test_bridge_regressions
+10/18 Test #10: test_bridge_regressions ..........   Passed    0.34 sec
+      Start 11: test_readiness_state
+11/18 Test #11: test_readiness_state .............   Passed    0.06 sec
+      Start 12: test_fcu_session_controller
+12/18 Test #12: test_fcu_session_controller ......   Passed    0.05 sec
+      Start 13: test_blade_off_control
+13/18 Test #13: test_blade_off_control ...........   Passed    0.05 sec
+      Start 14: test_blade_control
+14/18 Test #14: test_blade_control ...............   Passed    0.05 sec
+      Start 15: test_esc_telemetry_tracker
+15/18 Test #15: test_esc_telemetry_tracker .......   Passed    0.05 sec
+      Start 16: test_command_provider
+16/18 Test #16: test_command_provider ............   Passed    0.05 sec
+      Start 17: test_rover_manual_control
+17/18 Test #17: test_rover_manual_control ........   Passed    0.05 sec
+      Start 18: test_safety_state
+18/18 Test #18: test_safety_state ................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 18
+
+Label Time Summary:
+gtest    =   0.75 sec*proc (9 tests)
+
+Total Test time (real) = 191.55 sec

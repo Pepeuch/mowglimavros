@@ -1,0 +1,11 @@
+{
+  "repository": "Pepeuch/MowgliMAVROS",
+  "branch": "main",
+  "base": "e7d516cb0adca1872dd9d10fb66412857d38b0c8",
+  "main_before_commit": "e7d516cb0adca1872dd9d10fb66412857d38b0c8",
+  "origin_main_refetched": "e7d516cb0adca1872dd9d10fb66412857d38b0c8",
+  "files_preserved_on_switch": 91,
+  "mowglinext_head": "7748af56acd98449938750714d2286193cf6143a",
+  "mowglinext_gitlink_unchanged": "e7d516cb0adca1872dd9d10fb66412857d38b0c8",
+  "push_authorized": false
+}

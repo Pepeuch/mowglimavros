@@ -189,6 +189,12 @@ A task is complete only when required acceptance is passed or explicitly identif
 Update `TODO.md`, roadmap, architecture docs, or compatibility documentation only when proven project state actually changes.
 Documentation must describe current behaviour, not intended behaviour.
 
+Persist analytical handoffs, validation reports and evidence referenced by checkpoints
+inside the owning repository (for example `docs/validation/<task>/`). Temporary
+external execution directories are not the sole archive: copy the relevant
+reports and provenance into the repository before handoff. Existing rules for
+local versus shared checkpoints and sensitive/large artifacts still apply.
+
 Before stopping, report concisely: files changed and why; validation executed; important evidence; known limitations/open items; repository/branch/`HEAD`; commit status; push status; exact next step if incomplete.
 
 ```md

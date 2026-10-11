@@ -202,13 +202,16 @@ def main():
                 ).get("right_lifted")
                 == "true"
             )
+            before_lift = len(requests)
             send(button(0x03))
             wait(
                 lambda: emergencies
                 and emergencies[-1].active_emergency
                 and emergencies[-1].reason == "WHEEL_LIFT"
             )
-            wait(lambda: ("arm", False) in requests)
+            wait(lambda: ("arm", False) in requests[before_lift:])
+            assert ("mode", "HOLD") not in requests[before_lift:]
+            assert ("arm", True) not in requests
             wait(
                 lambda: latest_diagnostic("mowgli_mavros_bridge/wheel_lift").level
                 == DiagnosticStatus.ERROR
@@ -230,9 +233,9 @@ def main():
                 ).message
                 == "engaged"
             )
-            wait(lambda: len(requests) >= before + 2)
-            assert ("mode", "HOLD") in requests[before:]
-            assert ("arm", False) in requests[before:]
+            # Hardware switch retains its explicit HOLD path, unlike lift.
+            wait(lambda: ("mode", "HOLD") in requests[before:])
+            assert ("arm", True) not in requests
             wait(emergency_stop.service_is_ready)
             future = emergency_stop.call_async(EmergencyStop.Request(emergency=0))
             wait(future.done)

@@ -17,7 +17,7 @@ from sensor_msgs.msg import Imu
 from geometry_msgs.msg import Quaternion
 from mavros_msgs.srv import CommandBool, CommandLong, SetMode
 from mavros_esc_wheel_odometry.msg import EscObservation
-from mowgli_interfaces.msg import Status
+from mowgli_interfaces.msg import Status, HighLevelStatus
 from mowgli_interfaces.srv import MowerControl, EmergencyStop
 
 
@@ -30,7 +30,8 @@ def main():
     commands, statuses, authority = [], [], []
     pwm, rpm, count = 1500, 0, 0
     freeze, reject, delayed = False, False, False
-    state = State(connected=True, armed=True)
+    state = State(connected=True, armed=False, mode="HOLD")
+    hl = HighLevelStatus(state=1)
     tilted = False
     safety = SysStatus(sensors_present=1 << 15, sensors_enabled=1 << 15)
 
@@ -46,11 +47,13 @@ def main():
 
     def arm(req, res):
         authority.append(("arm", req.value))
+        state.armed = req.value
         res.success = True
         return res
 
     def mode(req, res):
         authority.append(("mode", req.custom_mode))
+        state.mode = req.custom_mode
         res.mode_sent = True
         return res
 
@@ -63,6 +66,7 @@ def main():
             node.create_publisher(RCOut, "/mavros/rc/out", 10)]
     raw_pub = node.create_publisher(Mavlink, "/uas1/mavlink_source", 10)
     outgoing = node.create_publisher(Mavlink, "/uas1/mavlink_sink", 10)
+    hl_pub = node.create_publisher(HighLevelStatus, "/behavior_tree_node/high_level_status", 10)
     imu_pub = node.create_publisher(Imu, "/mavros/imu/data", 10)
 
     def frame(msgid, payload):
@@ -81,6 +85,8 @@ def main():
         esc_stamp = node.get_clock().now().to_msg()
         if delayed:
             esc_stamp.sec -= 2
+        state.header.stamp = safety.header.stamp = stamp
+        hl_pub.publish(hl)
         pubs[0].publish(state)
         pubs[1].publish(safety)
         pubs[2].publish(EscObservation(header=Header(stamp=esc_stamp), metadata_stamp=esc_stamp,
@@ -114,6 +120,12 @@ def main():
     def mow(enabled, direction=0):
         return call(mower, MowerControl.Request(mow_enabled=enabled, mow_direction=direction)).success
 
+    def activate_mowing():
+        hl.state = 4
+        spin(.2)
+        wait(lambda: state.mode == "MANUAL" and state.armed)
+        spin(.1)
+
     def neutral_reconnect():
         nonlocal rpm, pwm, freeze, reject
         state.connected = False
@@ -122,6 +134,7 @@ def main():
         spin(.3)
         state.connected = True
         spin(1.5)
+        activate_mowing()
 
     with tempfile.TemporaryDirectory(prefix="blade-graph-") as directory:
         with open(Path(directory) / "bridge.log", "w+") as log:
@@ -138,16 +151,16 @@ def main():
                     spin(.1)  # BT repetition at 10 Hz, not just a tight loop.
                 assert len(commands) == initial
                 assert authority == []
-                # No FCU ARM owner is introduced by repeated unauthorized ON.
-                state.armed = False
-                spin(.2)
-                denied_baseline = len(commands)
-                for _ in range(10):
-                    assert not mow(True)
-                    spin(.1)
-                assert len(commands) == denied_baseline
-                assert authority == []
-                state.armed = True
+                # A GUI blade ON in idle automatically arms in HOLD.
+                assert mow(True)
+                assert state.mode == "HOLD" and state.armed
+                assert ("arm", True) in authority
+                assert mow(False)
+                wait(lambda: not state.armed)
+                # An actual MowgliNext movement state starts MANUAL + ARM.
+                activate_mowing()
+                assert ("mode", "MANUAL") in authority and state.armed
+                authority.clear()
                 spin(1.5)
                 for step, (direction, target) in enumerate(((0, 1450), (1, 1550), (0, 1450))):
                     before = len(commands)
@@ -191,8 +204,12 @@ def main():
                 assert call(emergency, EmergencyStop.Request(emergency=1)).success
                 wait(lambda: (183, 3., 1500.) in commands[before:])
                 assert not mow(True)
-                assert ("mode", "HOLD") in authority and ("arm", False) in authority
+                wait(lambda: ("mode", "HOLD") in authority and ("arm", False) in authority)
                 assert call(emergency, EmergencyStop.Request(emergency=0)).success
+                spin(.3)
+                # Current MowgliNext state remains active: automatic resume,
+                # without tokens, extra services or another user action.
+                wait(lambda: state.mode == "MANUAL" and state.armed)
                 spin(1.5)
                 assert mow(True)
                 freeze = True

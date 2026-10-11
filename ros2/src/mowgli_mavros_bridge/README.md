@@ -23,17 +23,21 @@ conversion. The bridge applies HOLD plus DISARM for Safety/E-stop.
 | Mode request path implemented | Yes | Yes |
 | Default emergency policy | `HOLD` + disarm | Existing `HOLD` + disarm preserved |
 | MowerControl OFF | Native183 servo neutral, deduplicated | Unsupported (rejected) |
-| MowerControl ON | Native183, guarded FWD/REV, already armed FCU required | Unsupported (rejected) |
+| MowerControl ON | Native183, guarded FWD/REV, automatic ARM confirmed by state | Unsupported (rejected) |
 | Physical actuation validated | No | No |
 
 Capabilities describe implemented software paths; physical actuation still depends
-on the configured FCU and actuators. Valid finite `/cmd_vel` input is mapped
-to Rover `MANUAL_CONTROL`, independently of FCU armed state; active Safety/E-stop
-produces neutral traction. The bridge retains
+on the configured FCU and actuators. Current movement states request MANUAL (recording/manual mowing) or ArduRover
+GUIDED (autonomous), then automatic ARM. Traction waits for FCU mode/ARM
+confirmation. MANUAL retains the Rover MANUAL_CONTROL mapping; GUIDED uses body
+velocity/yaw-rate PositionTarget. Idle and Safety/E-stop neutralize traction. The bridge retains
 timestamps, MAVROS clients and asynchronous response handling:
 emergency-service success means local forwarding, not FCU confirmation.
 
-`mower_control` owns only the blade actuator, never ARM/DISARM or mode changes.
+`BladeControl` owns the blade actuator. The independent FCU adapter serializes
+MODE/ARM/DISARM according to existing MowgliNext states and mower requests.
+A direct MowerControl ON at idle temporarily arms in HOLD with neutral traction. OFF leaves an
+active movement session armed, and otherwise ends the temporary arming.
 ArduPilot uses `MAV_CMD_DO_SET_SERVO` (183); startup parameters are read-only:
 `blade_servo_channel=3`, `blade_neutral_pwm=1500`, `blade_forward_pwm=1450`,
 `blade_reverse_pwm=1550`. The directional defaults are LOW-EXCURSION acceptance
@@ -43,7 +47,8 @@ direction is inferred from RPM. Enable0 requests OFF regardless of direction;
 enable1/direction0 requests forward, enable1/direction1 reverse. Other ON values
 are rejected. ON also requires a connected, already armed FCU, fresh heartbeat,
 released/fresh hardware safety, no active/latched emergency, `mowing_enabled`,
-and valid/fresh ESC acquisition. The blade does not arm the FCU for the caller.
+and valid/fresh ESC acquisition. The adapter automatically requests ARM before passing ON to BladeControl;
+ArduPilot still decides whether ARM succeeds.
 The blade gate also bounds the ROS acquisition-stamp age to1000ms before
 recording monotonic receipt liveness. The generic ESC tracker has a separate
 3s display timeout; it must not freshen delayed acquisitions for blade control.
@@ -134,3 +139,9 @@ Mowgli wheel PID is not used by the MAVROS command path. The shared feed-forward
 tuner calibrates `ticks_per_meter` and `manual_control_linear_scale`; the latter
 is persisted through the canonical `wheel_pid_pwm_per_mps` setting.
 Cross-node mapping/calibration coherence remains the installation owner's responsibility.
+
+See [minimal FCU adapter](../../../docs/architecture/fcu-session-controller.md)
+for ordering, refusal diagnostics and exact remaining Pixhawk acceptance gates.
+No additional ROS interface is introduced. The actual idle GUI path currently
+forwards OFF in MowgliNext; its required internal functional correction is
+[documented separately](../../../docs/architecture/mowglinext-idle-blade-test-follow-up.md).

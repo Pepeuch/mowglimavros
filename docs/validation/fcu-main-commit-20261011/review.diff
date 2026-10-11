@@ -1,0 +1,3006 @@
+diff --git a/.agent/shared/checkpoints/INDEX.md b/.agent/shared/checkpoints/INDEX.md
+index 9beb89c..43f82d9 100644
+--- a/.agent/shared/checkpoints/INDEX.md
++++ b/.agent/shared/checkpoints/INDEX.md
+@@ -38,6 +38,16 @@ Navigation only. Not the project backlog.
+ 
+ ## Retained
+ 
++- `MM-FCU-MAIN-COMMIT-20261011` — direct main commit authorization, verified unchanged
++  origin/main, lossless worktree transfer, original safety mode paths restored and mocks.
++
++- `MM-FCU-REVIEW-FIXES-20261011` — isolated blade refusal/expiry cleanup, OFF ordering,
++  priority DISARM without HOLD, regression evidence and real idle GUI blocker follow-up.
++
++- `MM-FCU-ADAPTER-20261011` — minimal MowgliNext-driven MODE/ARM sequencer and
++  direct backend blade test in HOLD (real idle GUI blocker documented); software/mocks PASS, Pixhawk and independent
++  companion-loss failsafe acceptance remain HARDWARE_REQUIRED; no push/deploy.
++
+ - `MM-BLADE-HISTORY-RECOVERY-20261010` — Oct9 session remains in stash c93548f;
+   no published feature commit; original recovery review retained.
+ 
+diff --git a/.agent/shared/checkpoints/retained/MM-FCU-ADAPTER-20261011.md b/.agent/shared/checkpoints/retained/MM-FCU-ADAPTER-20261011.md
+new file mode 100644
+index 0000000..f49d951
+--- /dev/null
++++ b/.agent/shared/checkpoints/retained/MM-FCU-ADAPTER-20261011.md
+@@ -0,0 +1,76 @@
++# MM-FCU-ADAPTER-20261011
++
++Historical software baseline; current Git strategy and final safety-path audit
++are recorded in MM-FCU-MAIN-COMMIT-20261011. Earlier no-commit/feature-branch
++restrictions were superseded by explicit user authorization.
++
++Disposition RETAINED — software implementation and evidence; physical gates open.
++Repository /tmp/mowglimavros-fcu-session, feat/fcu-session-controller,
++HEAD/base e7d516cb0adca1872dd9d10fb66412857d38b0c8 (origin/main at branch creation).
++No commit/staging in the real index/push/merge/publication/deployment.
++MowgliNext 7748af56acd98449938750714d2286193cf6143a remains clean;
++gitlink remains e7d516cb0adca1872dd9d10fb66412857d38b0c8.
++
++Prior validation below is the pre-review baseline; affected acceptance is
++superseded by MM-FCU-REVIEW-FIXES-20261011 and its evidence archive.
++
++## Approved architecture
++
++MowgliNext sole functional authority. No extra service, schema, authorization
++protocol, intent tokens/generations or session watchdog. The real idle GUI path
++is blocked in MowgliNext; see the review-fixes checkpoint and follow-up document.
++Minimal FCU MODE/ARM sequencer: demand from existing HighLevelStatus and MowerControl,
++observed State, one pending RPC, accepted ACK + matching FCU state, deduplication,
++refusal/confirmation-timeout diagnostics without tick retries. RPC serials are
++callback correlation only. Late actual FCU confirmation can fulfill the target.
++ArduPilot idle/base HOLD/disarmed; recording/manual MANUAL/ARM; autonomous GUIDED/ARM.
++Direct backend MowerControl ON at idle temporarily ARM in HOLD with zero traction; OFF ends temporary ARM
++only without a movement session. Safety DISARM supersedes pending MODE/ARM and
++survives prior failure/timeout; late observed ARM causes corrective DISARM.
++Existing SafetyState and BladeControl unchanged. Reconnect/emergency release
++follow the current MowgliNext movement demand; no new user authorization step.
++Neutral traction initialized before ARM; preconfirmation velocities are not cached.
++GUIDED PositionTarget BODY_NED mask0x05E7; MANUAL mapping preserved.
++
++Authoritative implementation/acceptance notes:
++docs/architecture/fcu-session-controller.md.
++HOLD servo source review: ArduPilot dbe792162d06cab66c3475fd5556bf7a120f119e,
++Rover common command fallback plus ServoRelay channel-function/PWM dispatch;
++no mode prohibition observed. Not proof of actual Pixhawk/VESC output.
++
++## Software validation PASS
++
++Pinned local SDK d98e8e9899e57cdcfb9b3b1aec5588bd0c64fc31956dcc726ec5c31ca6825316.
++Every build/test/install command UID1000, container networknone, no devices;
++isolated ROS domains. SDK build6/6 packages, bridge17/17 suites, ESC5/5,
++battery1/1, GNSS1/1. Latest XML24 files,210 registered cases, zero failures,
++errors or skips; sequencer24 cases included. Final changed-source graph reruns
++provider+blade PASS; provider covers ArduPilot/PX4 x mowing-enabled true/false.
++Safety graph, ESC graph and GNSS graph PASS. Interface contracts3 + backend10,
++blade delegate/off contracts2, Python syntax, dashboard parity, diffcheck,
++clang-format18 full-file + merge-base changed-line checks PASS.
++Installed SDK ArduPilot provider graph PASS; ldd closure complete, .text identical
++between build and installed binaries (CMake adjusts RPATH).
++Build binary SHA256 3cfcc80d2772936a2412e39e17659919d8c22c723e67a19c67c127f68052bca6.
++Installed binary SHA256 9ab08c37807c51e6ead04f46b35d02fd72102ab7ccb4d679c4ea6fc84c69d213.
++Source manifest SHA256 dbf918a0cf9990b781beb02e30bed88833c571eae0535cc4ada2a8639238ec81.
++Repository-owned evidence: docs/validation/fcu-session-controller-20261011/README.md.
++That directory retains source-manifest.sha256, results-summary.json, all24 XMLs,
++validation.log, binary-proof.txt, RPATH/ldd proofs and the archived review.diff.
++The review diff predates this documentation-only archive/link update; validated
++source manifest remains unchanged. No required evidence is stored only outside
++this repository.
++Earlier discarded-architecture compile/graph failures are retained in the archived log;
++current simplified architecture suites all PASS. Known historic ESC graph
++intermittence did not occur in the simplified-architecture validation.
++
++## HARDWARE_REQUIRED
++
++Actual HOLD/servo channel output, wheel/cutting neutrality and direction,
++GUIDED velocity/yaw-rate signs/units, FCU confirmation and safety DISARM races,
++complete companion-loss independent failsafe and external FCU command ownership.
++Architecture doc records required baseline, bench procedure, observable criteria,
++independent E-stop/blades-removed/constraint prerequisites. No readiness claim.
++No hardware/SSH/FCU writes/parameter change/flash/production restart authorized.
++Next step: review the software branch; any hardware run/deploy/push needs separate
++user authorization. No required changes remain in authorized software scope.
+diff --git a/.agent/shared/checkpoints/retained/MM-FCU-MAIN-COMMIT-20261011.md b/.agent/shared/checkpoints/retained/MM-FCU-MAIN-COMMIT-20261011.md
+new file mode 100644
+index 0000000..e16ed00
+--- /dev/null
++++ b/.agent/shared/checkpoints/retained/MM-FCU-MAIN-COMMIT-20261011.md
+@@ -0,0 +1,56 @@
++# MM-FCU-MAIN-COMMIT-20261011
++
++Disposition RETAINED — final safety-path audit and direct-main commit handoff.
++Repository /tmp/mowglimavros-fcu-session (Pepeuch/MowgliMAVROS), branch main.
++Base e7d516cb0adca1872dd9d10fb66412857d38b0c8. User explicitly authorizes a
++local commit directly on existing main and removal of the local feature branch;
++prior feature/no-commit instructions are superseded. No push/PR/hardware/deploy.
++
++## Git provenance and preservation
++
++git fetch origin main succeeded on 2026-10-11. main, refreshed origin/main,
++FETCH_HEAD and feat/fcu-session-controller all matched base e7d516c.
++Switched to main with the dirty worktree; all 91 modified/untracked file hashes
++were identical immediately afterward. No stash/reset/discard. Earlier archives
++remain historical baselines, linked from the current report.
++MowgliNext HEAD 7748af56acd98449938750714d2286193cf6143a clean, gitlink e7d516c
++unchanged. Only the standalone clone is modified.
++
++## Final safety-path correction
++
++Original request_blade_disarm(): neutral cutting + DISARM, no mode write.
++Original request_hold_and_blade_disarm(): neutral cutting/traction + HOLD/DISARM.
++The reviewed alias and unconditional emergency→HOLD had unintentionally changed
++tilt/double-lift behavior. Restored mode preservation for these inputs and tilt
++latches, including repeated sequencer ticks. Hardware switch/service emergency
++retain HOLD. Both use one priority DISARM sequencer; HOLD failure/unavailability
++cannot block safety DISARM. No additional safety policy or ROS interface.
++
++Existing BladeControl and SafetyState unchanged. Temporary blade ON failure/expiry
++cleanup, OFF-before-pending-ON, MANUAL/GUIDED movement ownership and confirmed
++automatic ARM remain. MowgliNext remains the sole functional authority.
++
++## Software evidence
++
++Software PASS 18/18 suites, 112 XML tests, zero failures/errors/skips (192.94s).
++Node regressions7; FCU25; Blade16/Off5; Safety15. Native/provider graphs PASS.
++38 source hashes verified against final host and tested container; format18,
++syntax, whitespace and progress consistency PASS. Final build clean. Evidence: docs/validation/fcu-main-commit-20261011/.
++New mock cases: lift/tilt in MANUAL/GUIDED without HOLD, hardware/service with HOLD;
++check request, ACK, observed DISARM and subsequent ticks. Native safety graph
++also distinguishes lift-only DISARM from hardware HOLD. Full bridge suites rerun and PASS.
++UID1000 pinned SDK container, network none, no devices. Initial test-harness
++compile error from generic ROS lambdas corrected with explicit typed signatures.
++Source hashes, XML, logs, transfer snapshot and final diff remain repository-owned.
++Exact-path artifact attributes retain byte-identical archived diffs/logs/generated
++XML; source whitespace checks remain unchanged. Full staged diff check PASS.
++
++## Remaining acceptance and Git handoff
++
++Actual idle GUI ON is SOFTWARE_REQUIRED in MowgliNext; correction documented in
++docs/architecture/mowglinext-idle-blade-test-follow-up.md, no Next edits.
++HARDWARE_REQUIRED: HOLD servo output, real zero wheel movement, GUIDED signs/units,
++wire-level ARM/DISARM races and independent total companion-loss stopping.
++Exact safe bench baseline/procedure/criteria in fcu-session-controller.md.
++No production readiness claim. Commit title and result recorded in the validation
++report and Git history; no push until the user approves after reviewing them.
+diff --git a/.agent/shared/checkpoints/retained/MM-FCU-REVIEW-FIXES-20261011.md b/.agent/shared/checkpoints/retained/MM-FCU-REVIEW-FIXES-20261011.md
+new file mode 100644
+index 0000000..22244e5
+--- /dev/null
++++ b/.agent/shared/checkpoints/retained/MM-FCU-REVIEW-FIXES-20261011.md
+@@ -0,0 +1,54 @@
++# MM-FCU-REVIEW-FIXES-20261011
++
++Historical software baseline; current Git strategy and final safety-path audit
++are recorded in MM-FCU-MAIN-COMMIT-20261011. Earlier no-commit/feature-branch
++restrictions were superseded by explicit user authorization.
++
++Disposition RETAINED — post-review corrections; software PASS; physical acceptance remains open.
++Repository /tmp/mowglimavros-fcu-session; feat/fcu-session-controller;
++HEAD/base e7d516cb0adca1872dd9d10fb66412857d38b0c8. Worktree uncommitted.
++MowgliNext HEAD 7748af56acd98449938750714d2286193cf6143a and gitlink e7d516c
++remain unchanged/clean. No hardware, deployment, parameter change, push or merge.
++
++## Current architecture and corrections
++
++Minimal MODE/ARM RPC sequencing only; MowgliNext sole functional authority.
++Existing isolated-test flag is released on FCU activation refusal/timeout,
++queued blade expiry, or BladeControl cancellation/failure. Neutral cutting and
++traction; target HOLD/disarmed. Cancelled ON cannot run after late ARM.
++The helper cannot end a movement-owned ARM. No new authorization/generation,
++interface or safety policy. Existing BladeControl header is unchanged.
++
++OFF examined before any queued ON may dispatch; existing permission edge applied
++before binding its response revision. Emergency success means queued DISARM or
++already observed disarmed, independent of HOLD endpoint. Diagnostics expose
++pending transport, ACK and target state confirmation separately.
++
++## Confirmed MowgliNext blocker
++
++forOperatorCommand currently forwards OFF for idle GUI ON. Default IdleSequence
++also sends periodic OFF; StopHoldSequence shares IDLE but must retain STOP
++priority. Future minimal internal distinction required, no new public service.
++Exact baseline, call sites and tests:
++docs/architecture/mowglinext-idle-blade-test-follow-up.md.
++Do not treat direct backend MowerControl injection as true GUI evidence.
++
++## Evidence and next step
++
++New archive: docs/validation/fcu-session-review-fixes-20261011/.
++Contains final source/doc review.diff, node-only pre-review delta, exact hashes,
++JUnit XML and build/test logs. Earlier archive remains historical baseline.
++First new graph failure was a test expecting OFF success through an active-session
++BladeControl servo fault; fixed expectation preserves that existing fault,
++checks actual neutral and retained wheel ARM. Matrix then PASS.
++Final broad bridge run PASS 18/18 suites, 106 XML tests, no failures/skips (191.55s).
++Controller 25 cases; BladeControl16/BladeOff5; SafetyState15; readiness13.
++Provider/blade/safety/ESC/GNSS graphs PASS. Final peer API-warning cleanup
++rebuild + targeted test PASS (0.33s), no production-source change afterward.
++clang-format18 (full files + changed lines), Python compile, diff whitespace,
++README progress consistency PASS. 38 input-file hashes verified against the
++container's actual sources. Real Git index remains empty.
++No commit until user has reviewed final diff/results. Hardware gates remain
++HARDWARE_REQUIRED with exact bench baseline/procedure/criteria/prerequisites in
++docs/architecture/fcu-session-controller.md. Independent companion-loss stopping
++remains unresolved; no production readiness claim.
+diff --git a/.gitattributes b/.gitattributes
+index 35b25b2..cd25479 100644
+--- a/.gitattributes
++++ b/.gitattributes
+@@ -6,3 +6,40 @@ docs/investigations/2026-10-07-runtime-bringup/mavlink-passive-rates-20261010.py
+ docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit-20261009-original.md whitespace=-blank-at-eof
+ docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit.md whitespace=-blank-at-eof
+ docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-results.md whitespace=-blank-at-eof
++
++# Preserve byte-exact FCU evidence: unified-diff context, compiler caret output
++# and generated JUnit output contain trailing spaces. Exact artifacts only;
++# product source and ordinary docs retain full whitespace checks.
++docs/validation/fcu-main-commit-20261011/initial-build.log whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_blade_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_blade_off_contract.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_esc_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_firmware_detection.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_firmware_provider.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_gnss_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_gnss_launch.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_provider_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/junit/test_safety_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-main-commit-20261011/review.diff whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_blade_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_blade_off_contract.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_esc_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_firmware_detection.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_firmware_provider.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_gnss_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_gnss_launch.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_provider_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_safety_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/review.diff whitespace=-blank-at-eol
++docs/validation/fcu-session-controller-20261011/validation.log whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_blade_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_blade_off_contract.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_esc_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_firmware_detection.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_firmware_provider.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_gnss_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_gnss_launch.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_provider_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/junit/test_safety_graph.xml whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/node-review-fixes.diff whitespace=-blank-at-eol
++docs/validation/fcu-session-review-fixes-20261011/review.diff whitespace=-blank-at-eol
+diff --git a/AGENTS.md b/AGENTS.md
+index 8c3a1d1..8d83195 100644
+--- a/AGENTS.md
++++ b/AGENTS.md
+@@ -189,6 +189,12 @@ A task is complete only when required acceptance is passed or explicitly identif
+ Update `TODO.md`, roadmap, architecture docs, or compatibility documentation only when proven project state actually changes.
+ Documentation must describe current behaviour, not intended behaviour.
+ 
++Persist analytical handoffs, validation reports and evidence referenced by checkpoints
++inside the owning repository (for example `docs/validation/<task>/`). Temporary
++external execution directories are not the sole archive: copy the relevant
++reports and provenance into the repository before handoff. Existing rules for
++local versus shared checkpoints and sensitive/large artifacts still apply.
++
+ Before stopping, report concisely: files changed and why; validation executed; important evidence; known limitations/open items; repository/branch/`HEAD`; commit status; push status; exact next step if incomplete.
+ 
+ ```md
+diff --git a/README.md b/README.md
+index d5c2fbb..301bf41 100644
+--- a/README.md
++++ b/README.md
+@@ -7,9 +7,9 @@ Sidecar ROS 2 repository for the optional MAVROS backend used by MowgliNext.
+ 
+ ![Generated MowgliMAVROS progress](docs/status/mowglimavros_progress.svg)
+ 
+-**Verified completion: 13 / 26 (50.00%)**. An item counts as fully complete only when its TODO status is `DONE` and it has no `HARDWARE_PENDING` qualifier.
++**Verified completion: 13 / 28 (46.43%)**. An item counts as fully complete only when its TODO status is `DONE` and it has no `HARDWARE_PENDING` qualifier.
+ 
+-Status: **DONE 19** · **IN PROGRESS 1** · **TODO 3** · **BLOCKED 1** · **DEFERRED 2**. Hardware-pending items: **6** (software completion is not presented as physical validation).
++Status: **DONE 19** · **IN PROGRESS 2** · **TODO 4** · **BLOCKED 1** · **DEFERRED 2**. Hardware-pending items: **6** (software completion is not presented as physical validation).
+ 
+ ### Phase Progress
+ 
+@@ -19,8 +19,8 @@ Status: **DONE 19** · **IN PROGRESS 1** · **TODO 3** · **BLOCKED 1** · **DEF
+ - **3 — Reproducible MAVROS container:** 5 / 5 verified (100.00%); DONE 5
+ - **4 — Build tooling and CI:** 3 / 3 verified (100.00%); DONE 3
+ - **5 — Runtime smoke validation:** 2 / 2 verified (100.00%); DONE 2
+-- **6 — Backend contract before MowgliNext integration:** 1 / 7 verified (14.29%); TODO 2, DONE 5
+-- **7 — MowgliNext integration audit:** 0 / 1 verified (0.00%); IN PROGRESS 1
++- **6 — Backend contract before MowgliNext integration:** 1 / 8 verified (12.50%); TODO 2, IN PROGRESS 1, DONE 5
++- **7 — MowgliNext integration audit:** 0 / 2 verified (0.00%); TODO 1, IN PROGRESS 1
+ - **8 — Hardware validation:** 0 / 3 verified (0.00%); BLOCKED 1, DEFERRED 2
+ 
+ Generated solely from [`TODO.md`](TODO.md). Run `python3 tools/update_readme_progress.py` to update, or `python3 tools/update_readme_progress.py --check` to fail on stale output.
+diff --git a/TODO.md b/TODO.md
+index d1d14bd..21f6e99 100644
+--- a/TODO.md
++++ b/TODO.md
+@@ -721,6 +721,30 @@ Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTC
+ 
+ ---
+ 
++## MM-608 — FCU session controller
++Status: IN PROGRESS (software validated; GUI SOFTWARE_REQUIRED; HARDWARE_REQUIRED)
++
++Safety-critical implementation directly on `main`, base e7d516c.
++Minimal FCU transport sequencer: automatic state-confirmed MODE/ARM from existing
++MowgliNext states and mower commands, separate GUIDED velocity transport. Public
++interfaces and telemetry preserved; no added watchdog or
++authorization protocol. MowgliNext remains the sole functional authority.
++Validation and physical gates: [architecture](docs/architecture/fcu-session-controller.md).
++Review corrections: isolated ON failure/expiry lifecycle, OFF ordering, DISARM
++without HOLD; earlier 18 suites /106 XML tests PASS with mocks.
++Final pre-commit audit restores tilt/double-lift DISARM without implicit HOLD;
++hardware switch/explicit service retain HOLD/DISARM. Current validation is
++[recorded on main](docs/validation/fcu-main-commit-20261011/README.md):
++18/18 suites, 112 XML tests PASS. Local main commit authorized; no push/deploy. Actual idle GUI ON remains
++[SOFTWARE_REQUIRED in MowgliNext](docs/architecture/mowglinext-idle-blade-test-follow-up.md).
++Independent companion-loss failsafe and exclusive FCU authority remain unresolved.
++No production readiness claim.
++
++Acceptance: isolated unit/ROS mocks pass; exact-baseline physical HOLD/servo,
++mode/actuator/priority-DISARM and independent failsafe acceptance is acquired.
++
++---
++
+ # Phase 7 — MowgliNext integration audit
+ 
+ ## MM-701 — MowgliNext integration dependency and execution plan
+diff --git a/docs/architecture/fcu-session-controller.md b/docs/architecture/fcu-session-controller.md
+new file mode 100644
+index 0000000..4ef2431
+--- /dev/null
++++ b/docs/architecture/fcu-session-controller.md
+@@ -0,0 +1,175 @@
++# Minimal FCU adapter (safety-critical actuation change)
++
++Work repository: MowgliMAVROS, branch `main` (direct local commit authorized; former work branch transferred), based on
++`main` e7d516c. MowgliNext source and its submodule gitlink remain unchanged.
++MowgliNext remains the sole functional authority. The bridge translates its
++existing state and blade requests into MAVROS operations.
++
++## Public contract and ownership
++
++No message, service, parameter or BT/GUI integration is added. Inputs remain
++`/behavior_tree_node/high_level_status` (`HighLevelStatus`), `/cmd_vel`
++(`TwistStamped`), `~/mower_control` (`MowerControl`), existing emergency services,
++and existing MAVROS/ESC/safety observations. The node name remains hardware_bridge.
++Existing QoS, remaps and telemetry interfaces are preserved.
++
++`FcuSessionController` is only a MODE/ARM RPC sequencer. It stores the requested
++mode/arming, observed `/mavros/state`, one pending transport operation and the
++last transport failure. It has no functional session state machine, authorization
++protocol, intention IDs, session generations or liveness watchdog. Local RPC
++serials only associate callbacks with requests; callers never supply them.
++`BladeControl` remains unchanged and owns servo183, OFF/FWD/REV, neutral-before-
++inversion, acquired ESC stop proof, command ACKs and blade response deadlines.
++All bridge MODE/ARM/DISARM writes use the sequencer.
++
++| Existing MowgliNext input | Mode requested | ARM requested | Traction |
++| --- | --- | --- | --- |
++| Idle/base/no movement session | HOLD | false | neutral |
++| RECORDING | MANUAL | true | after FCU confirmation |
++| MANUAL_MOWING | MANUAL | true | after FCU confirmation |
++| AUTONOMOUS (including return home) | GUIDED | true | after FCU confirmation |
++| MowerControl ON without movement session | HOLD | true temporarily | always neutral |
++| MowerControl OFF with movement session | current session mode | true | session continues |
++| MowerControl OFF without movement session | HOLD | false | neutral |
++| Hardware safety switch / explicit emergency service | HOLD | false, priority | neutral |
++| Existing tilt or double-lift stop (including tilt latch) | retain observed FCU mode | false, priority | neutral |
++
++GUIDED transport applies to the ArduPilot provider. PX4 retains its existing
++Rover-style MANUAL mapping; native PX4 actuation compatibility is not established.
++Both profiles retain their capabilities/profile/telemetry implementation.
++Unsupported PX4 servo commands still fail rather than aliasing ARM/DISARM.
++
++## Ordering and refusal handling
++
++Normal requests are serialized: matching mode observation plus accepted mode
++response, then ARM response plus matching state observation, then forwarding of
++current velocity/blade commands. Already matching FCU state skips redundant
++operations. A response alone is never proof of ARM. State may arrive before or
++after the service response. Both traction transports are neutralized before ARM.
++Velocities received while waiting are dropped;
++none are stored for replay after arming.
++
++Repeated status publications and BT ticks do not repeat identical MODE/ARM RPCs.
++Each pending RPC/confirmation has a3s transport deadline. A refusal or expiry is
++reported in logs and the existing `/diagnostics` topic, under
++`mowgli_mavros_bridge/fcu_session`, with requested/confirmed mode and ARM,
++command pending/acknowledged and target state confirmed. Emergency service true
++means DISARM queued or already observed disarmed; HOLD may remain unavailable
++or unconfirmed. It never confirms the complete physical stop.
++The failed operation is not retried for the unchanged target. Changing the
++MowgliNext target clears that failure; no extra authorization or user handshake
++is required. A late actual FCU observation satisfying the target also fulfills
++that operation without resending it. An obsolete request's refusal cannot block the new target.
++
++For ordinary session end, cutting and traction are neutralized, HOLD is
++requested, then DISARM. HOLD refusal, timeout or service unavailability cannot
++block DISARM. The earlier safety paths are preserved: `request_blade_disarm()` (tilt/double
++lift) requests DISARM while retaining the FCU mode; it does not add HOLD on
++subsequent ticks. `request_hold_and_blade_disarm()` (hardware switch/explicit
++emergency service) retains HOLD/DISARM. Both use the same sequencer.
++Safety DISARM has higher transport priority: it supersedes any
++pending MODE/ARM immediately, before waiting for HOLD. Retired RPC callbacks are
++ignored; cancellation cannot retract an already emitted MAVLink command. A late
++observed ARM during the existing emergency leads to one corrective DISARM;
++stable repeated state does not cause a retry storm. A refused DISARM is diagnosed
++and latched, not turned into a tick-based retry loop.
++
++Reconnection and emergency release reconcile the demand still supplied by
++MowgliNext. The bridge does not invent an obligation to restart an already-active
++MowgliNext session. Existing safety conditions still block ARM while engaged.
++The existing SafetyState projections/latches and hardware switch, lift and tilt
++paths remain; their HOLD/DISARM writes share this command owner. Emergency still
++cancels the cutting request through the existing blade-neutral path.
++
++## Backend blade test through the existing service
++
++Existing `mower_control` ON in idle requests temporary ARM in HOLD with both
++traction outputs explicitly neutral. ON waits for FCU confirmation, then enters
++the unchanged `BladeControl` sequence in the requested direction. Pending
++callers are bounded to32 and share existing blade service timing bounds. An OFF
++cancels pending ON before any pending ON can be dispatched, including ON waiting
++for ARM or a reversal. Refused/expired isolated ON releases its temporary ARM
++and cancels the cutting intent; a late ARM cannot resurrect it. An ON failure
++during a movement session does not release that session’s ARM. OFF only releases
++the temporary ARM when no MowgliNext movement session is active. If a movement
++session starts during the blade test, its state owns mode/ARM thereafter.
++
++ARM uses the existing hardware safety/latch decisions. No new GNSS, battery,
++charging, ESC-stop or status-age precondition is added to ARM. BladeControl and
++its existing mowing-enable, heartbeat/safety freshness, ESC acquisition and
++inversion protections still determine whether the cutting command can execute.
++No safety is bypassed to permit automatic arming.
++
++ArduPilot source baseline `dbe792162d06cab66c3475fd5556bf7a120f119e`
++(`APMrover2-stable`, local reviewed source) routes DO_SET_SERVO through
++`libraries/GCS_MAVLink/GCS_Common.cpp` and `GCS_ServoRelay.cpp` without a HOLD
++mode restriction. Rover delegates unhandled commands to the common handler in
++[`GCS_MAVLink_Rover.cpp`](https://github.com/ArduPilot/ardupilot/blob/dbe792162d06cab66c3475fd5556bf7a120f119e/Rover/GCS_MAVLink_Rover.cpp#L438),
++and [`AP_ServoRelayEvents::do_set_servo`](https://github.com/ArduPilot/ardupilot/blob/dbe792162d06cab66c3475fd5556bf7a120f119e/libraries/AP_ServoRelayEvents/AP_ServoRelayEvents.cpp#L27)
++checks the channel function and applies PWM without checking the Rover mode.
++The official [servo command documentation](https://ardupilot.org/dev/docs/mavlink-move-servo.html)
++requires a compatible SERVOx_FUNCTION. This supports the choice of HOLD in
++software; it does not prove output on this installation. There is no automatic
++MANUAL fallback on a refusal: that refusal may instead indicate a channel or
++safety incompatibility. Reconsider MANUAL/zero traction only if bench evidence
++establishes HOLD incompatibility on the exact target.
++
++## Velocity transport
++
++MANUAL retains the provider's steering-Y/throttle-Z MANUAL_CONTROL conversion.
++ArduRover GUIDED uses `/mavros/setpoint_raw/local`, `PositionTarget`, BODY_NED,
++mask0x05E7 (velocity plus yaw rate), forward velocity in m/s and yaw rate in rad/s.
++MAVROS2.16 converts ROS FLU/body velocity and positive-CCW yaw rate to MAVLink
++conventions in `setpoint_raw.cpp::local_cb`. No nonzero MANUAL_CONTROL substitutes
++for GUIDED. Both transports have explicit neutral commands. No command/session
++watchdog or stamp rejection policy is added to the existing traction contract.
++See [ArduRover Guided commands](https://ardupilot.org/dev/docs/mavlink-rover-commands.html).
++
++## Software evidence and hardware boundary
++
++Validation results and source/binary baselines are recorded in the retained
++FCU main-commit checkpoint and the [current repository-owned validation archive](../validation/fcu-main-commit-20261011/README.md).
++The [review-fixes archive](../validation/fcu-session-review-fixes-20261011/README.md) records the preceding software baseline.
++The [earlier archive](../validation/fcu-session-controller-20261011/README.md) is retained as historical baseline. All tests run under UID1000 in a local pinned SDK,
++network disabled, no devices, using isolated ROS domains and FCU mocks.
++No SSH, hardware command, flash, FCU parameter change, deployment, production
++restart, image publication, push or merge is performed. The local commit on `main` is
++explicitly authorized by the user; no push is authorized.
++The real GUI path currently forwards OFF at idle in MowgliNext. The required
++minimal internal correction and its acceptance tests are documented in
++[mowglinext-idle-blade-test-follow-up.md](mowglinext-idle-blade-test-follow-up.md).
++Backend MowerControl injection does not validate an actual GUI click.
++
++**HARDWARE_REQUIRED**: actual output in HOLD; mode/velocity sign and units;
++confirmation timing and priority DISARM under wire races; complete companion-loss
++failsafe. Software tests do not establish any of these physical guarantees.
++
++Future separately authorized bench baseline must record: robot unit ID, Pixhawk
++model, exact ArduRover image/hash and parameter snapshot, VESC images/channel
++mapping, host OS/kernel, MAVROS revision, transport topology, bridge configuration
++and binary/image hash, MowgliNext commit and selected MowgliMAVROS gitlink. Prior
++Pixhawk5X/ArduRover4.7.1 observations do not validate this patch.
++
++Bench prerequisites: blades removed, propulsion safely constrained/isolated,
++qualified operator, independent physical E-stop/power cut and independent output
++recorder/tachometer. Proposed procedure and observable acceptance:
++1. Idle/base: actual HOLD/disarmed and neutral wheel/cutting outputs.
++2. Recording/manual/autonomous: observe the requested mode and confirmed ARM
++   before nonneutral output, then verify body velocity/yaw-rate sign and scale.
++3. GUI FWD/REV/OFF in HOLD: zero wheel motion throughout; correct channel/direction;
++   existing neutral/stop proof before inversion; OFF ends only temporary ARM.
++   Refusals must remain observable without automatic MANUAL fallback.
++4. Emergency during delayed/refused MODE/ARM: neutral outputs and priority DISARM;
++   late responses cannot restore actuation against an active emergency. Release
++   and reconnect follow the actual MowgliNext demand and existing protections.
++5. Kill ROS/MAVROS/companion power and interrupt USB, in MANUAL, GUIDED and during
++   cutting. An independently designed FCU-side failsafe must neutralize/disable
++   both drives within the approved stop bound. Proposed initial bench bound is
++   1000ms for neutral/disabled outputs, measured outside ROS; safe coast-down time
++   and field stop distance still require the physical safety assessment.
++
++Step5 remains an unresolved safety design and acceptance gate, not merely a run
++waiting to happen. No production readiness is claimed. A host-side RPC timeout
++or the documented GUIDED velocity timeout does not prove blade stop or MANUAL
++stop after total companion loss. Shared MAVROS endpoints also do not establish
++physical exclusive ownership against external command producers.
+diff --git a/docs/architecture/mowglinext-idle-blade-test-follow-up.md b/docs/architecture/mowglinext-idle-blade-test-follow-up.md
+new file mode 100644
+index 0000000..6da461a
+--- /dev/null
++++ b/docs/architecture/mowglinext-idle-blade-test-follow-up.md
+@@ -0,0 +1,77 @@
++# MowgliNext follow-up: explicit idle blade test
++
++Status: SOFTWARE_REQUIRED in MowgliNext; documented only, no source/gitlink edit.
++Read-only baseline: MowgliNext 7748af56acd98449938750714d2286193cf6143a,
++MowgliMAVROS gitlink e7d516cb0adca1872dd9d10fb66412857d38b0c8.
++
++## Confirmed failure and scope of current tests
++
++The real path is GUI → BladeControlService → BladeDirection → MowerControl →
++MowgliMAVROS. In `ros2/src/mowgli_behavior/include/mowgli_behavior/blade_direction.hpp`,
++`forOperatorCommand(true, direction)` updates direction and removes the operator
++inhibit, but outputs `requested_enabled_ && !operator_inhibit_`. At idle,
++`requested_enabled_` is false: the forwarded MowerControl contains OFF. The
++bridge cannot distinguish that OFF from a real stop and must obey it.
++
++`blade_control_service.hpp` already validates inputs and bridge availability,
++and serializes the service with BT callbacks. Its `success` means local handling;
++`forwarded` means an asynchronous request was queued, not that the backend or FCU
++confirmed execution. No service or message change is needed for idle ON.
++
++The backend graph tests call MowerControl directly. Their successful HOLD/ARM/ON
++sequence is not evidence that an actual GUI click starts a blade.
++`test_blade_direction.cpp::MenuCannotStartIdleBladeAndEndSessionClearsOverride`
++currently asserts the opposite requirement and will need updating.
++
++## Minimum necessary functional correction
++
++Keep the existing public service and direction semantics. In the existing
++BladeDirection/BT integration, distinguish the default idle OFF housekeeping
++from an explicit BT OFF (STOP, coverage halt, transit, docking, safety guard).
++Allow the explicit operator ON to emit `enabled=1` in the former case. Retain
++BT OFF priority in the latter case, even when an operator subsequently chooses
++a direction. Do not set `requested_enabled_=true` merely to defeat the current
++condition, and do not replace the result by unconditional `enabled`: either
++would discard the reason the BT last stopped cutting.
++
++This distinction is internal to the existing functional authority. A narrowly
++scoped idle-test flag/idle housekeeping entry point in BladeDirection is enough;
++no token, generation, external authorization service or MAVROS protocol is
++needed. Clear that explicit idle test on operator OFF, endSession, and any
++non-idle BT OFF. Preserve the operator OFF inhibit across periodic BT ON until
++the existing explicit session-start path clears it.
++
++The relevant call sites are `SetMowerEnabled::tick()` in `src/utility_nodes.cpp`
++and coverage's `setBladeEnabled()` in `src/coverage_nodes.cpp`. Both currently
++use `forMowerCommand(false, ...)` for real stops. Those paths must keep recording
++OFF even when the bridge service is unavailable.
++
++There is also a periodic cancellation trap: `trees/main_tree.xml` default
++`IdleSequence` sends SetMowerEnabled(false), then waits 0.5s and can restart.
++Only that default idle housekeeping must preserve an explicit idle test. The
++`StopHoldSequence` (command 8), also publishing IDLE, must continue forcing OFF
++every tick. Therefore allowing ON based only on HighLevelStatus==IDLE is
++insufficient. A small internal idle-specific call/BT node input can express this
++at the default IdleSequence, while all other existing SetMowerEnabled(false)
++call sites retain their present stop semantics. This is an existing BT decision,
++not a new safety decision in the bridge.
++
++## Required future software acceptance
++
++- Invoke the existing BladeControlService with ON FWD/REV from genuine default
++  idle; assert the actual forwarded MowerControl is ON in the chosen direction.
++- Tick default IdleSequence for several complete wait cycles; the explicit test
++  remains active until OFF or a real BT stop, rather than being silently erased.
++- STOP/coverage halt/transit/docking/guard OFF followed by operator FWD/REV still
++  forwards OFF. Test STOP and default idle separately despite their shared IDLE
++  status. Preserve `MenuOverridesRandomChoiceAndOffSurvivesTicksAndCoverage`.
++- Operator OFF survives BT ticks/automatic continuation; explicit session start
++  retains the existing inhibit-reset behavior. endSession clears the test.
++- Keep invalid-input, outage and callback-group serialization regressions.
++- Integrate this service path with the bridge mocks: forwarded ON → temporary
++  HOLD/ARM → FCU confirmation → blade; no nonneutral traction; OFF cancels it.
++
++No MowgliNext or GUI changes were performed here. Actual HOLD servo output and
++complete companion-loss stopping remain separate HARDWARE_REQUIRED acceptance
++items in `fcu-session-controller.md`; this software defect must be fixed before
++claiming the GUI test path works end to end.
+diff --git a/docs/status/mowglimavros_progress.svg b/docs/status/mowglimavros_progress.svg
+index df5843d..c6643cb 100644
+--- a/docs/status/mowglimavros_progress.svg
++++ b/docs/status/mowglimavros_progress.svg
+@@ -1,11 +1,11 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 118" role="img" aria-labelledby="title desc">
+ <title id="title">MowgliMAVROS development status</title>
+-<desc id="desc">13 of 26 work items are fully complete; software DONE items with hardware pending remain open.</desc>
++<desc id="desc">13 of 28 work items are fully complete; software DONE items with hardware pending remain open.</desc>
+ <rect width="720" height="118" rx="12" fill="#f8fafc"/>
+ <text x="28" y="36" font-family="sans-serif" font-size="22" font-weight="700" fill="#0f172a">MowgliMAVROS Development Status</text>
+ <text x="28" y="61" font-family="sans-serif" font-size="14" fill="#334155">Verified completion</text>
+-<text x="692" y="61" text-anchor="end" font-family="sans-serif" font-size="14" font-weight="700" fill="#0f172a">13 / 26 · 50.00%</text>
++<text x="692" y="61" text-anchor="end" font-family="sans-serif" font-size="14" font-weight="700" fill="#0f172a">13 / 28 · 46.43%</text>
+ <rect x="28" y="74" width="664" height="16" rx="8" fill="#dbe4ef"/>
+-<rect x="28" y="74" width="332.00" height="16" rx="8" fill="#1f8a70"/>
++<rect x="28" y="74" width="308.29" height="16" rx="8" fill="#1f8a70"/>
+ </svg>
+diff --git a/ros2/src/mowgli_mavros_bridge/CMakeLists.txt b/ros2/src/mowgli_mavros_bridge/CMakeLists.txt
+index 6f51f70..33ad51a 100644
+--- a/ros2/src/mowgli_mavros_bridge/CMakeLists.txt
++++ b/ros2/src/mowgli_mavros_bridge/CMakeLists.txt
+@@ -123,7 +123,19 @@ if(BUILD_TESTING)
+       GENERATE_RESULT_FOR_RETURN_CODE_ZERO
+     )
+   endif()
++  ament_add_gtest(test_bridge_regressions test/test_bridge_regressions.cpp
++    src/mavros_hardware_bridge_node.cpp src/readiness_state.cpp src/firmware_provider.cpp)
++  target_compile_definitions(test_bridge_regressions PRIVATE MOWGLI_BRIDGE_NO_MAIN)
++  target_include_directories(test_bridge_regressions PRIVATE include
++    ${libmavconn_INCLUDE_DIRS} ${mavlink_INCLUDE_DIRS})
++  target_link_libraries(test_bridge_regressions
++    ${geometry_msgs_TARGETS} ${nav_msgs_TARGETS} ${diagnostic_msgs_TARGETS}
++    ${mavros_msgs_TARGETS} ${mavros_esc_wheel_odometry_TARGETS} ${mowgli_interfaces_TARGETS}
++    ${sensor_msgs_TARGETS} ${std_msgs_TARGETS} ${std_srvs_TARGETS} rclcpp::rclcpp
++    sensor_msgs::sensor_msgs_library tf2::tf2 tf2_geometry_msgs::tf2_geometry_msgs)
+   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
++  ament_add_gtest(test_fcu_session_controller test/test_fcu_session_controller.cpp)
++  target_include_directories(test_fcu_session_controller PRIVATE include)
+   ament_add_gtest(test_blade_off_control test/test_blade_off_control.cpp)
+   target_include_directories(test_blade_off_control PRIVATE include)
+   ament_add_gtest(test_blade_control test/test_blade_control.cpp)
+diff --git a/ros2/src/mowgli_mavros_bridge/README.md b/ros2/src/mowgli_mavros_bridge/README.md
+index c7a62af..d4a56c2 100644
+--- a/ros2/src/mowgli_mavros_bridge/README.md
++++ b/ros2/src/mowgli_mavros_bridge/README.md
+@@ -23,17 +23,21 @@ conversion. The bridge applies HOLD plus DISARM for Safety/E-stop.
+ | Mode request path implemented | Yes | Yes |
+ | Default emergency policy | `HOLD` + disarm | Existing `HOLD` + disarm preserved |
+ | MowerControl OFF | Native183 servo neutral, deduplicated | Unsupported (rejected) |
+-| MowerControl ON | Native183, guarded FWD/REV, already armed FCU required | Unsupported (rejected) |
++| MowerControl ON | Native183, guarded FWD/REV, automatic ARM confirmed by state | Unsupported (rejected) |
+ | Physical actuation validated | No | No |
+ 
+ Capabilities describe implemented software paths; physical actuation still depends
+-on the configured FCU and actuators. Valid finite `/cmd_vel` input is mapped
+-to Rover `MANUAL_CONTROL`, independently of FCU armed state; active Safety/E-stop
+-produces neutral traction. The bridge retains
++on the configured FCU and actuators. Current movement states request MANUAL (recording/manual mowing) or ArduRover
++GUIDED (autonomous), then automatic ARM. Traction waits for FCU mode/ARM
++confirmation. MANUAL retains the Rover MANUAL_CONTROL mapping; GUIDED uses body
++velocity/yaw-rate PositionTarget. Idle and Safety/E-stop neutralize traction. The bridge retains
+ timestamps, MAVROS clients and asynchronous response handling:
+ emergency-service success means local forwarding, not FCU confirmation.
+ 
+-`mower_control` owns only the blade actuator, never ARM/DISARM or mode changes.
++`BladeControl` owns the blade actuator. The independent FCU adapter serializes
++MODE/ARM/DISARM according to existing MowgliNext states and mower requests.
++A direct MowerControl ON at idle temporarily arms in HOLD with neutral traction. OFF leaves an
++active movement session armed, and otherwise ends the temporary arming.
+ ArduPilot uses `MAV_CMD_DO_SET_SERVO` (183); startup parameters are read-only:
+ `blade_servo_channel=3`, `blade_neutral_pwm=1500`, `blade_forward_pwm=1450`,
+ `blade_reverse_pwm=1550`. The directional defaults are LOW-EXCURSION acceptance
+@@ -43,7 +47,8 @@ direction is inferred from RPM. Enable0 requests OFF regardless of direction;
+ enable1/direction0 requests forward, enable1/direction1 reverse. Other ON values
+ are rejected. ON also requires a connected, already armed FCU, fresh heartbeat,
+ released/fresh hardware safety, no active/latched emergency, `mowing_enabled`,
+-and valid/fresh ESC acquisition. The blade does not arm the FCU for the caller.
++and valid/fresh ESC acquisition. The adapter automatically requests ARM before passing ON to BladeControl;
++ArduPilot still decides whether ARM succeeds.
+ The blade gate also bounds the ROS acquisition-stamp age to1000ms before
+ recording monotonic receipt liveness. The generic ESC tracker has a separate
+ 3s display timeout; it must not freshen delayed acquisitions for blade control.
+@@ -134,3 +139,9 @@ Mowgli wheel PID is not used by the MAVROS command path. The shared feed-forward
+ tuner calibrates `ticks_per_meter` and `manual_control_linear_scale`; the latter
+ is persisted through the canonical `wheel_pid_pwm_per_mps` setting.
+ Cross-node mapping/calibration coherence remains the installation owner's responsibility.
++
++See [minimal FCU adapter](../../../docs/architecture/fcu-session-controller.md)
++for ordering, refusal diagnostics and exact remaining Pixhawk acceptance gates.
++No additional ROS interface is introduced. The actual idle GUI path currently
++forwards OFF in MowgliNext; its required internal functional correction is
++[documented separately](../../../docs/architecture/mowglinext-idle-blade-test-follow-up.md).
+diff --git a/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp b/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp
+index db58250..fbc44f5 100644
+--- a/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp
++++ b/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp
+@@ -14,6 +14,7 @@
+ 
+ #include "mowgli_mavros_bridge/blade_control.hpp"
+ #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
++#include "mowgli_mavros_bridge/fcu_session_controller.hpp"
+ #include "mowgli_mavros_bridge/firmware_provider.hpp"
+ #include "mowgli_mavros_bridge/readiness_state.hpp"
+ #include "mowgli_mavros_bridge/safety_state.hpp"
+@@ -45,6 +46,7 @@ public:
+   explicit MavrosHardwareBridgeNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
+ 
+ private:
++  friend class BridgeRegressionPeer;
+   void create_publishers();
+   void create_subscriptions();
+   void create_services();
+@@ -77,14 +79,18 @@ private:
+   void publish_emergency();
+   void publish_readiness();
+ 
+-  bool send_arm_command(bool arm);
++  void drive_session_locked();
++  bool motion_session_active() const;
++  void cancel_pending_blade_starts();
++  void end_failed_blade_test_locked(const char* reason);
++  bool blade_allowed_locked(int64_t steady) const;
+   bool request_blade_neutral();
+   void drive_blade_locked();
+   void reply_blade(const std::shared_ptr<rmw_request_id_t>& header, bool success);
+-  bool send_mode_command(const std::string& mode);
+   bool request_blade_disarm();
+   void publish_neutral_manual_control();
+   bool request_hold_and_blade_disarm();
++  bool request_safety_disarm(bool hold);
+   bool high_level_motion_active(uint8_t state) const;
+ 
+ private:
+@@ -113,6 +119,18 @@ private:
+ 
+   bool mow_enabled_{false};
+   BladeControl blade_control_;
++  FcuSessionController session_control_;
++  bool blade_test_active_{false};
++  bool traction_was_ready_{false};
++  std::string last_session_error_;
++  std::map<uint64_t, std::pair<bool, int64_t>> session_rpc_ids_;
++  struct PendingBladeStart
++  {
++    std::shared_ptr<rmw_request_id_t> header;
++    BladeControl::Direction direction;
++    int64_t started_ms;
++  };
++  std::vector<PendingBladeStart> pending_blade_starts_;
+   struct BladeReply
+   {
+     std::shared_ptr<rmw_request_id_t> header;
+@@ -159,6 +177,7 @@ private:
+   rclcpp::Publisher<mowgli_interfaces::msg::Emergency>::SharedPtr pub_emergency_;
+   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
+   rclcpp::Publisher<mavros_msgs::msg::ManualControl>::SharedPtr pub_manual_control_;
++  rclcpp::Publisher<mavros_msgs::msg::PositionTarget>::SharedPtr pub_guided_control_;
+   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr pub_readiness_;
+ 
+   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_cmd_vel_;
+diff --git a/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/fcu_session_controller.hpp b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/fcu_session_controller.hpp
+new file mode 100644
+index 0000000..a51c8a1
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/fcu_session_controller.hpp
+@@ -0,0 +1,203 @@
++#pragma once
++
++#include <cstdint>
++#include <optional>
++#include <string>
++
++namespace mowgli_mavros_bridge
++{
++// MAVROS command sequencer only. MowgliNext owns the functional demand;
++// SafetyState/BladeControl/ArduPilot retain their existing safety decisions.
++// The serial identifies a local RPC callback, never a user authorization.
++class FcuSessionController
++{
++public:
++  enum class Kind
++  {
++    Mode,
++    Arm
++  };
++  struct Command
++  {
++    uint64_t serial;
++    Kind kind;
++    std::string mode;
++    bool arm;
++  };
++  const std::string& requested_mode() const
++  {
++    return wanted_mode_;
++  }
++  const std::string& confirmed_mode() const
++  {
++    return mode_;
++  }
++  bool requested_arm() const
++  {
++    return wanted_arm_;
++  }
++  bool confirmed_arm() const
++  {
++    return armed_;
++  }
++  const std::string& error() const
++  {
++    return error_;
++  }
++  bool failed() const
++  {
++    return mode_failed_ || arm_failed_;
++  }
++  bool current(uint64_t serial) const
++  {
++    return pending_ && pending_->serial == serial;
++  }
++  bool command_pending() const
++  {
++    return pending_.has_value();
++  }
++  bool command_acknowledged() const
++  {
++    return pending_ && acked_;
++  }
++  bool disarm_pending() const
++  {
++    return pending_ && pending_->kind == Kind::Arm && !pending_->arm;
++  }
++  bool ready() const
++  {
++    return connected_ && !pending_ && mode_ == wanted_mode_ && armed_ == wanted_arm_;
++  }
++
++  void demand(const std::string& mode, bool arm, bool safety_disarm = false)
++  {
++    if (wanted_mode_ == mode && wanted_arm_ == arm && safety_disarm_ == safety_disarm)
++      return;
++    wanted_mode_ = mode;
++    wanted_arm_ = arm;
++    mode_failed_ = arm_failed_ = false;
++    error_.clear();
++    if (safety_disarm && !safety_disarm_)
++    {
++      // Safety DISARM must not wait for an unrelated MODE/ARM transaction.
++      // The wire request cannot be retracted; late callbacks are ignored and
++      // any subsequent observed ARM is reconciled by a corrective DISARM.
++      pending_.reset();
++      force_disarm_ = true;
++    }
++    safety_disarm_ = safety_disarm;
++  }
++  void observe(bool connected, bool armed, const std::string& mode)
++  {
++    if (!connected)
++      pending_.reset();
++    if (safety_disarm_ && armed && !armed_)
++    {
++      force_disarm_ = true;
++      arm_failed_ = false;
++    }
++    connected_ = connected;
++    armed_ = armed;
++    mode_ = mode;
++    // An actual late FCU confirmation fulfills the current target without a
++    // retry or new functional request. A mismatching state retains the failure.
++    if (connected_ && mode_ == wanted_mode_)
++      mode_failed_ = false;
++    if (connected_ && armed_ == wanted_arm_)
++      arm_failed_ = false;
++    settle();
++  }
++  void tick(int64_t now)
++  {
++    // This bounds only an outstanding RPC/confirmation, not session liveness.
++    if (pending_ && now - sent_at_ >= 3000)
++      fail("confirmation_timeout");
++  }
++  std::optional<Command> next(int64_t now, bool mode_service, bool arm_service, bool allow_arm)
++  {
++    tick(now);
++    if (!connected_ || pending_)
++      return std::nullopt;
++    Command command{0, Kind::Mode, wanted_mode_, false};
++    if (safety_disarm_ && (force_disarm_ || armed_) && !arm_failed_)
++    {
++      if (!arm_service)
++        return std::nullopt;
++      command.kind = Kind::Arm;
++      force_disarm_ = false;
++    }
++    else if (mode_ != wanted_mode_ && !mode_failed_)
++    {
++      if (!mode_service)
++      {
++        // HOLD unavailability cannot obstruct the existing DISARM path.
++        if (wanted_arm_ || !armed_ || arm_failed_ || !arm_service)
++          return std::nullopt;
++        command.kind = Kind::Arm;
++      }
++    }
++    else if (armed_ != wanted_arm_ && !arm_failed_)
++    {
++      // An activation never proceeds past a failed MODE. Ending a session can
++      // still DISARM even when HOLD has failed or timed out.
++      if ((wanted_arm_ && (mode_ != wanted_mode_ || !allow_arm)) || !arm_service)
++        return std::nullopt;
++      command.kind = Kind::Arm;
++      command.arm = wanted_arm_;
++    }
++    else
++      return std::nullopt;
++    command.serial = ++serial_;
++    pending_ = command;
++    acked_ = false;
++    sent_at_ = now;
++    return command;
++  }
++  void complete(uint64_t serial, bool accepted, int64_t now)
++  {
++    tick(now);
++    if (!current(serial))
++      return;
++    if (!accepted)
++    {
++      fail("request_refused");
++      return;
++    }
++    acked_ = true;
++    settle();
++  }
++
++private:
++  void settle()
++  {
++    if (!pending_ || !acked_)
++      return;
++    const bool confirmed =
++        pending_->kind == Kind::Mode ? mode_ == pending_->mode : armed_ == pending_->arm;
++    if (confirmed)
++    {
++      pending_.reset();
++      if (!failed())
++        error_.clear();
++    }
++  }
++  void fail(const char* reason)
++  {
++    if (!pending_)
++      return;
++    const bool mode = pending_->kind == Kind::Mode;
++    if (mode && pending_->mode == wanted_mode_)
++      mode_failed_ = true;
++    else if (!mode && pending_->arm == wanted_arm_)
++      arm_failed_ = true;
++    error_ = std::string(mode ? "mode:" : "arming:") + reason;
++    pending_.reset();
++  }
++  std::string wanted_mode_{"HOLD"}, mode_, error_;
++  bool wanted_arm_{false}, armed_{false}, connected_{false}, safety_disarm_{false};
++  bool force_disarm_{false}, mode_failed_{false}, arm_failed_{false}, acked_{false};
++  uint64_t serial_{0};
++  int64_t sent_at_{0};
++  std::optional<Command> pending_;
++};
++}  // namespace mowgli_mavros_bridge
+diff --git a/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/firmware_provider.hpp b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/firmware_provider.hpp
+index 2b1abf0..91bcd34 100644
+--- a/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/firmware_provider.hpp
++++ b/ros2/src/mowgli_mavros_bridge/include/mowgli_mavros_bridge/firmware_provider.hpp
+@@ -4,11 +4,16 @@
+ #include <string>
+ 
+ #include <geometry_msgs/msg/twist_stamped.hpp>
++
+ #include <mavros_msgs/msg/manual_control.hpp>
++#include <mavros_msgs/msg/position_target.hpp>
+ 
+ namespace mowgli_mavros_bridge
+ {
+-enum class ManualControlMapping { RoverSteeringYThrottleZ };
++enum class ManualControlMapping
++{
++  RoverSteeringYThrottleZ
++};
+ 
+ struct FirmwareCapabilities
+ {
+@@ -33,15 +38,22 @@ class FirmwareProvider
+ {
+ public:
+   virtual ~FirmwareProvider() = default;
+-  virtual const char * name() const noexcept = 0;
++  virtual const char* name() const noexcept = 0;
+   virtual FirmwareCapabilities capabilities() const noexcept = 0;
++  virtual bool guided_velocity_implemented() const noexcept
++  {
++    return false;
++  }
++  virtual mavros_msgs::msg::PositionTarget guided_velocity_from_twist(
++      const geometry_msgs::msg::TwistStamped& twist) const;
+   virtual EmergencyPolicy default_emergency_policy() const = 0;
+-  virtual EmergencyPolicy emergency_policy(
+-    const std::string & configured_mode, bool configured_disarm) const = 0;
++  virtual EmergencyPolicy emergency_policy(const std::string& configured_mode,
++                                           bool configured_disarm) const = 0;
+   virtual mavros_msgs::msg::ManualControl manual_control_from_twist(
+-    const geometry_msgs::msg::TwistStamped & twist,
+-    double linear_scale, double yaw_scale) const = 0;
++      const geometry_msgs::msg::TwistStamped& twist,
++      double linear_scale,
++      double yaw_scale) const = 0;
+ };
+ 
+-std::unique_ptr<FirmwareProvider> make_firmware_provider(const std::string & firmware);
++std::unique_ptr<FirmwareProvider> make_firmware_provider(const std::string& firmware);
+ }  // namespace mowgli_mavros_bridge
+diff --git a/ros2/src/mowgli_mavros_bridge/src/firmware_provider.cpp b/ros2/src/mowgli_mavros_bridge/src/firmware_provider.cpp
+index ad513c1..3d4d86f 100644
+--- a/ros2/src/mowgli_mavros_bridge/src/firmware_provider.cpp
++++ b/ros2/src/mowgli_mavros_bridge/src/firmware_provider.cpp
+@@ -42,6 +42,10 @@ public:
+ class ArduPilotProvider final : public CurrentRuntimeProvider
+ {
+ public:
++  bool guided_velocity_implemented() const noexcept override
++  {
++    return true;
++  }
+   const char* name() const noexcept override
+   {
+     return "ardupilot";
+@@ -58,6 +62,22 @@ public:
+ };
+ }  // namespace
+ 
++mavros_msgs::msg::PositionTarget FirmwareProvider::guided_velocity_from_twist(
++    const geometry_msgs::msg::TwistStamped& twist) const
++{
++  if (!guided_velocity_implemented())
++    throw std::logic_error("GUIDED velocity unsupported");
++  mavros_msgs::msg::PositionTarget target;
++  target.header = twist.header;
++  target.coordinate_frame = mavros_msgs::msg::PositionTarget::FRAME_BODY_NED;
++  // Rover velocity + yaw rate: ignore position, acceleration and absolute yaw.
++  // MAVROS 2.16 transforms FLU body velocity and ENU yaw rate on the wire.
++  target.type_mask = 0x05E7;
++  target.velocity.x = twist.twist.linear.x;
++  target.yaw_rate = static_cast<float>(twist.twist.angular.z);
++  return target;
++}
++
+ std::unique_ptr<FirmwareProvider> make_firmware_provider(const std::string& firmware)
+ {
+   if (firmware == "ardupilot")
+diff --git a/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp b/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp
+index 310dc6f..1acac60 100644
+--- a/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp
++++ b/ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp
+@@ -187,6 +187,8 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
+ 
+ void MavrosHardwareBridgeNode::create_publishers()
+ {
++  pub_guided_control_ =
++      create_publisher<mavros_msgs::msg::PositionTarget>("/mavros/setpoint_raw/local", 10);
+   pub_status_ = create_publisher<mowgli_interfaces::msg::Status>("~/status", 10);
+   pub_emergency_ = create_publisher<mowgli_interfaces::msg::Emergency>("~/emergency", 10);
+   pub_imu_ = create_publisher<sensor_msgs::msg::Imu>("~/imu/data_raw", 10);
+@@ -344,6 +346,7 @@ void MavrosHardwareBridgeNode::create_timers()
+                                    [this]()
+                                    {
+                                      std::lock_guard<std::mutex> lock(mutex_);
++                                     drive_session_locked();
+                                      drive_blade_locked();
+                                    });
+   const auto period = std::chrono::duration<double>(1.0 / std::max(1.0, status_publish_rate_hz_));
+@@ -364,39 +367,48 @@ void MavrosHardwareBridgeNode::create_timers()
+ void MavrosHardwareBridgeNode::on_cmd_vel(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
+ {
+   std::lock_guard<std::mutex> lock(mutex_);
++  drive_session_locked();
+   if (!std::isfinite(msg->twist.linear.x) || !std::isfinite(msg->twist.angular.z))
+-  {
+-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Ignoring non-finite /cmd_vel command.");
+     return;
+-  }
+-
+-  if (safety_state_.project(now().nanoseconds()).active_emergency)
++  const auto safety = safety_state_.project(now().nanoseconds());
++  if (safety.active_emergency || safety.latched_emergency || !motion_session_active() ||
++      !session_control_.requested_arm() || !session_control_.ready())
+   {
+     publish_neutral_manual_control();
+     return;
+   }
+-
+-  auto cmd = firmware_provider_->manual_control_from_twist(*msg,
+-                                                           manual_control_linear_scale_,
+-                                                           manual_control_yaw_scale_);
+-  cmd.header.stamp = now();
+-  pub_manual_control_->publish(cmd);
++  // Do not cache a velocity received before FCU confirmation.
++  if (last_high_level_status_.state ==
++          mowgli_interfaces::msg::HighLevelStatus::HIGH_LEVEL_STATE_AUTONOMOUS &&
++      firmware_provider_->guided_velocity_implemented())
++    pub_guided_control_->publish(firmware_provider_->guided_velocity_from_twist(*msg));
++  else
++  {
++    auto cmd = firmware_provider_->manual_control_from_twist(*msg,
++                                                             manual_control_linear_scale_,
++                                                             manual_control_yaw_scale_);
++    cmd.header.stamp = now();
++    pub_manual_control_->publish(cmd);
++  }
+ }
+ 
+ void MavrosHardwareBridgeNode::on_high_level_status(
+     const mowgli_interfaces::msg::HighLevelStatus::SharedPtr msg)
+ {
+-  bool enter_manual = false;
+-  {
+-    std::lock_guard<std::mutex> lock(mutex_);
+-    enter_manual = high_level_motion_active(msg->state) &&
+-                   !high_level_motion_active(last_high_level_status_.state);
+-    last_high_level_status_ = *msg;
+-  }
+-  if (enter_manual)
++  std::lock_guard<std::mutex> lock(mutex_);
++  const bool was_motion = motion_session_active();
++  last_high_level_status_ = *msg;
++  if (was_motion && !motion_session_active())
+   {
+-    (void)send_mode_command("MANUAL");
++    blade_test_active_ = false;
++    cancel_pending_blade_starts();
++    blade_control_.force_off(blade_steady_ms());
++    publish_neutral_manual_control();
++    drive_blade_locked();
+   }
++  // State publication is the demand. No extra intention, token or service.
++  drive_session_locked();
++  drive_blade_locked();
+ }
+ 
+ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg)
+@@ -423,7 +435,11 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
+     safety_state_.disconnect();
+   }
+   readiness_.connection(msg->connected);
++  if (mavros_state_.connected && !msg->connected)
++    cancel_pending_blade_starts();
+   mavros_state_ = *msg;
++  session_control_.observe(msg->connected, msg->armed, msg->mode);
++  drive_session_locked();
+   drive_blade_locked();
+ }
+ 
+@@ -581,7 +597,6 @@ void MavrosHardwareBridgeNode::on_mower_control(
+     const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request)
+ {
+   std::lock_guard<std::mutex> lock(mutex_);
+-  drive_blade_locked();
+   if (request->mow_enabled > 1 || (request->mow_enabled && request->mow_direction > 1))
+   {
+     reply_blade(header, false);
+@@ -592,37 +607,82 @@ void MavrosHardwareBridgeNode::on_mower_control(
+                                                        : BladeControl::Direction::Reverse;
+   const bool transport_available = std::string(firmware_provider_->name()) == "ardupilot" &&
+                                    cli_command_long_->service_is_ready();
+-  if (!transport_available && direction != BladeControl::Direction::Off)
++  if (direction == BladeControl::Direction::Off)
+   {
+-    reply_blade(header, false);
++    cancel_pending_blade_starts();
++    blade_test_active_ = false;
++    if (!motion_session_active())
++    {
++      const auto safety = safety_state_.project(now().nanoseconds());
++      session_control_.demand("HOLD", false, safety.active_emergency || safety.latched_emergency);
++      // Apply the permission edge before binding this OFF caller to a blade
++      // revision. This does not dispatch DISARM before neutral cutting.
++      blade_control_.permission(blade_allowed_locked(blade_steady_ms()), blade_steady_ms());
++    }
++    // Blade OFF is dispatched before ending temporary arming. An active
++    // MowgliNext movement session continues to own its requested ARM state.
++    const auto result = blade_control_.request(direction, blade_steady_ms());
++    if (result == BladeControl::Result::Pending && transport_available &&
++        blade_replies_.size() < 32)
++      blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
++    else
++      reply_blade(header, transport_available && result == BladeControl::Result::Confirmed);
++    drive_blade_locked();
++    drive_session_locked();
+     return;
+   }
+-  // OFF cancels a deferred ON even while the transport is absent. A queued
+-  // neutral is not an ACK: fail this caller, but retain the OFF intent so that
+-  // service recovery can never launch the superseded ON.
+-  const auto result = blade_control_.request(direction, blade_steady_ms());
+-  if (!transport_available)
++  if (!pending_blade_starts_.empty() && pending_blade_starts_.front().direction != direction)
++    cancel_pending_blade_starts();
++  drive_session_locked();
++  drive_blade_locked();
++  const auto safety = safety_state_.project(now().nanoseconds());
++  // Reuse the existing blade protections; do not change BladeControl policy.
++  if (!transport_available || !mowing_enabled_ || !mavros_state_.connected ||
++      safety.active_emergency || safety.latched_emergency ||
++      safety_state_.hardware_safety_state() != HardwareSafetyState::Released ||
++      blade_control_.failed())
+   {
+-    drive_blade_locked();
+     reply_blade(header, false);
+     return;
+   }
+-  if (result != BladeControl::Result::Pending)
++  if (!motion_session_active())
+   {
+-    reply_blade(header, result == BladeControl::Result::Confirmed);
+-    return;
++    blade_test_active_ = true;
++    publish_neutral_manual_control();
+   }
+-  if (blade_replies_.size() >= 32)
++  drive_session_locked();
++  if (session_control_.failed() || (!motion_session_active() && !blade_test_active_))
+   {
+-    // Never prevent OFF from preempting ON because the response queue is full.
+-    drive_blade_locked();
++    end_failed_blade_test_locked(session_control_.error().c_str());
+     reply_blade(header, false);
+     return;
+   }
+-  blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
++  if (!session_control_.ready())
++  {
++    if (pending_blade_starts_.size() >= 32)
++    {
++      reply_blade(header, false);
++      return;
++    }
++    pending_blade_starts_.push_back({header, direction, blade_steady_ms()});
++    return;
++  }
++  blade_control_.permission(blade_allowed_locked(blade_steady_ms()), blade_steady_ms());
++  const auto result = blade_control_.request(direction, blade_steady_ms());
++  if (result == BladeControl::Result::Pending && blade_replies_.size() < 32)
++    blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
++  else
++    reply_blade(header, result == BladeControl::Result::Confirmed);
+   drive_blade_locked();
+ }
+ 
++void MavrosHardwareBridgeNode::cancel_pending_blade_starts()
++{
++  for (const auto& pending : pending_blade_starts_)
++    reply_blade(pending.header, false);
++  pending_blade_starts_.clear();
++}
++
+ bool MavrosHardwareBridgeNode::request_blade_neutral()
+ {
+   std::lock_guard<std::mutex> lock(mutex_);
+@@ -647,20 +707,67 @@ void MavrosHardwareBridgeNode::reply_blade(const std::shared_ptr<rmw_request_id_
+   }
+ }
+ 
++void MavrosHardwareBridgeNode::end_failed_blade_test_locked(const char* reason)
++{
++  if (!blade_test_active_ || motion_session_active())
++    return;
++  RCLCPP_ERROR(get_logger(), "Isolated blade test cancelled: %s", reason);
++  blade_test_active_ = false;
++  cancel_pending_blade_starts();
++  blade_control_.force_off(blade_steady_ms());
++  publish_neutral_manual_control();
++  const auto safety = safety_state_.project(now().nanoseconds());
++  session_control_.demand("HOLD", false, safety.active_emergency || safety.latched_emergency);
++}
++
++bool MavrosHardwareBridgeNode::blade_allowed_locked(int64_t steady) const
++{
++  const auto safety = safety_state_.project(now().nanoseconds());
++  return session_control_.ready() && session_control_.requested_arm() && mowing_enabled_ &&
++         mavros_state_.connected && mavros_state_.armed && last_fcu_receipt_ms_ >= 0 &&
++         steady - last_fcu_receipt_ms_ <= 2500 && last_hardware_safety_ms_ >= 0 &&
++         steady - last_hardware_safety_ms_ <= 3000 &&
++         safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
++         !safety.active_emergency && !safety.latched_emergency && blade_esc_slot_ >= 0;
++}
++
+ void MavrosHardwareBridgeNode::drive_blade_locked()
+ {
+   const auto steady = blade_steady_ms();
+   while (!blade_wire_expectations_.empty() && blade_wire_expectations_.front().until_ms < steady)
+     blade_wire_expectations_.pop_front();
+   const auto safety = safety_state_.project(now().nanoseconds());
+-  const bool allowed = mowing_enabled_ && mavros_state_.connected && mavros_state_.armed &&
+-                       last_fcu_receipt_ms_ >= 0 && steady - last_fcu_receipt_ms_ <= 2500 &&
+-                       last_hardware_safety_ms_ >= 0 && steady - last_hardware_safety_ms_ <= 3000 &&
+-                       safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
+-                       !safety.active_emergency && !safety.latched_emergency &&
+-                       blade_esc_slot_ >= 0;
+-  blade_control_.permission(allowed, steady);
++  if (session_control_.failed() || !mavros_state_.connected)
++    end_failed_blade_test_locked("FCU activation failed or disconnected");
++  blade_control_.permission(blade_allowed_locked(steady), steady);
+   blade_control_.tick(steady);
++  if (std::any_of(pending_blade_starts_.begin(),
++                  pending_blade_starts_.end(),
++                  [steady](const auto& pending)
++                  {
++                    return steady - pending.started_ms > 20000;
++                  }))
++    end_failed_blade_test_locked("blade request expired");
++  for (auto it = pending_blade_starts_.begin(); it != pending_blade_starts_.end();)
++  {
++    if (session_control_.failed() || !mavros_state_.connected || safety.active_emergency ||
++        safety.latched_emergency || steady - it->started_ms > 20000)
++    {
++      reply_blade(it->header, false);
++      it = pending_blade_starts_.erase(it);
++    }
++    else if (session_control_.ready())
++    {
++      const auto result = blade_control_.request(it->direction, steady);
++      if (result == BladeControl::Result::Pending && blade_replies_.size() < 32)
++        blade_replies_.push_back({it->header, blade_control_.revision(), it->started_ms});
++      else
++        reply_blade(it->header, result == BladeControl::Result::Confirmed);
++      it = pending_blade_starts_.erase(it);
++    }
++    else
++      ++it;
++  }
+   if (!blade_control_.satisfied() && std::any_of(blade_replies_.begin(),
+                                                  blade_replies_.end(),
+                                                  [this, steady](const auto& reply)
+@@ -695,6 +802,8 @@ void MavrosHardwareBridgeNode::drive_blade_locked()
+     else
+       ++it;
+   }
++  if (pending_blade_starts_.empty() && blade_control_.requested() == BladeControl::Direction::Off)
++    end_failed_blade_test_locked("blade ON rejected, expired or cancelled");
+   if (std::string(firmware_provider_->name()) != "ardupilot" ||
+       !cli_command_long_->service_is_ready())
+   {
+@@ -764,9 +873,10 @@ void MavrosHardwareBridgeNode::on_emergency_stop(
+       std::lock_guard<std::mutex> lock(mutex_);
+       safety_state_.clear_released_latches();
+     }
+-    if (high_level_motion_active(last_high_level_status_.state))
+     {
+-      (void)send_mode_command("MANUAL");
++      std::lock_guard<std::mutex> lock(mutex_);
++      drive_session_locked();
++      drive_blade_locked();
+     }
+     response->success = true;
+     return;
+@@ -873,6 +983,7 @@ void MavrosHardwareBridgeNode::publish_readiness()
+   std::array<int64_t, 3> esc_slots{};
+   mavros_msgs::msg::State fcu{};
+   SafetyState safety{};
++  FcuSessionController session{};
+   {
+     std::lock_guard<std::mutex> lock(mutex_);
+     readiness = readiness_.project(now_ns);
+@@ -887,6 +998,7 @@ void MavrosHardwareBridgeNode::publish_readiness()
+     }
+     fcu = mavros_state_;
+     safety = safety_state_;
++    session = session_control_;
+   }
+   const auto add_value =
+       [](diagnostic_msgs::msg::DiagnosticStatus& status, const char* key, const std::string& value)
+@@ -896,6 +1008,22 @@ void MavrosHardwareBridgeNode::publish_readiness()
+     item.value = value;
+     status.values.push_back(std::move(item));
+   };
++  diagnostic_msgs::msg::DiagnosticStatus session_status;
++  session_status.name = "mowgli_mavros_bridge/fcu_session";
++  session_status.level = session.failed() ? diagnostic_msgs::msg::DiagnosticStatus::ERROR
++                                          : diagnostic_msgs::msg::DiagnosticStatus::OK;
++  session_status.message =
++      session.error().empty() ? (session.ready() ? "confirmed" : "waiting_fcu") : session.error();
++  add_value(session_status, "requested_mode", session.requested_mode());
++  add_value(session_status, "confirmed_mode", session.confirmed_mode());
++  add_value(session_status, "requested_arm", session.requested_arm() ? "true" : "false");
++  add_value(session_status, "confirmed_arm", session.confirmed_arm() ? "true" : "false");
++  add_value(session_status, "command_pending", session.command_pending() ? "true" : "false");
++  add_value(session_status,
++            "command_acknowledged",
++            session.command_acknowledged() ? "true" : "false");
++  add_value(session_status, "state_confirmed", session.ready() ? "true" : "false");
++  output.status.push_back(std::move(session_status));
+   const auto format_value = [](double value)
+   {
+     return std::isfinite(value) ? std::to_string(value) : std::string("unavailable");
+@@ -1066,114 +1194,126 @@ void MavrosHardwareBridgeNode::publish_readiness()
+   pub_readiness_->publish(output);
+ }
+ 
+-bool MavrosHardwareBridgeNode::send_arm_command(bool arm)
++bool MavrosHardwareBridgeNode::motion_session_active() const
+ {
+-  const auto capabilities = firmware_provider_->capabilities();
+-  if (!(arm ? capabilities.arm_implemented : capabilities.disarm_implemented))
+-  {
+-    return false;
+-  }
+-  if (!cli_arm_)
+-  {
+-    RCLCPP_ERROR(get_logger(), "CommandBool client is null");
+-    return false;
+-  }
+-
+-  if (!cli_arm_->wait_for_service(std::chrono::seconds(1)))
+-  {
+-    RCLCPP_ERROR(get_logger(), "Service /mavros/cmd/arming not available");
+-    return false;
+-  }
+-
+-  auto request = std::make_shared<mavros_msgs::srv::CommandBool::Request>();
+-  request->value = arm;
+-
+-  cli_arm_->async_send_request(
+-      request,
+-      [this, arm](rclcpp::Client<mavros_msgs::srv::CommandBool>::SharedFuture future)
+-      {
+-        try
+-        {
+-          const auto response = future.get();
+-          if (!response)
+-          {
+-            RCLCPP_ERROR(get_logger(), "Null response from /mavros/cmd/arming");
+-            return;
+-          }
+-
+-          if (!response->success)
+-          {
+-            RCLCPP_ERROR(get_logger(),
+-                         "Autopilot rejected arming request: %s",
+-                         arm ? "ARM" : "DISARM");
+-            return;
+-          }
+-
+-          RCLCPP_INFO(get_logger(),
+-                      "Autopilot confirmed arming request: %s",
+-                      arm ? "ARM" : "DISARM");
+-        }
+-        catch (const std::exception& e)
+-        {
+-          RCLCPP_ERROR(get_logger(), "Arm/disarm request failed asynchronously: %s", e.what());
+-        }
+-      });
+-
+-  return true;
++  return high_level_motion_active(last_high_level_status_.state);
+ }
+ 
+-bool MavrosHardwareBridgeNode::send_mode_command(const std::string& mode)
++void MavrosHardwareBridgeNode::drive_session_locked()
+ {
+-  if (!firmware_provider_->capabilities().mode_control_implemented)
++  const auto steady = blade_steady_ms();
++  const auto safety = safety_state_.project(now().nanoseconds());
++  const bool emergency = safety.active_emergency || safety.latched_emergency;
++  const bool movement = motion_session_active();
++  const bool guided = last_high_level_status_.state ==
++                          mowgli_interfaces::msg::HighLevelStatus::HIGH_LEVEL_STATE_AUTONOMOUS &&
++                      firmware_provider_->guided_velocity_implemented();
++  // Preserve the pre-adapter safety paths: tilt/double lift only DISARM.
++  // Hardware switch and explicit service emergency also request HOLD.
++  const bool hold_emergency =
++      safety.reason == "HARDWARE_SAFETY_SWITCH" || safety.reason == "SERVICE_EMERGENCY_STOP";
++  const std::string mode = emergency && !hold_emergency ? mavros_state_.mode
++                           : emergency || !movement     ? "HOLD"
++                           : guided                     ? "GUIDED"
++                                                        : "MANUAL";
++  session_control_.demand(mode, !emergency && (movement || blade_test_active_), emergency);
++  session_control_.tick(steady);
++  const bool traction_ready =
++      movement && !emergency && session_control_.ready() && session_control_.requested_arm();
++  if (traction_was_ready_ && !traction_ready)
++    publish_neutral_manual_control();
++  traction_was_ready_ = traction_ready;
++  const auto& error = session_control_.error();
++  if (!error.empty() && error != last_session_error_)
++    RCLCPP_ERROR(get_logger(), "FCU command failed: %s", error.c_str());
++  last_session_error_ = error;
++  if (session_control_.failed())
++    end_failed_blade_test_locked("FCU activation refused or timed out");
++  for (auto it = session_rpc_ids_.begin(); it != session_rpc_ids_.end();)
+   {
+-    return false;
++    if (!session_control_.current(it->first))
++    {
++      if (it->second.first)
++        cli_set_mode_->remove_pending_request(it->second.second);
++      else
++        cli_arm_->remove_pending_request(it->second.second);
++      it = session_rpc_ids_.erase(it);
++    }
++    else
++      ++it;
+   }
+-  if (!cli_set_mode_)
++  // Only the existing hardware safety/latches decide whether ARM is allowed.
++  const bool allow_arm =
++      !emergency && safety_state_.hardware_safety_state() == HardwareSafetyState::Released;
++  const auto command = session_control_.next(steady,
++                                             cli_set_mode_->service_is_ready(),
++                                             cli_arm_->service_is_ready(),
++                                             allow_arm);
++  if (!command)
++    return;
++  const auto serial = command->serial;
++  try
+   {
+-    RCLCPP_ERROR(get_logger(), "SetMode client is null");
+-    return false;
++    if (command->kind == FcuSessionController::Kind::Mode)
++    {
++      auto request = std::make_shared<mavros_msgs::srv::SetMode::Request>();
++      request->custom_mode = command->mode;
++      const auto result = cli_set_mode_->async_send_request(
++          request,
++          [this, serial](rclcpp::Client<mavros_msgs::srv::SetMode>::SharedFuture future)
++          {
++            bool accepted = false;
++            try
++            {
++              const auto response = future.get();
++              accepted = response && response->mode_sent;
++            }
++            catch (const std::exception&)
++            {
++            }
++            std::lock_guard<std::mutex> lock(mutex_);
++            session_rpc_ids_.erase(serial);
++            session_control_.complete(serial, accepted, blade_steady_ms());
++            drive_session_locked();
++            drive_blade_locked();
++          });
++      session_rpc_ids_[serial] = {true, result.request_id};
++    }
++    else
++    {
++      // Initialize both traction transports to neutral before an ARM request;
++      // only a later confirmed session can forward an actual velocity.
++      if (command->arm)
++        publish_neutral_manual_control();
++      auto request = std::make_shared<mavros_msgs::srv::CommandBool::Request>();
++      request->value = command->arm;
++      const auto result = cli_arm_->async_send_request(
++          request,
++          [this, serial](rclcpp::Client<mavros_msgs::srv::CommandBool>::SharedFuture future)
++          {
++            bool accepted = false;
++            try
++            {
++              const auto response = future.get();
++              accepted = response && response->success && response->result == 0;
++            }
++            catch (const std::exception&)
++            {
++            }
++            std::lock_guard<std::mutex> lock(mutex_);
++            session_rpc_ids_.erase(serial);
++            session_control_.complete(serial, accepted, blade_steady_ms());
++            drive_session_locked();
++            drive_blade_locked();
++          });
++      session_rpc_ids_[serial] = {false, result.request_id};
++    }
+   }
+-
+-  if (!cli_set_mode_->wait_for_service(std::chrono::seconds(1)))
++  catch (const std::exception& error)
+   {
+-    RCLCPP_ERROR(get_logger(), "Service /mavros/set_mode not available");
+-    return false;
++    session_control_.complete(serial, false, steady);
++    RCLCPP_ERROR(get_logger(), "FCU send failed: %s", error.what());
+   }
+-
+-  auto request = std::make_shared<mavros_msgs::srv::SetMode::Request>();
+-  request->custom_mode = mode;
+-
+-  cli_set_mode_->async_send_request(
+-      request,
+-      [this, mode](rclcpp::Client<mavros_msgs::srv::SetMode>::SharedFuture future)
+-      {
+-        try
+-        {
+-          const auto response = future.get();
+-          if (!response)
+-          {
+-            RCLCPP_ERROR(get_logger(), "Null response from /mavros/set_mode");
+-            return;
+-          }
+-
+-          if (!response->mode_sent)
+-          {
+-            RCLCPP_ERROR(get_logger(), "Autopilot rejected mode request '%s'", mode.c_str());
+-            return;
+-          }
+-
+-          RCLCPP_INFO(get_logger(), "Autopilot confirmed mode request '%s'", mode.c_str());
+-        }
+-        catch (const std::exception& e)
+-        {
+-          RCLCPP_ERROR(get_logger(),
+-                       "Set mode request failed asynchronously for '%s': %s",
+-                       mode.c_str(),
+-                       e.what());
+-        }
+-      });
+-
+-  return true;
+ }
+ 
+ void MavrosHardwareBridgeNode::publish_neutral_manual_control()
+@@ -1181,29 +1321,38 @@ void MavrosHardwareBridgeNode::publish_neutral_manual_control()
+   mavros_msgs::msg::ManualControl command;
+   command.header.stamp = now();
+   pub_manual_control_->publish(command);
++  if (firmware_provider_->guided_velocity_implemented())
++  {
++    geometry_msgs::msg::TwistStamped neutral;
++    neutral.header.stamp = now();
++    pub_guided_control_->publish(firmware_provider_->guided_velocity_from_twist(neutral));
++  }
+ }
+ 
+ bool MavrosHardwareBridgeNode::request_blade_disarm()
+ {
+-  (void)request_blade_neutral();
+-  {
+-    std::lock_guard<std::mutex> lock(mutex_);
+-    mow_enabled_ = false;
+-  }
+-  return send_arm_command(false);
++  return request_safety_disarm(false);
+ }
+ 
+ bool MavrosHardwareBridgeNode::request_hold_and_blade_disarm()
+ {
+-  (void)request_blade_neutral();
+-  {
+-    std::lock_guard<std::mutex> lock(mutex_);
+-    mow_enabled_ = false;
+-    publish_neutral_manual_control();
+-  }
+-  const bool mode_forwarded = send_mode_command("HOLD");
+-  const bool blade_forwarded = send_arm_command(false);
+-  return mode_forwarded && blade_forwarded;
++  return request_safety_disarm(true);
++}
++
++bool MavrosHardwareBridgeNode::request_safety_disarm(bool hold)
++{
++  std::lock_guard<std::mutex> lock(mutex_);
++  mow_enabled_ = false;
++  blade_test_active_ = false;
++  cancel_pending_blade_starts();
++  blade_control_.force_off(blade_steady_ms());
++  publish_neutral_manual_control();
++  session_control_.demand(hold ? "HOLD" : mavros_state_.mode, false, true);
++  drive_blade_locked();
++  drive_session_locked();
++  // True means DISARM was queued, or is already observed; HOLD may still be
++  // unavailable/unconfirmed. A service ACK alone is not FCU confirmation.
++  return session_control_.disarm_pending() || (mavros_state_.connected && !mavros_state_.armed);
+ }
+ 
+ bool MavrosHardwareBridgeNode::high_level_motion_active(uint8_t state) const
+@@ -1216,6 +1365,8 @@ bool MavrosHardwareBridgeNode::high_level_motion_active(uint8_t state) const
+ 
+ }  // namespace mowgli_mavros_bridge
+ 
++// The regression executable links the actual node without its standalone main.
++#ifndef MOWGLI_BRIDGE_NO_MAIN
+ int main(int argc, char** argv)
+ {
+   rclcpp::init(argc, argv);
+@@ -1223,3 +1374,5 @@ int main(int argc, char** argv)
+   rclcpp::shutdown();
+   return 0;
+ }
++
++#endif
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py b/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py
+index c9c0c51..d770666 100644
+--- a/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py
++++ b/ros2/src/mowgli_mavros_bridge/test/test_blade_graph.py
+@@ -17,7 +17,7 @@ from sensor_msgs.msg import Imu
+ from geometry_msgs.msg import Quaternion
+ from mavros_msgs.srv import CommandBool, CommandLong, SetMode
+ from mavros_esc_wheel_odometry.msg import EscObservation
+-from mowgli_interfaces.msg import Status
++from mowgli_interfaces.msg import Status, HighLevelStatus
+ from mowgli_interfaces.srv import MowerControl, EmergencyStop
+ 
+ 
+@@ -30,7 +30,8 @@ def main():
+     commands, statuses, authority = [], [], []
+     pwm, rpm, count = 1500, 0, 0
+     freeze, reject, delayed = False, False, False
+-    state = State(connected=True, armed=True)
++    state = State(connected=True, armed=False, mode="HOLD")
++    hl = HighLevelStatus(state=1)
+     tilted = False
+     safety = SysStatus(sensors_present=1 << 15, sensors_enabled=1 << 15)
+ 
+@@ -46,11 +47,13 @@ def main():
+ 
+     def arm(req, res):
+         authority.append(("arm", req.value))
++        state.armed = req.value
+         res.success = True
+         return res
+ 
+     def mode(req, res):
+         authority.append(("mode", req.custom_mode))
++        state.mode = req.custom_mode
+         res.mode_sent = True
+         return res
+ 
+@@ -63,6 +66,7 @@ def main():
+             node.create_publisher(RCOut, "/mavros/rc/out", 10)]
+     raw_pub = node.create_publisher(Mavlink, "/uas1/mavlink_source", 10)
+     outgoing = node.create_publisher(Mavlink, "/uas1/mavlink_sink", 10)
++    hl_pub = node.create_publisher(HighLevelStatus, "/behavior_tree_node/high_level_status", 10)
+     imu_pub = node.create_publisher(Imu, "/mavros/imu/data", 10)
+ 
+     def frame(msgid, payload):
+@@ -81,6 +85,8 @@ def main():
+         esc_stamp = node.get_clock().now().to_msg()
+         if delayed:
+             esc_stamp.sec -= 2
++        state.header.stamp = safety.header.stamp = stamp
++        hl_pub.publish(hl)
+         pubs[0].publish(state)
+         pubs[1].publish(safety)
+         pubs[2].publish(EscObservation(header=Header(stamp=esc_stamp), metadata_stamp=esc_stamp,
+@@ -114,6 +120,12 @@ def main():
+     def mow(enabled, direction=0):
+         return call(mower, MowerControl.Request(mow_enabled=enabled, mow_direction=direction)).success
+ 
++    def activate_mowing():
++        hl.state = 4
++        spin(.2)
++        wait(lambda: state.mode == "MANUAL" and state.armed)
++        spin(.1)
++
+     def neutral_reconnect():
+         nonlocal rpm, pwm, freeze, reject
+         state.connected = False
+@@ -122,6 +134,7 @@ def main():
+         spin(.3)
+         state.connected = True
+         spin(1.5)
++        activate_mowing()
+ 
+     with tempfile.TemporaryDirectory(prefix="blade-graph-") as directory:
+         with open(Path(directory) / "bridge.log", "w+") as log:
+@@ -138,16 +151,16 @@ def main():
+                     spin(.1)  # BT repetition at 10 Hz, not just a tight loop.
+                 assert len(commands) == initial
+                 assert authority == []
+-                # No FCU ARM owner is introduced by repeated unauthorized ON.
+-                state.armed = False
+-                spin(.2)
+-                denied_baseline = len(commands)
+-                for _ in range(10):
+-                    assert not mow(True)
+-                    spin(.1)
+-                assert len(commands) == denied_baseline
+-                assert authority == []
+-                state.armed = True
++                # A GUI blade ON in idle automatically arms in HOLD.
++                assert mow(True)
++                assert state.mode == "HOLD" and state.armed
++                assert ("arm", True) in authority
++                assert mow(False)
++                wait(lambda: not state.armed)
++                # An actual MowgliNext movement state starts MANUAL + ARM.
++                activate_mowing()
++                assert ("mode", "MANUAL") in authority and state.armed
++                authority.clear()
+                 spin(1.5)
+                 for step, (direction, target) in enumerate(((0, 1450), (1, 1550), (0, 1450))):
+                     before = len(commands)
+@@ -191,8 +204,12 @@ def main():
+                 assert call(emergency, EmergencyStop.Request(emergency=1)).success
+                 wait(lambda: (183, 3., 1500.) in commands[before:])
+                 assert not mow(True)
+-                assert ("mode", "HOLD") in authority and ("arm", False) in authority
++                wait(lambda: ("mode", "HOLD") in authority and ("arm", False) in authority)
+                 assert call(emergency, EmergencyStop.Request(emergency=0)).success
++                spin(.3)
++                # Current MowgliNext state remains active: automatic resume,
++                # without tokens, extra services or another user action.
++                wait(lambda: state.mode == "MANUAL" and state.armed)
+                 spin(1.5)
+                 assert mow(True)
+                 freeze = True
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py b/ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py
+index 58d4edd..0d3abbe 100644
+--- a/ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py
++++ b/ros2/src/mowgli_mavros_bridge/test/test_blade_off_contract.py
+@@ -5,12 +5,14 @@ import unittest
+ 
+ 
+ class BladeOffContract(unittest.TestCase):
+-    def test_mower_service_has_no_arming_or_mode_side_effect(self):
++    def test_blade_requests_delegate_fcu_transport_to_adapter(self):
+         source = (Path(__file__).parents[1] / "src/mavros_hardware_bridge_node.cpp").read_text()
+         body = source.split("void MavrosHardwareBridgeNode::on_mower_control(", 1)[1]
+         body = body.split("bool MavrosHardwareBridgeNode::request_blade_neutral()", 1)[0]
++        self.assertNotIn("cli_arm_", body)
+         self.assertNotIn("send_arm_command", body)
+         self.assertNotIn("send_mode_command", body)
++        self.assertIn("drive_session_locked", body)
+         self.assertIn("BladeControl::Direction::Off", body)
+         self.assertIn("BladeControl::Direction::Forward", body)
+         self.assertIn("BladeControl::Direction::Reverse", body)
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_bridge_regressions.cpp b/ros2/src/mowgli_mavros_bridge/test/test_bridge_regressions.cpp
+new file mode 100644
+index 0000000..2015126
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/test/test_bridge_regressions.cpp
+@@ -0,0 +1,209 @@
++#include <chrono>
++#include <thread>
++
++#include "mavros_hardware_bridge_node.hpp"
++#include <gtest/gtest.h>
++
++namespace mowgli_mavros_bridge
++{
++// Deterministic callback boundary: OFF arrives with an ON queued, FCU already
++// confirmed and real BladeControl stop acquisition complete. No executor timer
++// can race the callback; the outbound servo requests are captured by a ROS mock.
++class BridgeRegressionPeer
++{
++public:
++  static int64_t steady()
++  {
++    return std::chrono::duration_cast<std::chrono::milliseconds>(
++               std::chrono::steady_clock::now().time_since_epoch())
++        .count();
++  }
++  static void wait_transport(MavrosHardwareBridgeNode& n)
++  {
++    ASSERT_TRUE(n.cli_command_long_->wait_for_service(std::chrono::seconds(3)));
++  }
++  static void setup(MavrosHardwareBridgeNode& n)
++  {
++    const auto t = steady();
++    n.mavros_state_.connected = n.mavros_state_.armed = true;
++    n.mavros_state_.mode = "HOLD";
++    n.last_fcu_receipt_ms_ = n.last_hardware_safety_ms_ = t;
++    n.safety_state_.observe_motor_outputs(true, true);
++    n.blade_test_active_ = true;
++    n.session_control_.demand("HOLD", true);
++    n.session_control_.observe(true, true, "HOLD");
++    n.blade_control_.connection(true, t - 1600);
++    n.blade_control_.permission(true, t - 1600);
++    auto neutral = n.blade_control_.next(t - 1600);
++    ASSERT_TRUE(neutral);
++    n.blade_control_.complete(neutral->token, true, t - 1600);
++    for (int i = 0; i != 6; ++i)
++    {
++      const auto sample = t - 1250 + i * 250;
++      n.blade_control_.sample(2, sample * 1000000, i + 1, true, true, 0, sample);
++    }
++    ASSERT_TRUE(n.blade_control_.stopped(t));
++    n.pending_blade_starts_.push_back(
++        {std::make_shared<rmw_request_id_t>(), BladeControl::Direction::Forward, t});
++  }
++  static void wait_safety_transport(MavrosHardwareBridgeNode& n)
++  {
++    ASSERT_TRUE(n.cli_arm_->wait_for_service(std::chrono::seconds(3)));
++    ASSERT_TRUE(n.cli_set_mode_->wait_for_service(std::chrono::seconds(3)));
++  }
++  static void prepare_safety(MavrosHardwareBridgeNode& n,
++                             const std::string& mode,
++                             const std::string& reason)
++  {
++    setup(n);
++    n.pending_blade_starts_.clear();
++    n.blade_test_active_ = false;
++    n.mavros_state_.mode = mode;
++    n.last_high_level_status_.state = mode == "MANUAL" ? 4 : 2;
++    n.session_control_.demand(mode, true);
++    n.session_control_.observe(true, true, mode);
++    if (reason == "lift")
++      n.safety_state_.observe_button_change(3, n.now().nanoseconds());
++    else if (reason == "tilt")
++      n.safety_state_.observe_tilt(true);
++    else if (reason == "switch")
++      n.safety_state_.observe_motor_outputs(true, false);
++    else
++      n.safety_state_.set_service_emergency(true);
++  }
++  static bool disarm(MavrosHardwareBridgeNode& n, bool hold)
++  {
++    return hold ? n.request_hold_and_blade_disarm() : n.request_blade_disarm();
++  }
++  static void confirm_disarm(MavrosHardwareBridgeNode& n)
++  {
++    n.mavros_state_.armed = false;
++    n.session_control_.observe(true, false, n.mavros_state_.mode);
++  }
++  static void off(MavrosHardwareBridgeNode& n)
++  {
++    auto request = std::make_shared<mowgli_interfaces::srv::MowerControl::Request>();
++    n.on_mower_control(std::make_shared<rmw_request_id_t>(), request);
++    EXPECT_FALSE(n.blade_test_active_);
++    EXPECT_TRUE(n.pending_blade_starts_.empty());
++    EXPECT_EQ(n.blade_control_.requested(), BladeControl::Direction::Off);
++    EXPECT_FALSE(n.session_control_.requested_arm());
++  }
++};
++
++TEST(BridgeRegression, OffCancelsReadyQueuedOnBeforeDispatch)
++{
++  rclcpp::init(0, nullptr);
++  auto mock = std::make_shared<rclcpp::Node>("off_order_mock");
++  std::vector<float> pwms;
++  auto service = mock->create_service<mavros_msgs::srv::CommandLong>(
++      "/mavros/cmd/command",
++      [&pwms](const std::shared_ptr<mavros_msgs::srv::CommandLong::Request> req,
++              std::shared_ptr<mavros_msgs::srv::CommandLong::Response> res)
++      {
++        pwms.push_back(req->param2);
++        res->success = true;
++        res->result = 0;
++      });
++  auto bridge = std::make_shared<MavrosHardwareBridgeNode>();
++  // Discovery may finish without spinning the bridge (and its periodic timer).
++  BridgeRegressionPeer::wait_transport(*bridge);
++  BridgeRegressionPeer::setup(*bridge);
++  BridgeRegressionPeer::off(*bridge);
++  rclcpp::executors::SingleThreadedExecutor executor;
++  executor.add_node(mock);
++  for (int i = 0; i != 20; ++i)
++  {
++    executor.spin_some();
++    std::this_thread::sleep_for(std::chrono::milliseconds(10));
++  }
++  ASSERT_FALSE(pwms.empty());
++  for (const auto pwm : pwms)
++    EXPECT_EQ(pwm, 1500);
++  executor.remove_node(mock);
++  bridge.reset();
++  mock.reset();
++  rclcpp::shutdown();
++}
++
++class SafetyPathRegression : public testing::TestWithParam<std::pair<std::string, std::string>>
++{
++};
++TEST_P(SafetyPathRegression, PreservesOriginalModePolicyAcrossDisarmAndTicks)
++{
++  rclcpp::init(0, nullptr);
++  const auto [mode, reason] = GetParam();
++  const bool hold = reason == "switch" || reason == "service";
++  auto mock = std::make_shared<rclcpp::Node>("safety_path_mock");
++  auto bridge = std::make_shared<MavrosHardwareBridgeNode>();
++  std::vector<std::string> modes;
++  std::vector<bool> arms;
++  std::vector<float> pwms;
++  auto arm = mock->create_service<mavros_msgs::srv::CommandBool>(
++      "/mavros/cmd/arming",
++      [&](std::shared_ptr<mavros_msgs::srv::CommandBool::Request> request,
++          std::shared_ptr<mavros_msgs::srv::CommandBool::Response> response)
++      {
++        arms.push_back(request->value);
++        response->success = true;
++        response->result = 0;
++        BridgeRegressionPeer::confirm_disarm(*bridge);
++      });
++  auto set_mode = mock->create_service<mavros_msgs::srv::SetMode>(
++      "/mavros/set_mode",
++      [&](std::shared_ptr<mavros_msgs::srv::SetMode::Request> request,
++          std::shared_ptr<mavros_msgs::srv::SetMode::Response> response)
++      {
++        modes.push_back(request->custom_mode);
++        response->mode_sent = true;
++      });
++  auto servo = mock->create_service<mavros_msgs::srv::CommandLong>(
++      "/mavros/cmd/command",
++      [&](std::shared_ptr<mavros_msgs::srv::CommandLong::Request> request,
++          std::shared_ptr<mavros_msgs::srv::CommandLong::Response> response)
++      {
++        pwms.push_back(request->param2);
++        response->success = true;
++        response->result = 0;
++      });
++  auto arm_client = mock->create_client<mavros_msgs::srv::CommandBool>("/mavros/cmd/arming");
++  ASSERT_TRUE(arm_client->wait_for_service(std::chrono::seconds(3)));
++  BridgeRegressionPeer::wait_transport(*bridge);
++  BridgeRegressionPeer::wait_safety_transport(*bridge);
++  BridgeRegressionPeer::prepare_safety(*bridge, mode, reason);
++  ASSERT_TRUE(BridgeRegressionPeer::disarm(*bridge, hold));
++  rclcpp::executors::SingleThreadedExecutor executor;
++  executor.add_node(mock);
++  executor.add_node(bridge);
++  for (int i = 0; i != 40; ++i)
++  {
++    executor.spin_some();
++    std::this_thread::sleep_for(std::chrono::milliseconds(10));
++  }
++  ASSERT_EQ(arms.size(), 1u);
++  EXPECT_FALSE(arms.front());
++  ASSERT_FALSE(pwms.empty());
++  for (const auto pwm : pwms)
++    EXPECT_EQ(pwm, 1500);
++  if (hold)
++  {
++    ASSERT_EQ(modes.size(), 1u);
++    EXPECT_EQ(modes.front(), "HOLD");
++  }
++  else
++    EXPECT_TRUE(modes.empty());  // also after DISARM ACK, observed state and repeated ticks
++  executor.remove_node(bridge);
++  executor.remove_node(mock);
++  bridge.reset();
++  mock.reset();
++  rclcpp::shutdown();
++}
++INSTANTIATE_TEST_SUITE_P(ExistingSafetyPaths,
++                         SafetyPathRegression,
++                         testing::Values(std::make_pair("MANUAL", "lift"),
++                                         std::make_pair("GUIDED", "lift"),
++                                         std::make_pair("MANUAL", "tilt"),
++                                         std::make_pair("GUIDED", "tilt"),
++                                         std::make_pair("MANUAL", "switch"),
++                                         std::make_pair("GUIDED", "service")));
++}  // namespace mowgli_mavros_bridge
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_command_provider.cpp b/ros2/src/mowgli_mavros_bridge/test/test_command_provider.cpp
+index 0211c9f..ecb059d 100644
+--- a/ros2/src/mowgli_mavros_bridge/test/test_command_provider.cpp
++++ b/ros2/src/mowgli_mavros_bridge/test/test_command_provider.cpp
+@@ -99,3 +99,22 @@ TEST(CommandProvider, EmergencyPolicyPreservesDefaultsAndEveryOverride)
+     }
+   }
+ }
++
++TEST(FirmwareProvider, GuidedTransportIsSeparateAndBodyRelative)
++{
++  auto ap = mowgli_mavros_bridge::make_firmware_provider("ardupilot");
++  auto px4 = mowgli_mavros_bridge::make_firmware_provider("px4");
++  geometry_msgs::msg::TwistStamped twist;
++  twist.twist.linear.x = 0.35;
++  twist.twist.angular.z = -0.4;
++  ASSERT_TRUE(ap->guided_velocity_implemented());
++  const auto target = ap->guided_velocity_from_twist(twist);
++  EXPECT_EQ(target.coordinate_frame, mavros_msgs::msg::PositionTarget::FRAME_BODY_NED);
++  EXPECT_EQ(target.type_mask, 0x05E7);
++  EXPECT_DOUBLE_EQ(target.velocity.x, 0.35);
++  EXPECT_DOUBLE_EQ(target.velocity.y, 0.0);
++  EXPECT_DOUBLE_EQ(target.velocity.z, 0.0);
++  EXPECT_FLOAT_EQ(target.yaw_rate, -0.4F);
++  EXPECT_FALSE(px4->guided_velocity_implemented());
++  EXPECT_THROW(px4->guided_velocity_from_twist(twist), std::logic_error);
++}
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_fcu_session_controller.cpp b/ros2/src/mowgli_mavros_bridge/test/test_fcu_session_controller.cpp
+new file mode 100644
+index 0000000..b16665c
+--- /dev/null
++++ b/ros2/src/mowgli_mavros_bridge/test/test_fcu_session_controller.cpp
+@@ -0,0 +1,318 @@
++#include "mowgli_mavros_bridge/fcu_session_controller.hpp"
++#include <gtest/gtest.h>
++using Adapter = mowgli_mavros_bridge::FcuSessionController;
++using Kind = Adapter::Kind;
++struct FcuTest : testing::Test
++{
++  Adapter c;
++  void idle()
++  {
++    c.observe(true, false, "HOLD");
++  }
++  Adapter::Command next(int64_t t)
++  {
++    auto op = c.next(t, true, true, true);
++    EXPECT_TRUE(op);
++    return op.value();
++  }
++  void run(const std::string& mode = "GUIDED")
++  {
++    idle();
++    c.demand(mode, true);
++    auto set = next(1);
++    EXPECT_EQ(set.kind, Kind::Mode);
++    EXPECT_EQ(set.mode, mode);
++    c.complete(set.serial, true, 2);
++    EXPECT_FALSE(c.ready());
++    EXPECT_FALSE(c.next(3, true, true, true));
++    c.observe(true, false, mode);
++    auto arm = next(4);
++    EXPECT_EQ(arm.kind, Kind::Arm);
++    EXPECT_TRUE(arm.arm);
++    c.complete(arm.serial, true, 5);
++    EXPECT_FALSE(c.ready());
++    c.observe(true, true, mode);
++    EXPECT_TRUE(c.ready());
++  }
++};
++TEST_F(FcuTest, IdleDeduplicatesHoldDisarm)
++{
++  idle();
++  for (int i = 0; i < 100; ++i)
++    EXPECT_FALSE(c.next(i, true, true, true));
++}
++TEST_F(FcuTest, GuidedModeThenConfirmedArm)
++{
++  run();
++}
++TEST_F(FcuTest, ManualModeThenConfirmedArm)
++{
++  run("MANUAL");
++}
++TEST_F(FcuTest, BladeTestArmsInHold)
++{
++  idle();
++  c.demand("HOLD", true);
++  auto arm = next(1);
++  EXPECT_EQ(arm.kind, Kind::Arm);
++  c.complete(arm.serial, true, 2);
++  EXPECT_FALSE(c.ready());
++  c.observe(true, true, "HOLD");
++  EXPECT_TRUE(c.ready());
++}
++TEST_F(FcuTest, StateBeforeAckAlsoWorks)
++{
++  idle();
++  c.demand("HOLD", true);
++  auto arm = next(1);
++  c.observe(true, true, "HOLD");
++  EXPECT_FALSE(c.ready());
++  c.complete(arm.serial, true, 2);
++  EXPECT_TRUE(c.ready());
++}
++TEST_F(FcuTest, ActiveTicksNeverRepeatRequests)
++{
++  run();
++  for (int i = 6; i < 10000; ++i)
++  {
++    c.demand("GUIDED", true);
++    EXPECT_FALSE(c.next(i, true, true, true));
++  }
++}
++TEST_F(FcuTest, EndHoldThenDisarm)
++{
++  run();
++  c.demand("HOLD", false);
++  auto mode = next(6);
++  EXPECT_EQ(mode.kind, Kind::Mode);
++  c.complete(mode.serial, true, 7);
++  EXPECT_FALSE(c.next(8, true, true, true));
++  c.observe(true, true, "HOLD");
++  auto arm = next(9);
++  EXPECT_FALSE(arm.arm);
++  c.complete(arm.serial, true, 10);
++  c.observe(true, false, "HOLD");
++  EXPECT_TRUE(c.ready());
++}
++TEST_F(FcuTest, RefusedArmDoesNotRetryOnTicks)
++{
++  idle();
++  c.demand("HOLD", true);
++  auto arm = next(1);
++  c.complete(arm.serial, false, 2);
++  EXPECT_EQ(c.error(), "arming:request_refused");
++  for (int i = 3; i < 10000; ++i)
++  {
++    c.demand("HOLD", true);
++    EXPECT_FALSE(c.next(i, true, true, true));
++  }
++}
++TEST_F(FcuTest, ModeRefusalPreventsActivation)
++{
++  idle();
++  c.demand("GUIDED", true);
++  auto mode = next(1);
++  c.complete(mode.serial, false, 2);
++  EXPECT_TRUE(c.failed());
++  for (int i = 3; i < 100; ++i)
++    EXPECT_FALSE(c.next(i, true, true, true));
++}
++TEST_F(FcuTest, ModeTimeoutPreventsActivationWithoutRetry)
++{
++  idle();
++  c.demand("GUIDED", true);
++  next(1);
++  c.tick(3002);
++  EXPECT_EQ(c.error(), "mode:confirmation_timeout");
++  EXPECT_FALSE(c.next(3003, true, true, true));
++}
++TEST_F(FcuTest, SafetyPreemptsPendingMode)
++{
++  idle();
++  c.demand("GUIDED", true);
++  auto old = next(1);
++  c.demand("HOLD", false, true);
++  auto disarm = next(2);
++  EXPECT_EQ(disarm.kind, Kind::Arm);
++  EXPECT_FALSE(disarm.arm);
++  c.complete(old.serial, true, 3);
++  EXPECT_TRUE(c.current(disarm.serial));
++}
++TEST_F(FcuTest, SafetyPreemptsPendingArmAndReconcilesLateArm)
++{
++  idle();
++  c.demand("HOLD", true);
++  auto old = next(1);
++  c.demand("HOLD", false, true);
++  auto stop = next(2);
++  c.complete(old.serial, true, 3);
++  EXPECT_TRUE(c.current(stop.serial));
++  c.complete(stop.serial, true, 4);
++  c.observe(true, true, "HOLD");
++  auto corrective = next(5);
++  EXPECT_FALSE(corrective.arm);
++  c.complete(corrective.serial, true, 6);
++  c.observe(true, false, "HOLD");
++  EXPECT_FALSE(c.next(7, true, true, true));
++}
++TEST_F(FcuTest, SafetyDisarmSurvivesPriorModeTimeout)
++{
++  idle();
++  c.demand("GUIDED", true);
++  next(1);
++  c.tick(3002);
++  c.demand("HOLD", false, true);
++  auto disarm = next(3003);
++  EXPECT_EQ(disarm.kind, Kind::Arm);
++  EXPECT_FALSE(disarm.arm);
++}
++TEST_F(FcuTest, HoldFailureStillDisarms)
++{
++  run();
++  c.demand("HOLD", false);
++  auto mode = next(6);
++  c.complete(mode.serial, false, 7);
++  auto arm = next(8);
++  EXPECT_FALSE(arm.arm);
++}
++TEST_F(FcuTest, MissingHoldEndpointStillDisarms)
++{
++  c.observe(true, true, "MANUAL");
++  auto cmd = c.next(1, false, true, true);
++  ASSERT_TRUE(cmd);
++  EXPECT_EQ(cmd->kind, Kind::Arm);
++  EXPECT_FALSE(cmd->arm);
++}
++TEST_F(FcuTest, ReleasedEmergencyUsesCurrentMowgliNextDemand)
++{
++  run();
++  c.demand("HOLD", false, true);
++  auto disarm = next(6);
++  c.complete(disarm.serial, true, 7);
++  c.observe(true, false, "HOLD");
++  c.demand("GUIDED", true);
++  auto mode = next(8);
++  EXPECT_EQ(mode.mode, "GUIDED");
++}
++TEST_F(FcuTest, ReconnectRetainsFunctionalDemandWithoutNewIntent)
++{
++  run();
++  c.observe(false, false, "");
++  EXPECT_FALSE(c.ready());
++  EXPECT_FALSE(c.next(6, true, true, true));
++  c.observe(true, false, "GUIDED");
++  auto arm = next(7);
++  EXPECT_TRUE(arm.arm);
++}
++TEST_F(FcuTest, SupersededRefusalDoesNotBlockNewModeOrDisarm)
++{
++  idle();
++  c.demand("GUIDED", true);
++  auto old = next(1);
++  c.demand("MANUAL", true);
++  EXPECT_FALSE(c.next(2, true, true, true));
++  c.complete(old.serial, false, 3);
++  auto mode = next(4);
++  EXPECT_EQ(mode.mode, "MANUAL");
++}
++TEST_F(FcuTest, ExistingSafetyGateBlocksArmButNotDisarm)
++{
++  idle();
++  c.demand("HOLD", true);
++  EXPECT_FALSE(c.next(1, true, true, false));
++  auto arm = next(2);
++  EXPECT_TRUE(arm.arm);
++  c.demand("HOLD", false, true);
++  auto stop = c.next(3, true, true, false);
++  ASSERT_TRUE(stop);
++  EXPECT_FALSE(stop->arm);
++}
++TEST_F(FcuTest, ExternalDisarmReconcilesCurrentDemandOnce)
++{
++  run("MANUAL");
++  c.observe(true, false, "MANUAL");
++  auto arm = next(6);
++  EXPECT_TRUE(arm.arm);
++  for (int i = 7; i < 100; ++i)
++    EXPECT_FALSE(c.next(i, true, true, true));
++}
++
++TEST_F(FcuTest, RefusedSafetyDisarmIsDiagnosedWithoutTickRetries)
++{
++  c.observe(true, true, "HOLD");
++  c.demand("HOLD", false, true);
++  const auto stop = next(1);
++  c.complete(stop.serial, false, 2);
++  EXPECT_EQ(c.error(), "arming:request_refused");
++  for (int i = 3; i < 10000; ++i)
++  {
++    c.demand("HOLD", false, true);
++    c.observe(true, true, "HOLD");
++    EXPECT_FALSE(c.next(i, true, true, false));
++  }
++}
++
++TEST_F(FcuTest, SafetyDisarmStillRunsAfterArmTimeout)
++{
++  idle();
++  c.demand("HOLD", true);
++  next(1);
++  c.tick(3002);
++  EXPECT_EQ(c.error(), "arming:confirmation_timeout");
++  c.demand("HOLD", false, true);
++  const auto stop = next(3003);
++  EXPECT_EQ(stop.kind, Kind::Arm);
++  EXPECT_FALSE(stop.arm);
++}
++
++TEST_F(FcuTest, SupersededArmRefusalCannotBlockSessionEndDisarm)
++{
++  idle();
++  c.demand("HOLD", true);
++  const auto arm = next(1);
++  c.demand("HOLD", false);
++  c.observe(true, true, "HOLD");
++  c.complete(arm.serial, false, 2);
++  const auto stop = next(3);
++  EXPECT_EQ(stop.kind, Kind::Arm);
++  EXPECT_FALSE(stop.arm);
++}
++
++TEST_F(FcuTest, LateModeConfirmationFulfillsCurrentDemandWithoutRetry)
++{
++  idle();
++  c.demand("GUIDED", true);
++  const auto mode = next(1);
++  c.tick(3002);
++  EXPECT_TRUE(c.failed());
++  c.complete(mode.serial, true, 3003);
++  EXPECT_FALSE(c.next(3004, true, true, true));
++  c.observe(true, false, "GUIDED");
++  const auto arm = next(3005);
++  EXPECT_EQ(arm.kind, Kind::Arm);
++  EXPECT_TRUE(arm.arm);
++  c.complete(arm.serial, true, 3006);
++  c.observe(true, true, "GUIDED");
++  EXPECT_TRUE(c.ready());
++  EXPECT_FALSE(c.failed());
++}
++
++TEST_F(FcuTest, PendingAcknowledgedAndObservedDisarmAreDistinct)
++{
++  c.observe(true, true, "MANUAL");
++  c.demand("HOLD", false, true);
++  auto disarm = c.next(1, false, true, false);
++  ASSERT_TRUE(disarm);
++  EXPECT_TRUE(c.disarm_pending());
++  EXPECT_TRUE(c.command_pending());
++  EXPECT_FALSE(c.command_acknowledged());
++  c.complete(disarm->serial, true, 2);
++  EXPECT_TRUE(c.command_acknowledged());
++  EXPECT_TRUE(c.confirmed_arm());
++  EXPECT_FALSE(c.ready());
++  c.observe(true, false, "MANUAL");
++  EXPECT_FALSE(c.command_pending());
++  EXPECT_FALSE(c.command_acknowledged());
++  EXPECT_FALSE(c.confirmed_arm());
++  EXPECT_FALSE(c.ready());  // HOLD still missing
++}
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py b/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py
+index ea4b6cf..eda9cee 100644
+--- a/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py
++++ b/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py
+@@ -1,251 +1,346 @@
+ #!/usr/bin/env python3
+-"""Prove traction and blade mappings against real bridge ROS interfaces."""
++"""Existing ROS interfaces, real bridge, software-only FCU service mocks."""
+ import argparse
+ import json
+ import os
+ from pathlib import Path
+ import signal
+ import subprocess
+-import sys
+ import tempfile
+ import time
+ 
+ 
+ def main():
+     parser = argparse.ArgumentParser()
+-    parser.add_argument("--bridge-executable", required=True)
+-    parser.add_argument("--provider", choices=("ardupilot", "px4"))
+-    parser.add_argument("--mowing-enabled", choices=("true", "false"))
++    parser.add_argument('--bridge-executable', required=True)
++    parser.add_argument('--provider', choices=['ardupilot', 'px4'])
++    parser.add_argument('--mowing-enabled', default='true')
+     args = parser.parse_args()
+     if args.provider is None:
+-        for provider_index, provider in enumerate(("ardupilot", "px4")):
+-            for enabled_index, enabled in enumerate(("true", "false")):
+-                env = dict(
+-                    os.environ,
+-                    ROS_DOMAIN_ID=str(221 + provider_index * 2 + enabled_index),
+-                    ROS_AUTOMATIC_DISCOVERY_RANGE="LOCALHOST",
+-                    MAVROS_RESOLVED_FIRMWARE=provider,
+-                )
+-                subprocess.run(
+-                    [
+-                        sys.executable,
+-                        __file__,
+-                        "--bridge-executable",
+-                        args.bridge_executable,
+-                        "--provider",
+-                        provider,
+-                        "--mowing-enabled",
+-                        enabled,
+-                    ],
+-                    env=env,
+-                    check=True,
+-                    timeout=30,
+-                )
++        for provider in ('ardupilot', 'px4'):
++            for enabled in ('true', 'false'):
++                subprocess.run([os.sys.executable, __file__, '--bridge-executable', args.bridge_executable,
++                                '--provider', provider, '--mowing-enabled', enabled],
++                    env=dict(os.environ, MAVROS_RESOLVED_FIRMWARE=provider,
++                             ROS_DOMAIN_ID='198', ROS_AUTOMATIC_DISCOVERY_RANGE='LOCALHOST'),
++                    check=True, timeout=65)
+         return
+ 
+     import rclpy
++    from std_msgs.msg import Header
+     from geometry_msgs.msg import TwistStamped
+-    from mavros_msgs.msg import ManualControl, State, SysStatus
++    from diagnostic_msgs.msg import DiagnosticArray
++    from mavros_msgs.msg import ManualControl, PositionTarget, State, SysStatus
+     from mavros_msgs.srv import CommandBool, CommandLong, SetMode
++    from mavros_esc_wheel_odometry.msg import EscObservation
+     from mowgli_interfaces.msg import HighLevelStatus
+     from mowgli_interfaces.srv import EmergencyStop, MowerControl
+     from std_srvs.srv import Trigger
+ 
+-    mowing_enabled = args.mowing_enabled == "true"
+     rclpy.init()
+-    node = rclpy.create_node("provider_contract_mock")
+-    requests = []
+-    commands = []
+-
+-    def mode_request(request, response):
+-        requests.append(("mode", request.custom_mode))
+-        response.mode_sent = True
+-        return response
+-
+-    def arm_request(request, response):
+-        requests.append(("arm", request.value))
+-        response.success = True
+-        return response
+-
+-    def command_request(request, response):
+-        requests.append(("command", request.command, request.param1, request.param2))
+-        response.success = True
+-        return response
+-
+-    services = [
+-        node.create_service(SetMode, "/mavros/set_mode", mode_request),
+-        node.create_service(CommandBool, "/mavros/cmd/arming", arm_request),
+-        node.create_service(CommandLong, "/mavros/cmd/command", command_request),
+-    ]
+-    subscription = node.create_subscription(
+-        ManualControl, "/mavros/manual_control/send", commands.append, 10
+-    )
+-    publisher = node.create_publisher(TwistStamped, "/cmd_vel", 10)
+-    state_publisher = node.create_publisher(State, "/mavros/state", 10)
+-    safety_publisher = node.create_publisher(SysStatus, "/mavros/sys_status", 10)
+-    high_level_publisher = node.create_publisher(
+-        HighLevelStatus, "/behavior_tree_node/high_level_status", 10
+-    )
+-    fcu_state = State(connected=True, armed=False)
+-    safety_status = SysStatus(sensors_present=1 << 15, sensors_enabled=1 << 15)
+-
+-    def publish_fcu():
+-        state_publisher.publish(fcu_state)
+-        safety_publisher.publish(safety_status)
+-
+-    safety_timer = node.create_timer(0.05, publish_fcu)
+-    emergency = node.create_client(EmergencyStop, "/hardware_bridge/emergency_stop")
+-    mower = node.create_client(MowerControl, "/hardware_bridge/mower_control")
+-    reboot = node.create_client(Trigger, "/hardware_bridge/reboot_board")
+-
+-    def wait_for(predicate, timeout=6):
++    node = rclpy.create_node('provider_session_mock')
++    requests, manual, guided, diagnostics = [], [], [], []
++    state = State(connected=True, armed=False, mode='HOLD')
++    hl = HighLevelStatus(state=1)
++    confirm, reject_mode, reject_arm, reject_blade = True, False, False, False
++    count = 0
++    def mode(req, res):
++        requests.append(('mode', req.custom_mode))
++        res.mode_sent = not reject_mode
++        if confirm and not reject_mode:
++            state.mode = req.custom_mode
++        return res
++    def arm(req, res):
++        requests.append(('arm', req.value))
++        res.success, res.result = not reject_arm, 4 if reject_arm else 0
++        if confirm and not reject_arm:
++            state.armed = req.value
++        return res
++    def command(req, res):
++        requests.append(('command', req.command, req.param1, req.param2))
++        refused = reject_blade and req.command == 183 and req.param2 != 1500.
++        res.success, res.result = not refused, 4 if refused else 0
++        return res
++    services = [node.create_service(SetMode, '/mavros/set_mode', mode),
++                node.create_service(CommandBool, '/mavros/cmd/arming', arm),
++                node.create_service(CommandLong, '/mavros/cmd/command', command)]
++    subscriptions = [node.create_subscription(ManualControl, '/mavros/manual_control/send', manual.append, 100),
++        node.create_subscription(PositionTarget, '/mavros/setpoint_raw/local', guided.append, 100),
++        node.create_subscription(DiagnosticArray, '/diagnostics', diagnostics.append, 100)]
++    vel_pub = node.create_publisher(TwistStamped, '/cmd_vel', 10)
++    state_pub = node.create_publisher(State, '/mavros/state', 10)
++    safety_pub = node.create_publisher(SysStatus, '/mavros/sys_status', 10)
++    hl_pub = node.create_publisher(HighLevelStatus, '/behavior_tree_node/high_level_status', 10)
++    esc_pub = node.create_publisher(EscObservation, '/mavros/esc_wheel_odometry/esc_observation', 10)
++    safety = SysStatus(sensors_present=1 << 15, sensors_enabled=1 << 15)
++    def publish():
++        nonlocal count
++        count += 1
++        stamp = node.get_clock().now().to_msg()
++        state.header.stamp = safety.header.stamp = stamp
++        state_pub.publish(state)
++        safety_pub.publish(safety)
++        hl_pub.publish(hl)
++        esc_pub.publish(EscObservation(header=Header(stamp=stamp), source=2, esc_index=2,
++            valid=True, rpm=0, rpm_valid=True, count=count, count_valid=True))
++    timer = node.create_timer(.04, publish)
++    emergency = node.create_client(EmergencyStop, '/hardware_bridge/emergency_stop')
++    mower = node.create_client(MowerControl, '/hardware_bridge/mower_control')
++    reboot = node.create_client(Trigger, '/hardware_bridge/reboot_board')
++    def spin(seconds=.2):
++        end = time.monotonic() + seconds
++        while time.monotonic() < end:
++            rclpy.spin_once(node, timeout_sec=.02)
++    def wait(pred, timeout=8):
+         end = time.monotonic() + timeout
+-        while not predicate() and time.monotonic() < end:
+-            rclpy.spin_once(node, timeout_sec=0.05)
+-        assert predicate(), "timed out waiting for bridge/mock ROS exchange"
+-
+-    def send_twist(linear, yaw):
+-        before = len(commands)
+-        message = TwistStamped()
+-        message.twist.linear.x = linear
+-        message.twist.angular.z = yaw
+-        for _ in range(5):
+-            publisher.publish(message)
+-            rclpy.spin_once(node, timeout_sec=0.05)
+-        return commands[before:]
+-
+-    def call(client, request):
+-        future = client.call_async(request)
+-        wait_for(future.done)
++        while not pred() and time.monotonic() < end:
++            spin(.04)
++        assert pred(), 'provider mock timeout'
++    def call(client, req):
++        future = client.call_async(req)
++        wait(future.done)
+         return future.result()
++    def velocity(x=.2, yaw=-.35):
++        msg = TwistStamped()
++        msg.header.stamp = node.get_clock().now().to_msg()
++        msg.twist.linear.x, msg.twist.angular.z = x, yaw
++        vel_pub.publish(msg)
++        spin(.1)
++    def idle():
++        hl.state = 1
++        wait(lambda: state.mode == 'HOLD' and not state.armed)
++        spin(.2)
++    def values():
++        matches = [s for array in diagnostics for s in array.status
++                   if s.name == 'mowgli_mavros_bridge/fcu_session']
++        return matches[-1] if matches else None
+ 
+-    with tempfile.TemporaryDirectory(prefix="provider-graph-") as directory:
+-        config = Path(directory) / "parameters.yaml"
+-        config.write_text(
+-            json.dumps(
+-                {
+-                    "hardware_bridge": {
+-                        "ros__parameters": {"mowing_enabled": mowing_enabled}
+-                    }
+-                }
+-            )
+-        )
+-        with open(Path(directory) / "bridge.log", "w+") as log:
+-            process = subprocess.Popen(
+-                [args.bridge_executable, "--ros-args", "--params-file", str(config)],
+-                stdout=log,
+-                stderr=subprocess.STDOUT,
+-            )
++    with tempfile.TemporaryDirectory(prefix='provider-session-') as directory:
++        params = Path(directory) / 'params.yaml'
++        params.write_text(json.dumps({'hardware_bridge': {'ros__parameters':
++            {'mowing_enabled': args.mowing_enabled == 'true'}}}))
++        with open(Path(directory) / 'bridge.log', 'w+') as log:
++            process = subprocess.Popen([args.bridge_executable, '--ros-args', '--params-file', str(params)],
++                stdout=log, stderr=log)
+             try:
+-                wait_for(
+-                    lambda: emergency.service_is_ready()
+-                    and mower.service_is_ready()
+-                    and reboot.service_is_ready()
+-                    and publisher.get_subscription_count() == 1
+-                )
+-                wait_for(lambda: subscription.get_publisher_count() == 1)
+-                wait_for(
+-                    lambda: state_publisher.get_subscription_count() == 1
+-                    and safety_publisher.get_subscription_count() == 1
+-                )
+-                if args.provider == "ardupilot":
+-                    wait_for(lambda: ("command", 183, 3.0, 1500.0) in requests)
+-                requests.clear()  # Startup neutral is blade-owned, not traction-owned.
+-
+-                # Traction is forwarded while FCU armed=false. It must not ARM or
+-                # change mode as a side effect of receiving /cmd_vel.
+-                output = send_twist(0.2, -0.35)
+-                assert output
+-                assert all(
+-                    (msg.x, msg.y, msg.z, msg.r, msg.buttons)
+-                    == (0, -350, 200, 0, 0)
+-                    for msg in output
+-                )
+-                assert not requests
+-                assert not send_twist(float("nan"), 0.0)
+-
+-                # PLAY states request MANUAL exactly on entry.
+-                high_level_publisher.publish(
+-                    HighLevelStatus(state=HighLevelStatus.HIGH_LEVEL_STATE_AUTONOMOUS)
+-                )
+-                wait_for(lambda: ("mode", "MANUAL") in requests)
+-
+-                # ON is rejected while the global FCU is disarmed.
+-                # Neither ON nor OFF owns the FCU ARM/DISARM authority.
+-                before = len(requests)
+-                response = call(
+-                    mower,
+-                    MowerControl.Request(mow_enabled=True, mow_direction=1),
+-                )
+-                assert not response.success
+-                assert requests[before:] == []
++                wait(lambda: emergency.service_is_ready() and mower.service_is_ready())
++                spin(1.5)
++                initial = len(requests)
++                velocity()
++                assert manual[-1].y == manual[-1].z == 0
++                spin(.2)
++                assert len(requests) == initial  # idle never arms on velocity
++                before = len(manual)
++                velocity(float('nan'), 0.)
++                assert len(manual) == before
++                guided_mode = 'GUIDED' if args.provider == 'ardupilot' else 'MANUAL'
++                confirm = False
++                hl.state = 2
++                wait(lambda: ('mode', guided_mode) in requests)
++                assert ('arm', True) not in requests
++                velocity()
++                assert manual[-1].z == 0
++                state.mode = guided_mode
++                wait(lambda: ('arm', True) in requests)
++                # ACK is not ARM confirmation; no nonneutral setpoint is sent.
++                velocity()
++                assert manual[-1].z == 0
++                old_requests = len(requests)
++                state.armed = True
++                spin(.2)
++                velocity()
++                if args.provider == 'ardupilot':
++                    target = guided[-1]
++                    assert target.coordinate_frame == PositionTarget.FRAME_BODY_NED
++                    assert target.type_mask == 0x05E7
++                    assert abs(target.velocity.x - .2) < 1e-6
++                    assert abs(target.yaw_rate + .35) < 1e-6
++                    assert all(m.y == m.z == 0 for m in manual)
++                else:
++                    assert manual[-1].y == -350 and manual[-1].z == 200
++                spin(.3)
++                assert len(requests) == old_requests
++                confirm = True
++                idle()
++                for target in (2, 3, 4):
++                    hl.state = target
++                    wait(lambda: state.mode == (guided_mode if target == 2 else 'MANUAL') and state.armed)
++                    spin(.1)
++                    velocity()
++                    if target == 2 and args.provider == 'ardupilot':
++                        assert abs(guided[-1].velocity.x - .2) < 1e-6
++                    else:
++                        assert manual[-1].y == -350 and manual[-1].z == 200
++                    before = requests.count(('arm', False))
++                    off = call(mower, MowerControl.Request(mow_enabled=0))
++                    assert off.success == (args.provider == 'ardupilot')
++                    assert requests.count(('arm', False)) == before  # wheel session persists
++                    idle()
++                # Direct backend MowerControl ON (not the actual GUI chain) tests temporary HOLD/ARM.
++                if args.provider == 'ardupilot' and args.mowing_enabled == 'true':
++                    spin(1.5)
++                    confirm = False
++                    before = len(requests)
++                    on = mower.call_async(MowerControl.Request(mow_enabled=1, mow_direction=0))
++                    wait(lambda: ('arm', True) in requests[before:])
++                    spin(.2)
++                    assert not on.done()
++                    assert ("command", 183, 3., 1450.) not in requests[before:]
++                    velocity()
++                    assert manual[-1].y == manual[-1].z == 0
++                    state.armed = True
++                    wait(on.done)
++                    assert on.result().success and state.mode == 'HOLD'
++                    velocity()
++                    assert manual[-1].y == manual[-1].z == 0
++                    assert guided[-1].velocity.x == guided[-1].yaw_rate == 0
++                    confirm = True
++                    assert call(mower, MowerControl.Request(mow_enabled=0)).success
++                    wait(lambda: not state.armed)
++                    # OFF cancels an ON waiting for ARM, including late ARM.
++                    spin(1.5)
++                    confirm = False
++                    before = len(requests)
++                    on = mower.call_async(MowerControl.Request(mow_enabled=1, mow_direction=1))
++                    wait(lambda: ('arm', True) in requests[before:])
++                    off = mower.call_async(MowerControl.Request(mow_enabled=0))
++                    wait(off.done); wait(on.done)
++                    assert off.result().success and not on.result().success
++                    state.armed = True
++                    confirm = True
++                    wait(lambda: not state.armed)
++                    assert ('command', 183, 3., 1550.) not in requests[before:]
++                    # Refused isolated ON releases temporary ARM; a late FCU
++                    # ARM never resurrects the cancelled servo command.
++                    for failure in ('refused', 'expired'):
++                        spin(1.5)
++                        confirm = False
++                        reject_arm = failure == 'refused'
++                        before = len(requests)
++                        on = mower.call_async(MowerControl.Request(mow_enabled=1, mow_direction=0))
++                        wait(lambda: ('arm', True) in requests[before:])
++                        wait(on.done)
++                        assert not on.result().success, failure
++                        snapshot = requests.count(('arm', True))
++                        spin(.3)
++                        assert requests.count(('arm', True)) == snapshot
++                        reject_arm = False
++                        state.armed = True  # an unconfirmable/refused ARM can arrive late
++                        confirm = True
++                        wait(lambda: not state.armed)
++                        spin(.2)
++                        assert ('command', 183, 3., 1450.) not in requests[before:]
++                        assert requests.count(('arm', True)) == snapshot
++                    # A servo refusal releases an isolated test but preserves
++                    # the movement session's ARM in both MANUAL and GUIDED.
++                    for movement in (1, 4, 2):
++                        hl.state = movement
++                        if movement != 1:
++                            wait(lambda: state.armed and state.mode ==
++                                 ('MANUAL' if movement == 4 else 'GUIDED'))
++                        spin(1.5)
++                        reject_blade = True
++                        before = requests.count(('arm', False))
++                        command_before = len(requests)
++                        result = call(mower, MowerControl.Request(mow_enabled=1))
++                        assert not result.success
++                        assert ('command', 183, 3., 1450.) in requests[command_before:], movement
++                        wait(lambda: ('command', 183, 3., 1500.) in requests[command_before:])
++                        if movement == 1:
++                            wait(lambda: not state.armed)
++                        else:
++                            spin(.3)
++                            assert state.armed and requests.count(('arm', False)) == before
++                        reject_blade = False
++                        off = call(mower, MowerControl.Request(mow_enabled=0))
++                        # BladeControl keeps an active-session servo refusal
++                        # latched; OFF does not disguise that existing fault.
++                        assert off.success == (movement == 1), movement
++                        idle()
+ 
+-                before = len(requests)
+-                response = call(
+-                    mower,
+-                    MowerControl.Request(mow_enabled=False, mow_direction=0),
+-                )
+-                if args.provider == "ardupilot":
+-                    assert response.success
+-                    assert requests[before:] == []  # Startup neutral already ACKed.
+-                    for _ in range(10):
+-                        assert call(
+-                            mower,
+-                            MowerControl.Request(mow_enabled=False, mow_direction=1),
+-                        ).success
+-                    assert requests[before:] == []
+                 else:
+-                    # No unsupported PX4 servo primitive or ARM alias fallback.
+-                    assert not response.success
++                    before = len(requests)
++                    assert not call(mower, MowerControl.Request(mow_enabled=1)).success
+                     assert requests[before:] == []
+-
+-                # E-stop produces HOLD + immediate neutral + blade DISARM and
+-                # keeps subsequent traction neutral until the stop is released.
+-                before_commands = len(commands)
+-                before_requests = len(requests)
++                # Safety DISARM preempts unconfirmed MODE immediately.
++                confirm = False
++                hl.state = 2
++                before = len(requests)
++                wait(lambda: ('mode', guided_mode) in requests[before:])
+                 assert call(emergency, EmergencyStop.Request(emergency=1)).success
+-                expected = [
+-                    ("arm", False),
+-                    ("mode", "HOLD"),
+-                ]
+-                if args.provider == "ardupilot":
+-                    expected.append(("command", 183, 3.0, 1500.0))
+-                wait_for(lambda: len(requests) == before_requests + len(expected))
+-                assert sorted(requests[before_requests:]) == sorted(expected)
+-                wait_for(lambda: len(commands) > before_commands)
+-                assert commands[-1].y == commands[-1].z == 0
+-                stopped = send_twist(0.2, 0.0)
+-                assert stopped and all(msg.y == msg.z == 0 for msg in stopped)
+-
++                wait(lambda: ('arm', False) in requests[before:])
++                assert requests.index(('arm', False), before) > requests.index(('mode', guided_mode), before)
++                state.mode, state.armed = 'HOLD', False
++                confirm = True
++                spin(.2)
++                velocity()
++                assert manual[-1].y == manual[-1].z == 0
++                # Clear uses the still-active MowgliNext demand, without a new action.
+                 assert call(emergency, EmergencyStop.Request(emergency=0)).success
+-                resumed = send_twist(0.2, 0.0)
+-                assert resumed and all(msg.z == 200 for msg in resumed)
+-
++                wait(lambda: state.mode == guided_mode and state.armed)
++                before = len(requests)
++                spin(.4)
++                assert len(requests) == before
++                # Explicit disconnect retains that demand on reconnection.
++                state.connected = False
++                spin(.2)
++                state.mode, state.armed, state.connected = 'HOLD', False, True
++                wait(lambda: state.mode == guided_mode and state.armed)
++                idle()
++                # Refused ARM is diagnosed and never retried by repeated status.
++                reject_arm = True
++                before = requests.count(('arm', True))
++                hl.state = 4
++                wait(lambda: state.mode == 'MANUAL')
++                wait(lambda: requests.count(('arm', True)) > before)
++                wait(lambda: values() is not None and values().message == 'arming:request_refused')
++                before = requests.count(('arm', True))
++                spin(.5)
++                assert requests.count(('arm', True)) == before
++                velocity()
++                assert manual[-1].z == 0
++                reject_arm = False
++                idle()
++                # Refused MODE blocks ARM and does not create a retry storm.
++                reject_mode = True
++                hl.state = 2
++                wait(lambda: values() is not None and values().message == 'mode:request_refused')
+                 before = len(requests)
+-                reboot_response = call(reboot, Trigger.Request())
+-                assert reboot_response.success
+-                wait_for(lambda: len(requests) == before + 1)
+-                command = requests[-1]
+-                assert command[0:2] == ("command", 246)
+-                assert command[2] == 1.0
+-                print(
+-                    f"PASS provider={args.provider} mowing_enabled={mowing_enabled}"
+-                )
++                spin(.4)
++                assert len(requests) == before
++                reject_mode = False
++                idle()
++                # Missing HOLD endpoint cannot block safety DISARM forwarding.
++                hl.state = 4
++                wait(lambda: state.mode == 'MANUAL' and state.armed)
++                node.destroy_service(services[0])
++                spin(.4)
++                confirm = False
++                before = len(requests)
++                assert call(emergency, EmergencyStop.Request(emergency=1)).success
++                wait(lambda: ('arm', False) in requests[before:])
++                wait(lambda: values() is not None and
++                     dict((v.key, v.value) for v in values().values).get('command_acknowledged') == 'true')
++                info = dict((v.key, v.value) for v in values().values)
++                assert info['confirmed_arm'] == 'true' and info['requested_arm'] == 'false'
++                assert info['state_confirmed'] == 'false' and values().message == 'waiting_fcu'
++                assert ('mode', 'HOLD') not in requests[before:]
++                state.armed = False
++                spin(.2)
++                # Existing reboot service remains a command246 forwarding path.
++                assert call(reboot, Trigger.Request()).success
++                wait(lambda: ('command', 246, 1., 0.) in requests)
++                print(f'PASS provider={args.provider} mowing_enabled={args.mowing_enabled}: '
++                      'idle/transitions/ARM/FCU-confirmation/GUIDED/blade-test/safety/refusal/reconnect')
+             except BaseException:
+-                log.flush()
+-                log.seek(0)
+-                print(log.read(), file=sys.stderr)
++                log.flush(); log.seek(0); print(log.read())
+                 raise
+             finally:
+                 process.send_signal(signal.SIGINT)
+-                try:
+-                    process.wait(timeout=4)
+-                except subprocess.TimeoutExpired:
+-                    process.kill()
+-                    process.wait()
++                process.wait(timeout=5)
+     node.destroy_node()
+     rclpy.shutdown()
+ 
+ 
+-if __name__ == "__main__":
++if __name__ == '__main__':
+     main()
+diff --git a/ros2/src/mowgli_mavros_bridge/test/test_safety_graph.py b/ros2/src/mowgli_mavros_bridge/test/test_safety_graph.py
+index 6fd53ae..96c1ba8 100644
+--- a/ros2/src/mowgli_mavros_bridge/test/test_safety_graph.py
++++ b/ros2/src/mowgli_mavros_bridge/test/test_safety_graph.py
+@@ -202,13 +202,16 @@ def main():
+                 ).get("right_lifted")
+                 == "true"
+             )
++            before_lift = len(requests)
+             send(button(0x03))
+             wait(
+                 lambda: emergencies
+                 and emergencies[-1].active_emergency
+                 and emergencies[-1].reason == "WHEEL_LIFT"
+             )
+-            wait(lambda: ("arm", False) in requests)
++            wait(lambda: ("arm", False) in requests[before_lift:])
++            assert ("mode", "HOLD") not in requests[before_lift:]
++            assert ("arm", True) not in requests
+             wait(
+                 lambda: latest_diagnostic("mowgli_mavros_bridge/wheel_lift").level
+                 == DiagnosticStatus.ERROR
+@@ -230,9 +233,9 @@ def main():
+                 ).message
+                 == "engaged"
+             )
+-            wait(lambda: len(requests) >= before + 2)
+-            assert ("mode", "HOLD") in requests[before:]
+-            assert ("arm", False) in requests[before:]
++            # Hardware switch retains its explicit HOLD path, unlike lift.
++            wait(lambda: ("mode", "HOLD") in requests[before:])
++            assert ("arm", True) not in requests
+             wait(emergency_stop.service_is_ready)
+             future = emergency_stop.call_async(EmergencyStop.Request(emergency=0))
+             wait(future.done)

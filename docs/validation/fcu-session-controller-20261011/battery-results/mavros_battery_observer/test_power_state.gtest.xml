@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="8" failures="0" disabled="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.540" name="AllTests">
+  <testsuite name="PowerState" tests="8" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.540">
+    <testcase name="Power1VoltageMeansCharging" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="12" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+    <testcase name="Power2CurrentIsNegativeInMowgliConvention" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="22" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+    <testcase name="ChargeCurrentIsPower1MinusRawPower2" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="32" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+    <testcase name="ResidualVoltageBelowThresholdIsNotCharging" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="40" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+    <testcase name="ChargerPresenceUsesVoltageHysteresis" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="50" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+    <testcase name="StaleDataBecomesUnavailable" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="69" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+    <testcase name="StaleChargerMustCrossOnThresholdAgain" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="81" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+    <testcase name="ResetDropsPreviousGeneration" file="/tmp/fcu-src/ros2/src/mavros_battery_observer/test/test_power_state.cpp" line="95" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.540" classname="mavros_battery_observer.PowerState" />
+  </testsuite>
+</testsuites>

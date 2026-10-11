@@ -1,0 +1,88 @@
+Test project /tmp/fcu-state/build/mowgli_mavros_bridge
+      Start  1: test_blade_off_contract
+ 1/18 Test  #1: test_blade_off_contract ..........   Passed    0.08 sec
+      Start  2: test_gnss_launch
+ 2/18 Test  #2: test_gnss_launch .................   Passed    0.26 sec
+      Start  3: test_firmware_provider
+ 3/18 Test  #3: test_firmware_provider ...........   Passed    0.08 sec
+      Start  4: test_firmware_detection
+ 4/18 Test  #4: test_firmware_detection ..........   Passed    2.67 sec
+      Start  5: test_provider_graph
+ 5/18 Test  #5: test_provider_graph ..............***Failed   21.02 sec
+-- run_test.py: invoking following command in '/tmp/fcu-state/build/mowgli_mavros_bridge':
+ - /usr/bin/python3 /tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py --bridge-executable /tmp/fcu-state/build/mowgli_mavros_bridge/mavros_hardware_bridge_node
+[INFO] [1791722103.267217355] [hardware_bridge]: MAVROS hardware bridge started.
+[ERROR] [1791722113.840639660] [hardware_bridge]: FCU command failed: arming:request_refused
+[ERROR] [1791722113.840679651] [hardware_bridge]: Isolated blade test cancelled: FCU activation refused or timed out
+[ERROR] [1791722119.000749654] [hardware_bridge]: FCU command failed: arming:confirmation_timeout
+[ERROR] [1791722119.000887721] [hardware_bridge]: Isolated blade test cancelled: FCU activation refused or timed out
+[ERROR] [1791722121.161642114] [hardware_bridge]: Isolated blade test cancelled: blade ON rejected, expired or cancelled
+
+Traceback (most recent call last):
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 340, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 252, in main
+    assert call(mower, MowerControl.Request(mow_enabled=0)).success
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError
+Traceback (most recent call last):
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 340, in <module>
+    main()
+    ~~~~^^
+  File "/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py", line 22, in main
+    subprocess.run([os.sys.executable, __file__, '--bridge-executable', args.bridge_executable,
+    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                    '--provider', provider, '--mowing-enabled', enabled],
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        env=dict(os.environ, MAVROS_RESOLVED_FIRMWARE=provider,
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                 ROS_DOMAIN_ID='198', ROS_AUTOMATIC_DISCOVERY_RANGE='LOCALHOST'),
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+        check=True, timeout=65)
+        ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.14/subprocess.py", line 578, in run
+    raise CalledProcessError(retcode, process.args,
+                             output=stdout, stderr=stderr)
+subprocess.CalledProcessError: Command '['/usr/bin/python3', '/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_provider_graph.py', '--bridge-executable', '/tmp/fcu-state/build/mowgli_mavros_bridge/mavros_hardware_bridge_node', '--provider', 'ardupilot', '--mowing-enabled', 'true']' returned non-zero exit status 1.
+-- run_test.py: return code 1
+-- run_test.py: generate result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_provider_graph.xml' with failed test
+-- run_test.py: verify result file '/tmp/fcu-state/build/mowgli_mavros_bridge/test_results/mowgli_mavros_bridge/test_provider_graph.xml'
+
+      Start  6: test_blade_graph
+ 6/18 Test  #6: test_blade_graph .................   Passed   36.26 sec
+      Start  7: test_esc_graph
+ 7/18 Test  #7: test_esc_graph ...................   Passed   31.97 sec
+      Start  8: test_safety_graph
+ 8/18 Test  #8: test_safety_graph ................   Passed   18.49 sec
+      Start  9: test_gnss_graph
+ 9/18 Test  #9: test_gnss_graph ..................   Passed   36.93 sec
+      Start 10: test_bridge_regressions
+10/18 Test #10: test_bridge_regressions ..........   Passed    0.33 sec
+      Start 11: test_readiness_state
+11/18 Test #11: test_readiness_state .............   Passed    0.04 sec
+      Start 12: test_fcu_session_controller
+12/18 Test #12: test_fcu_session_controller ......   Passed    0.05 sec
+      Start 13: test_blade_off_control
+13/18 Test #13: test_blade_off_control ...........   Passed    0.05 sec
+      Start 14: test_blade_control
+14/18 Test #14: test_blade_control ...............   Passed    0.05 sec
+      Start 15: test_esc_telemetry_tracker
+15/18 Test #15: test_esc_telemetry_tracker .......   Passed    0.05 sec
+      Start 16: test_command_provider
+16/18 Test #16: test_command_provider ............   Passed    0.05 sec
+      Start 17: test_rover_manual_control
+17/18 Test #17: test_rover_manual_control ........   Passed    0.05 sec
+      Start 18: test_safety_state
+18/18 Test #18: test_safety_state ................   Passed    0.05 sec
+
+94% tests passed, 1 tests failed out of 18
+
+Label Time Summary:
+gtest    =   0.72 sec*proc (9 tests)
+
+Total Test time (real) = 148.49 sec
+
+The following tests FAILED:
+	  5 - test_provider_graph (Failed)
+Errors while running CTest

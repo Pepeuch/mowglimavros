@@ -7,9 +7,9 @@ Sidecar ROS 2 repository for the optional MAVROS backend used by MowgliNext.
 
 ![Generated MowgliMAVROS progress](docs/status/mowglimavros_progress.svg)
 
-**Verified completion: 13 / 26 (50.00%)**. An item counts as fully complete only when its TODO status is `DONE` and it has no `HARDWARE_PENDING` qualifier.
+**Verified completion: 13 / 28 (46.43%)**. An item counts as fully complete only when its TODO status is `DONE` and it has no `HARDWARE_PENDING` qualifier.
 
-Status: **DONE 19** · **IN PROGRESS 1** · **TODO 3** · **BLOCKED 1** · **DEFERRED 2**. Hardware-pending items: **6** (software completion is not presented as physical validation).
+Status: **DONE 19** · **IN PROGRESS 2** · **TODO 4** · **BLOCKED 1** · **DEFERRED 2**. Hardware-pending items: **6** (software completion is not presented as physical validation).
 
 ### Phase Progress
 
@@ -19,8 +19,8 @@ Status: **DONE 19** · **IN PROGRESS 1** · **TODO 3** · **BLOCKED 1** · **DEF
 - **3 — Reproducible MAVROS container:** 5 / 5 verified (100.00%); DONE 5
 - **4 — Build tooling and CI:** 3 / 3 verified (100.00%); DONE 3
 - **5 — Runtime smoke validation:** 2 / 2 verified (100.00%); DONE 2
-- **6 — Backend contract before MowgliNext integration:** 1 / 7 verified (14.29%); TODO 2, DONE 5
-- **7 — MowgliNext integration audit:** 0 / 1 verified (0.00%); IN PROGRESS 1
+- **6 — Backend contract before MowgliNext integration:** 1 / 8 verified (12.50%); TODO 2, IN PROGRESS 1, DONE 5
+- **7 — MowgliNext integration audit:** 0 / 2 verified (0.00%); TODO 1, IN PROGRESS 1
 - **8 — Hardware validation:** 0 / 3 verified (0.00%); BLOCKED 1, DEFERRED 2
 
 Generated solely from [`TODO.md`](TODO.md). Run `python3 tools/update_readme_progress.py` to update, or `python3 tools/update_readme_progress.py --check` to fail on stale output.

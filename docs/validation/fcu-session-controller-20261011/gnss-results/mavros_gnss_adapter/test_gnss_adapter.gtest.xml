@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="14" failures="0" disabled="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.600" name="AllTests">
+  <testsuite name="Selection" tests="1" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.600">
+    <testcase name="BothReceiversAndDirectMode" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="38" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Selection" />
+  </testsuite>
+  <testsuite name="Mapping" tests="4" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.600">
+    <testcase name="FixRtkAndBaselineEnums" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="49" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Mapping" />
+    <testcase name="ExplicitSolutionTypesRemainValidThroughCanonicalStatus" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="72" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Mapping" />
+    <testcase name="IndependentCapabilityBitsAndValues" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="89" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Mapping" />
+    <testcase name="RichFieldsAndUnknownCorrectionDiagnostics" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="132" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Mapping" />
+  </testsuite>
+  <testsuite name="Freshness" tests="2" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.600">
+    <testcase name="CachedRtkDoesNotRenewPositionAndStaleDoesNotAdvanceSequence" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="174" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Freshness" />
+    <testcase name="NoFixZeroSequenceRestartAndRegression" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="197" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Freshness" />
+  </testsuite>
+  <testsuite name="Altitude" tests="5" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.600">
+    <testcase name="EllipsoidPreservedForBothSourcesAndBothCallbackOrders" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="213" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="MissingAmbiguousOldOrWrongPositionNeverFallsBackToMsl" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="234" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="NoFixStaleAndIncarnationChangeDiscardPendingFix" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="253" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="SeveralPositionsWithinDeliveryWindowAreNotDropped" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="275" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="ZeroAndNegativeEllipsoidAreValidWhenAvailable" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="289" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.Altitude" />
+  </testsuite>
+  <testsuite name="AltitudeWire" tests="2" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.600">
+    <testcase name="RequiresAllFourFieldBytesForBothReceivers" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="304" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.AltitudeWire" />
+    <testcase name="ZeroFieldRemainsUnknownEvenWithCompleteOrLongerPayload" file="/tmp/fcu-src/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="335" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.600" classname="mavros_gnss_adapter.AltitudeWire" />
+  </testsuite>
+</testsuites>

@@ -42,6 +42,10 @@ public:
 class ArduPilotProvider final : public CurrentRuntimeProvider
 {
 public:
+  bool guided_velocity_implemented() const noexcept override
+  {
+    return true;
+  }
   const char* name() const noexcept override
   {
     return "ardupilot";
@@ -57,6 +61,22 @@ public:
   }
 };
 }  // namespace
+
+mavros_msgs::msg::PositionTarget FirmwareProvider::guided_velocity_from_twist(
+    const geometry_msgs::msg::TwistStamped& twist) const
+{
+  if (!guided_velocity_implemented())
+    throw std::logic_error("GUIDED velocity unsupported");
+  mavros_msgs::msg::PositionTarget target;
+  target.header = twist.header;
+  target.coordinate_frame = mavros_msgs::msg::PositionTarget::FRAME_BODY_NED;
+  // Rover velocity + yaw rate: ignore position, acceleration and absolute yaw.
+  // MAVROS 2.16 transforms FLU body velocity and ENU yaw rate on the wire.
+  target.type_mask = 0x05E7;
+  target.velocity.x = twist.twist.linear.x;
+  target.yaw_rate = static_cast<float>(twist.twist.angular.z);
+  return target;
+}
 
 std::unique_ptr<FirmwareProvider> make_firmware_provider(const std::string& firmware)
 {

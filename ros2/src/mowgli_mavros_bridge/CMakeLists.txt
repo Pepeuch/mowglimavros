@@ -123,7 +123,19 @@ if(BUILD_TESTING)
       GENERATE_RESULT_FOR_RETURN_CODE_ZERO
     )
   endif()
+  ament_add_gtest(test_bridge_regressions test/test_bridge_regressions.cpp
+    src/mavros_hardware_bridge_node.cpp src/readiness_state.cpp src/firmware_provider.cpp)
+  target_compile_definitions(test_bridge_regressions PRIVATE MOWGLI_BRIDGE_NO_MAIN)
+  target_include_directories(test_bridge_regressions PRIVATE include
+    ${libmavconn_INCLUDE_DIRS} ${mavlink_INCLUDE_DIRS})
+  target_link_libraries(test_bridge_regressions
+    ${geometry_msgs_TARGETS} ${nav_msgs_TARGETS} ${diagnostic_msgs_TARGETS}
+    ${mavros_msgs_TARGETS} ${mavros_esc_wheel_odometry_TARGETS} ${mowgli_interfaces_TARGETS}
+    ${sensor_msgs_TARGETS} ${std_msgs_TARGETS} ${std_srvs_TARGETS} rclcpp::rclcpp
+    sensor_msgs::sensor_msgs_library tf2::tf2 tf2_geometry_msgs::tf2_geometry_msgs)
   ament_add_gtest(test_readiness_state test/test_readiness_state.cpp src/readiness_state.cpp)
+  ament_add_gtest(test_fcu_session_controller test/test_fcu_session_controller.cpp)
+  target_include_directories(test_fcu_session_controller PRIVATE include)
   ament_add_gtest(test_blade_off_control test/test_blade_off_control.cpp)
   target_include_directories(test_blade_off_control PRIVATE include)
   ament_add_gtest(test_blade_control test/test_blade_control.cpp)

@@ -99,3 +99,22 @@ TEST(CommandProvider, EmergencyPolicyPreservesDefaultsAndEveryOverride)
     }
   }
 }
+
+TEST(FirmwareProvider, GuidedTransportIsSeparateAndBodyRelative)
+{
+  auto ap = mowgli_mavros_bridge::make_firmware_provider("ardupilot");
+  auto px4 = mowgli_mavros_bridge::make_firmware_provider("px4");
+  geometry_msgs::msg::TwistStamped twist;
+  twist.twist.linear.x = 0.35;
+  twist.twist.angular.z = -0.4;
+  ASSERT_TRUE(ap->guided_velocity_implemented());
+  const auto target = ap->guided_velocity_from_twist(twist);
+  EXPECT_EQ(target.coordinate_frame, mavros_msgs::msg::PositionTarget::FRAME_BODY_NED);
+  EXPECT_EQ(target.type_mask, 0x05E7);
+  EXPECT_DOUBLE_EQ(target.velocity.x, 0.35);
+  EXPECT_DOUBLE_EQ(target.velocity.y, 0.0);
+  EXPECT_DOUBLE_EQ(target.velocity.z, 0.0);
+  EXPECT_FLOAT_EQ(target.yaw_rate, -0.4F);
+  EXPECT_FALSE(px4->guided_velocity_implemented());
+  EXPECT_THROW(px4->guided_velocity_from_twist(twist), std::logic_error);
+}

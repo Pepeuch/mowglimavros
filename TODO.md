@@ -721,6 +721,30 @@ Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTC
 
 ---
 
+## MM-608 — FCU session controller
+Status: IN PROGRESS (software validated; GUI SOFTWARE_REQUIRED; HARDWARE_REQUIRED)
+
+Safety-critical implementation directly on `main`, base e7d516c.
+Minimal FCU transport sequencer: automatic state-confirmed MODE/ARM from existing
+MowgliNext states and mower commands, separate GUIDED velocity transport. Public
+interfaces and telemetry preserved; no added watchdog or
+authorization protocol. MowgliNext remains the sole functional authority.
+Validation and physical gates: [architecture](docs/architecture/fcu-session-controller.md).
+Review corrections: isolated ON failure/expiry lifecycle, OFF ordering, DISARM
+without HOLD; earlier 18 suites /106 XML tests PASS with mocks.
+Final pre-commit audit restores tilt/double-lift DISARM without implicit HOLD;
+hardware switch/explicit service retain HOLD/DISARM. Current validation is
+[recorded on main](docs/validation/fcu-main-commit-20261011/README.md):
+18/18 suites, 112 XML tests PASS. Local main commit authorized; no push/deploy. Actual idle GUI ON remains
+[SOFTWARE_REQUIRED in MowgliNext](docs/architecture/mowglinext-idle-blade-test-follow-up.md).
+Independent companion-loss failsafe and exclusive FCU authority remain unresolved.
+No production readiness claim.
+
+Acceptance: isolated unit/ROS mocks pass; exact-baseline physical HOLD/servo,
+mode/actuator/priority-DISARM and independent failsafe acceptance is acquired.
+
+---
+
 # Phase 7 — MowgliNext integration audit
 
 ## MM-701 — MowgliNext integration dependency and execution plan

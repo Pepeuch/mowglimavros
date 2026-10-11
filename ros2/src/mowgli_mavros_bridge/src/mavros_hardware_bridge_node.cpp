@@ -187,6 +187,8 @@ MavrosHardwareBridgeNode::MavrosHardwareBridgeNode(const rclcpp::NodeOptions& op
 
 void MavrosHardwareBridgeNode::create_publishers()
 {
+  pub_guided_control_ =
+      create_publisher<mavros_msgs::msg::PositionTarget>("/mavros/setpoint_raw/local", 10);
   pub_status_ = create_publisher<mowgli_interfaces::msg::Status>("~/status", 10);
   pub_emergency_ = create_publisher<mowgli_interfaces::msg::Emergency>("~/emergency", 10);
   pub_imu_ = create_publisher<sensor_msgs::msg::Imu>("~/imu/data_raw", 10);
@@ -344,6 +346,7 @@ void MavrosHardwareBridgeNode::create_timers()
                                    [this]()
                                    {
                                      std::lock_guard<std::mutex> lock(mutex_);
+                                     drive_session_locked();
                                      drive_blade_locked();
                                    });
   const auto period = std::chrono::duration<double>(1.0 / std::max(1.0, status_publish_rate_hz_));
@@ -364,39 +367,48 @@ void MavrosHardwareBridgeNode::create_timers()
 void MavrosHardwareBridgeNode::on_cmd_vel(const geometry_msgs::msg::TwistStamped::SharedPtr msg)
 {
   std::lock_guard<std::mutex> lock(mutex_);
+  drive_session_locked();
   if (!std::isfinite(msg->twist.linear.x) || !std::isfinite(msg->twist.angular.z))
-  {
-    RCLCPP_WARN_THROTTLE(get_logger(), *get_clock(), 5000, "Ignoring non-finite /cmd_vel command.");
     return;
-  }
-
-  if (safety_state_.project(now().nanoseconds()).active_emergency)
+  const auto safety = safety_state_.project(now().nanoseconds());
+  if (safety.active_emergency || safety.latched_emergency || !motion_session_active() ||
+      !session_control_.requested_arm() || !session_control_.ready())
   {
     publish_neutral_manual_control();
     return;
   }
-
-  auto cmd = firmware_provider_->manual_control_from_twist(*msg,
-                                                           manual_control_linear_scale_,
-                                                           manual_control_yaw_scale_);
-  cmd.header.stamp = now();
-  pub_manual_control_->publish(cmd);
+  // Do not cache a velocity received before FCU confirmation.
+  if (last_high_level_status_.state ==
+          mowgli_interfaces::msg::HighLevelStatus::HIGH_LEVEL_STATE_AUTONOMOUS &&
+      firmware_provider_->guided_velocity_implemented())
+    pub_guided_control_->publish(firmware_provider_->guided_velocity_from_twist(*msg));
+  else
+  {
+    auto cmd = firmware_provider_->manual_control_from_twist(*msg,
+                                                             manual_control_linear_scale_,
+                                                             manual_control_yaw_scale_);
+    cmd.header.stamp = now();
+    pub_manual_control_->publish(cmd);
+  }
 }
 
 void MavrosHardwareBridgeNode::on_high_level_status(
     const mowgli_interfaces::msg::HighLevelStatus::SharedPtr msg)
 {
-  bool enter_manual = false;
+  std::lock_guard<std::mutex> lock(mutex_);
+  const bool was_motion = motion_session_active();
+  last_high_level_status_ = *msg;
+  if (was_motion && !motion_session_active())
   {
-    std::lock_guard<std::mutex> lock(mutex_);
-    enter_manual = high_level_motion_active(msg->state) &&
-                   !high_level_motion_active(last_high_level_status_.state);
-    last_high_level_status_ = *msg;
+    blade_test_active_ = false;
+    cancel_pending_blade_starts();
+    blade_control_.force_off(blade_steady_ms());
+    publish_neutral_manual_control();
+    drive_blade_locked();
   }
-  if (enter_manual)
-  {
-    (void)send_mode_command("MANUAL");
-  }
+  // State publication is the demand. No extra intention, token or service.
+  drive_session_locked();
+  drive_blade_locked();
 }
 
 void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::SharedPtr msg)
@@ -423,7 +435,11 @@ void MavrosHardwareBridgeNode::on_mavros_state(const mavros_msgs::msg::State::Sh
     safety_state_.disconnect();
   }
   readiness_.connection(msg->connected);
+  if (mavros_state_.connected && !msg->connected)
+    cancel_pending_blade_starts();
   mavros_state_ = *msg;
+  session_control_.observe(msg->connected, msg->armed, msg->mode);
+  drive_session_locked();
   drive_blade_locked();
 }
 
@@ -581,7 +597,6 @@ void MavrosHardwareBridgeNode::on_mower_control(
     const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request)
 {
   std::lock_guard<std::mutex> lock(mutex_);
-  drive_blade_locked();
   if (request->mow_enabled > 1 || (request->mow_enabled && request->mow_direction > 1))
   {
     reply_blade(header, false);
@@ -592,35 +607,80 @@ void MavrosHardwareBridgeNode::on_mower_control(
                                                        : BladeControl::Direction::Reverse;
   const bool transport_available = std::string(firmware_provider_->name()) == "ardupilot" &&
                                    cli_command_long_->service_is_ready();
-  if (!transport_available && direction != BladeControl::Direction::Off)
+  if (direction == BladeControl::Direction::Off)
   {
-    reply_blade(header, false);
-    return;
-  }
-  // OFF cancels a deferred ON even while the transport is absent. A queued
-  // neutral is not an ACK: fail this caller, but retain the OFF intent so that
-  // service recovery can never launch the superseded ON.
-  const auto result = blade_control_.request(direction, blade_steady_ms());
-  if (!transport_available)
-  {
+    cancel_pending_blade_starts();
+    blade_test_active_ = false;
+    if (!motion_session_active())
+    {
+      const auto safety = safety_state_.project(now().nanoseconds());
+      session_control_.demand("HOLD", false, safety.active_emergency || safety.latched_emergency);
+      // Apply the permission edge before binding this OFF caller to a blade
+      // revision. This does not dispatch DISARM before neutral cutting.
+      blade_control_.permission(blade_allowed_locked(blade_steady_ms()), blade_steady_ms());
+    }
+    // Blade OFF is dispatched before ending temporary arming. An active
+    // MowgliNext movement session continues to own its requested ARM state.
+    const auto result = blade_control_.request(direction, blade_steady_ms());
+    if (result == BladeControl::Result::Pending && transport_available &&
+        blade_replies_.size() < 32)
+      blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
+    else
+      reply_blade(header, transport_available && result == BladeControl::Result::Confirmed);
     drive_blade_locked();
-    reply_blade(header, false);
+    drive_session_locked();
     return;
   }
-  if (result != BladeControl::Result::Pending)
-  {
-    reply_blade(header, result == BladeControl::Result::Confirmed);
-    return;
-  }
-  if (blade_replies_.size() >= 32)
-  {
-    // Never prevent OFF from preempting ON because the response queue is full.
-    drive_blade_locked();
-    reply_blade(header, false);
-    return;
-  }
-  blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
+  if (!pending_blade_starts_.empty() && pending_blade_starts_.front().direction != direction)
+    cancel_pending_blade_starts();
+  drive_session_locked();
   drive_blade_locked();
+  const auto safety = safety_state_.project(now().nanoseconds());
+  // Reuse the existing blade protections; do not change BladeControl policy.
+  if (!transport_available || !mowing_enabled_ || !mavros_state_.connected ||
+      safety.active_emergency || safety.latched_emergency ||
+      safety_state_.hardware_safety_state() != HardwareSafetyState::Released ||
+      blade_control_.failed())
+  {
+    reply_blade(header, false);
+    return;
+  }
+  if (!motion_session_active())
+  {
+    blade_test_active_ = true;
+    publish_neutral_manual_control();
+  }
+  drive_session_locked();
+  if (session_control_.failed() || (!motion_session_active() && !blade_test_active_))
+  {
+    end_failed_blade_test_locked(session_control_.error().c_str());
+    reply_blade(header, false);
+    return;
+  }
+  if (!session_control_.ready())
+  {
+    if (pending_blade_starts_.size() >= 32)
+    {
+      reply_blade(header, false);
+      return;
+    }
+    pending_blade_starts_.push_back({header, direction, blade_steady_ms()});
+    return;
+  }
+  blade_control_.permission(blade_allowed_locked(blade_steady_ms()), blade_steady_ms());
+  const auto result = blade_control_.request(direction, blade_steady_ms());
+  if (result == BladeControl::Result::Pending && blade_replies_.size() < 32)
+    blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
+  else
+    reply_blade(header, result == BladeControl::Result::Confirmed);
+  drive_blade_locked();
+}
+
+void MavrosHardwareBridgeNode::cancel_pending_blade_starts()
+{
+  for (const auto& pending : pending_blade_starts_)
+    reply_blade(pending.header, false);
+  pending_blade_starts_.clear();
 }
 
 bool MavrosHardwareBridgeNode::request_blade_neutral()
@@ -647,20 +707,67 @@ void MavrosHardwareBridgeNode::reply_blade(const std::shared_ptr<rmw_request_id_
   }
 }
 
+void MavrosHardwareBridgeNode::end_failed_blade_test_locked(const char* reason)
+{
+  if (!blade_test_active_ || motion_session_active())
+    return;
+  RCLCPP_ERROR(get_logger(), "Isolated blade test cancelled: %s", reason);
+  blade_test_active_ = false;
+  cancel_pending_blade_starts();
+  blade_control_.force_off(blade_steady_ms());
+  publish_neutral_manual_control();
+  const auto safety = safety_state_.project(now().nanoseconds());
+  session_control_.demand("HOLD", false, safety.active_emergency || safety.latched_emergency);
+}
+
+bool MavrosHardwareBridgeNode::blade_allowed_locked(int64_t steady) const
+{
+  const auto safety = safety_state_.project(now().nanoseconds());
+  return session_control_.ready() && session_control_.requested_arm() && mowing_enabled_ &&
+         mavros_state_.connected && mavros_state_.armed && last_fcu_receipt_ms_ >= 0 &&
+         steady - last_fcu_receipt_ms_ <= 2500 && last_hardware_safety_ms_ >= 0 &&
+         steady - last_hardware_safety_ms_ <= 3000 &&
+         safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
+         !safety.active_emergency && !safety.latched_emergency && blade_esc_slot_ >= 0;
+}
+
 void MavrosHardwareBridgeNode::drive_blade_locked()
 {
   const auto steady = blade_steady_ms();
   while (!blade_wire_expectations_.empty() && blade_wire_expectations_.front().until_ms < steady)
     blade_wire_expectations_.pop_front();
   const auto safety = safety_state_.project(now().nanoseconds());
-  const bool allowed = mowing_enabled_ && mavros_state_.connected && mavros_state_.armed &&
-                       last_fcu_receipt_ms_ >= 0 && steady - last_fcu_receipt_ms_ <= 2500 &&
-                       last_hardware_safety_ms_ >= 0 && steady - last_hardware_safety_ms_ <= 3000 &&
-                       safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
-                       !safety.active_emergency && !safety.latched_emergency &&
-                       blade_esc_slot_ >= 0;
-  blade_control_.permission(allowed, steady);
+  if (session_control_.failed() || !mavros_state_.connected)
+    end_failed_blade_test_locked("FCU activation failed or disconnected");
+  blade_control_.permission(blade_allowed_locked(steady), steady);
   blade_control_.tick(steady);
+  if (std::any_of(pending_blade_starts_.begin(),
+                  pending_blade_starts_.end(),
+                  [steady](const auto& pending)
+                  {
+                    return steady - pending.started_ms > 20000;
+                  }))
+    end_failed_blade_test_locked("blade request expired");
+  for (auto it = pending_blade_starts_.begin(); it != pending_blade_starts_.end();)
+  {
+    if (session_control_.failed() || !mavros_state_.connected || safety.active_emergency ||
+        safety.latched_emergency || steady - it->started_ms > 20000)
+    {
+      reply_blade(it->header, false);
+      it = pending_blade_starts_.erase(it);
+    }
+    else if (session_control_.ready())
+    {
+      const auto result = blade_control_.request(it->direction, steady);
+      if (result == BladeControl::Result::Pending && blade_replies_.size() < 32)
+        blade_replies_.push_back({it->header, blade_control_.revision(), it->started_ms});
+      else
+        reply_blade(it->header, result == BladeControl::Result::Confirmed);
+      it = pending_blade_starts_.erase(it);
+    }
+    else
+      ++it;
+  }
   if (!blade_control_.satisfied() && std::any_of(blade_replies_.begin(),
                                                  blade_replies_.end(),
                                                  [this, steady](const auto& reply)
@@ -695,6 +802,8 @@ void MavrosHardwareBridgeNode::drive_blade_locked()
     else
       ++it;
   }
+  if (pending_blade_starts_.empty() && blade_control_.requested() == BladeControl::Direction::Off)
+    end_failed_blade_test_locked("blade ON rejected, expired or cancelled");
   if (std::string(firmware_provider_->name()) != "ardupilot" ||
       !cli_command_long_->service_is_ready())
   {
@@ -764,9 +873,10 @@ void MavrosHardwareBridgeNode::on_emergency_stop(
       std::lock_guard<std::mutex> lock(mutex_);
       safety_state_.clear_released_latches();
     }
-    if (high_level_motion_active(last_high_level_status_.state))
     {
-      (void)send_mode_command("MANUAL");
+      std::lock_guard<std::mutex> lock(mutex_);
+      drive_session_locked();
+      drive_blade_locked();
     }
     response->success = true;
     return;
@@ -873,6 +983,7 @@ void MavrosHardwareBridgeNode::publish_readiness()
   std::array<int64_t, 3> esc_slots{};
   mavros_msgs::msg::State fcu{};
   SafetyState safety{};
+  FcuSessionController session{};
   {
     std::lock_guard<std::mutex> lock(mutex_);
     readiness = readiness_.project(now_ns);
@@ -887,6 +998,7 @@ void MavrosHardwareBridgeNode::publish_readiness()
     }
     fcu = mavros_state_;
     safety = safety_state_;
+    session = session_control_;
   }
   const auto add_value =
       [](diagnostic_msgs::msg::DiagnosticStatus& status, const char* key, const std::string& value)
@@ -896,6 +1008,22 @@ void MavrosHardwareBridgeNode::publish_readiness()
     item.value = value;
     status.values.push_back(std::move(item));
   };
+  diagnostic_msgs::msg::DiagnosticStatus session_status;
+  session_status.name = "mowgli_mavros_bridge/fcu_session";
+  session_status.level = session.failed() ? diagnostic_msgs::msg::DiagnosticStatus::ERROR
+                                          : diagnostic_msgs::msg::DiagnosticStatus::OK;
+  session_status.message =
+      session.error().empty() ? (session.ready() ? "confirmed" : "waiting_fcu") : session.error();
+  add_value(session_status, "requested_mode", session.requested_mode());
+  add_value(session_status, "confirmed_mode", session.confirmed_mode());
+  add_value(session_status, "requested_arm", session.requested_arm() ? "true" : "false");
+  add_value(session_status, "confirmed_arm", session.confirmed_arm() ? "true" : "false");
+  add_value(session_status, "command_pending", session.command_pending() ? "true" : "false");
+  add_value(session_status,
+            "command_acknowledged",
+            session.command_acknowledged() ? "true" : "false");
+  add_value(session_status, "state_confirmed", session.ready() ? "true" : "false");
+  output.status.push_back(std::move(session_status));
   const auto format_value = [](double value)
   {
     return std::isfinite(value) ? std::to_string(value) : std::string("unavailable");
@@ -1066,114 +1194,126 @@ void MavrosHardwareBridgeNode::publish_readiness()
   pub_readiness_->publish(output);
 }
 
-bool MavrosHardwareBridgeNode::send_arm_command(bool arm)
+bool MavrosHardwareBridgeNode::motion_session_active() const
 {
-  const auto capabilities = firmware_provider_->capabilities();
-  if (!(arm ? capabilities.arm_implemented : capabilities.disarm_implemented))
-  {
-    return false;
-  }
-  if (!cli_arm_)
-  {
-    RCLCPP_ERROR(get_logger(), "CommandBool client is null");
-    return false;
-  }
-
-  if (!cli_arm_->wait_for_service(std::chrono::seconds(1)))
-  {
-    RCLCPP_ERROR(get_logger(), "Service /mavros/cmd/arming not available");
-    return false;
-  }
-
-  auto request = std::make_shared<mavros_msgs::srv::CommandBool::Request>();
-  request->value = arm;
-
-  cli_arm_->async_send_request(
-      request,
-      [this, arm](rclcpp::Client<mavros_msgs::srv::CommandBool>::SharedFuture future)
-      {
-        try
-        {
-          const auto response = future.get();
-          if (!response)
-          {
-            RCLCPP_ERROR(get_logger(), "Null response from /mavros/cmd/arming");
-            return;
-          }
-
-          if (!response->success)
-          {
-            RCLCPP_ERROR(get_logger(),
-                         "Autopilot rejected arming request: %s",
-                         arm ? "ARM" : "DISARM");
-            return;
-          }
-
-          RCLCPP_INFO(get_logger(),
-                      "Autopilot confirmed arming request: %s",
-                      arm ? "ARM" : "DISARM");
-        }
-        catch (const std::exception& e)
-        {
-          RCLCPP_ERROR(get_logger(), "Arm/disarm request failed asynchronously: %s", e.what());
-        }
-      });
-
-  return true;
+  return high_level_motion_active(last_high_level_status_.state);
 }
 
-bool MavrosHardwareBridgeNode::send_mode_command(const std::string& mode)
+void MavrosHardwareBridgeNode::drive_session_locked()
 {
-  if (!firmware_provider_->capabilities().mode_control_implemented)
+  const auto steady = blade_steady_ms();
+  const auto safety = safety_state_.project(now().nanoseconds());
+  const bool emergency = safety.active_emergency || safety.latched_emergency;
+  const bool movement = motion_session_active();
+  const bool guided = last_high_level_status_.state ==
+                          mowgli_interfaces::msg::HighLevelStatus::HIGH_LEVEL_STATE_AUTONOMOUS &&
+                      firmware_provider_->guided_velocity_implemented();
+  // Preserve the pre-adapter safety paths: tilt/double lift only DISARM.
+  // Hardware switch and explicit service emergency also request HOLD.
+  const bool hold_emergency =
+      safety.reason == "HARDWARE_SAFETY_SWITCH" || safety.reason == "SERVICE_EMERGENCY_STOP";
+  const std::string mode = emergency && !hold_emergency ? mavros_state_.mode
+                           : emergency || !movement     ? "HOLD"
+                           : guided                     ? "GUIDED"
+                                                        : "MANUAL";
+  session_control_.demand(mode, !emergency && (movement || blade_test_active_), emergency);
+  session_control_.tick(steady);
+  const bool traction_ready =
+      movement && !emergency && session_control_.ready() && session_control_.requested_arm();
+  if (traction_was_ready_ && !traction_ready)
+    publish_neutral_manual_control();
+  traction_was_ready_ = traction_ready;
+  const auto& error = session_control_.error();
+  if (!error.empty() && error != last_session_error_)
+    RCLCPP_ERROR(get_logger(), "FCU command failed: %s", error.c_str());
+  last_session_error_ = error;
+  if (session_control_.failed())
+    end_failed_blade_test_locked("FCU activation refused or timed out");
+  for (auto it = session_rpc_ids_.begin(); it != session_rpc_ids_.end();)
   {
-    return false;
+    if (!session_control_.current(it->first))
+    {
+      if (it->second.first)
+        cli_set_mode_->remove_pending_request(it->second.second);
+      else
+        cli_arm_->remove_pending_request(it->second.second);
+      it = session_rpc_ids_.erase(it);
+    }
+    else
+      ++it;
   }
-  if (!cli_set_mode_)
+  // Only the existing hardware safety/latches decide whether ARM is allowed.
+  const bool allow_arm =
+      !emergency && safety_state_.hardware_safety_state() == HardwareSafetyState::Released;
+  const auto command = session_control_.next(steady,
+                                             cli_set_mode_->service_is_ready(),
+                                             cli_arm_->service_is_ready(),
+                                             allow_arm);
+  if (!command)
+    return;
+  const auto serial = command->serial;
+  try
   {
-    RCLCPP_ERROR(get_logger(), "SetMode client is null");
-    return false;
-  }
-
-  if (!cli_set_mode_->wait_for_service(std::chrono::seconds(1)))
-  {
-    RCLCPP_ERROR(get_logger(), "Service /mavros/set_mode not available");
-    return false;
-  }
-
-  auto request = std::make_shared<mavros_msgs::srv::SetMode::Request>();
-  request->custom_mode = mode;
-
-  cli_set_mode_->async_send_request(
-      request,
-      [this, mode](rclcpp::Client<mavros_msgs::srv::SetMode>::SharedFuture future)
-      {
-        try
-        {
-          const auto response = future.get();
-          if (!response)
+    if (command->kind == FcuSessionController::Kind::Mode)
+    {
+      auto request = std::make_shared<mavros_msgs::srv::SetMode::Request>();
+      request->custom_mode = command->mode;
+      const auto result = cli_set_mode_->async_send_request(
+          request,
+          [this, serial](rclcpp::Client<mavros_msgs::srv::SetMode>::SharedFuture future)
           {
-            RCLCPP_ERROR(get_logger(), "Null response from /mavros/set_mode");
-            return;
-          }
-
-          if (!response->mode_sent)
+            bool accepted = false;
+            try
+            {
+              const auto response = future.get();
+              accepted = response && response->mode_sent;
+            }
+            catch (const std::exception&)
+            {
+            }
+            std::lock_guard<std::mutex> lock(mutex_);
+            session_rpc_ids_.erase(serial);
+            session_control_.complete(serial, accepted, blade_steady_ms());
+            drive_session_locked();
+            drive_blade_locked();
+          });
+      session_rpc_ids_[serial] = {true, result.request_id};
+    }
+    else
+    {
+      // Initialize both traction transports to neutral before an ARM request;
+      // only a later confirmed session can forward an actual velocity.
+      if (command->arm)
+        publish_neutral_manual_control();
+      auto request = std::make_shared<mavros_msgs::srv::CommandBool::Request>();
+      request->value = command->arm;
+      const auto result = cli_arm_->async_send_request(
+          request,
+          [this, serial](rclcpp::Client<mavros_msgs::srv::CommandBool>::SharedFuture future)
           {
-            RCLCPP_ERROR(get_logger(), "Autopilot rejected mode request '%s'", mode.c_str());
-            return;
-          }
-
-          RCLCPP_INFO(get_logger(), "Autopilot confirmed mode request '%s'", mode.c_str());
-        }
-        catch (const std::exception& e)
-        {
-          RCLCPP_ERROR(get_logger(),
-                       "Set mode request failed asynchronously for '%s': %s",
-                       mode.c_str(),
-                       e.what());
-        }
-      });
-
-  return true;
+            bool accepted = false;
+            try
+            {
+              const auto response = future.get();
+              accepted = response && response->success && response->result == 0;
+            }
+            catch (const std::exception&)
+            {
+            }
+            std::lock_guard<std::mutex> lock(mutex_);
+            session_rpc_ids_.erase(serial);
+            session_control_.complete(serial, accepted, blade_steady_ms());
+            drive_session_locked();
+            drive_blade_locked();
+          });
+      session_rpc_ids_[serial] = {false, result.request_id};
+    }
+  }
+  catch (const std::exception& error)
+  {
+    session_control_.complete(serial, false, steady);
+    RCLCPP_ERROR(get_logger(), "FCU send failed: %s", error.what());
+  }
 }
 
 void MavrosHardwareBridgeNode::publish_neutral_manual_control()
@@ -1181,29 +1321,38 @@ void MavrosHardwareBridgeNode::publish_neutral_manual_control()
   mavros_msgs::msg::ManualControl command;
   command.header.stamp = now();
   pub_manual_control_->publish(command);
+  if (firmware_provider_->guided_velocity_implemented())
+  {
+    geometry_msgs::msg::TwistStamped neutral;
+    neutral.header.stamp = now();
+    pub_guided_control_->publish(firmware_provider_->guided_velocity_from_twist(neutral));
+  }
 }
 
 bool MavrosHardwareBridgeNode::request_blade_disarm()
 {
-  (void)request_blade_neutral();
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    mow_enabled_ = false;
-  }
-  return send_arm_command(false);
+  return request_safety_disarm(false);
 }
 
 bool MavrosHardwareBridgeNode::request_hold_and_blade_disarm()
 {
-  (void)request_blade_neutral();
-  {
-    std::lock_guard<std::mutex> lock(mutex_);
-    mow_enabled_ = false;
-    publish_neutral_manual_control();
-  }
-  const bool mode_forwarded = send_mode_command("HOLD");
-  const bool blade_forwarded = send_arm_command(false);
-  return mode_forwarded && blade_forwarded;
+  return request_safety_disarm(true);
+}
+
+bool MavrosHardwareBridgeNode::request_safety_disarm(bool hold)
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+  mow_enabled_ = false;
+  blade_test_active_ = false;
+  cancel_pending_blade_starts();
+  blade_control_.force_off(blade_steady_ms());
+  publish_neutral_manual_control();
+  session_control_.demand(hold ? "HOLD" : mavros_state_.mode, false, true);
+  drive_blade_locked();
+  drive_session_locked();
+  // True means DISARM was queued, or is already observed; HOLD may still be
+  // unavailable/unconfirmed. A service ACK alone is not FCU confirmation.
+  return session_control_.disarm_pending() || (mavros_state_.connected && !mavros_state_.armed);
 }
 
 bool MavrosHardwareBridgeNode::high_level_motion_active(uint8_t state) const
@@ -1216,6 +1365,8 @@ bool MavrosHardwareBridgeNode::high_level_motion_active(uint8_t state) const
 
 }  // namespace mowgli_mavros_bridge
 
+// The regression executable links the actual node without its standalone main.
+#ifndef MOWGLI_BRIDGE_NO_MAIN
 int main(int argc, char** argv)
 {
   rclcpp::init(argc, argv);
@@ -1223,3 +1374,5 @@ int main(int argc, char** argv)
   rclcpp::shutdown();
   return 0;
 }
+
+#endif

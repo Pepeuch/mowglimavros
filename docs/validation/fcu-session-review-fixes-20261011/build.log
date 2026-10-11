@@ -1,0 +1,17 @@
+Starting >>> mowgli_mavros_bridge
+--- stderr: mowgli_mavros_bridge
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_bridge_regressions.cpp: In member function ‘virtual void mowgli_mavros_bridge::BridgeRegression_OffCancelsReadyQueuedOnBeforeDispatch_Test::TestBody()’:
+/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_bridge_regressions.cpp:81:22: warning: ‘void rclcpp::spin_some(const Node::SharedPtr&)’ is deprecated: use SingleThreadedExecutor::spin_some instead [-Wdeprecated-declarations]
+   81 |     rclcpp::spin_some(mock);
+      |     ~~~~~~~~~~~~~~~~~^~~~~~
+In file included from /opt/ros/lyrical/include/rclcpp/rclcpp/rclcpp.hpp:174,
+                 from /tmp/fcu-src/ros2/src/mowgli_mavros_bridge/include/mavros_hardware_bridge_node.hpp:12,
+                 from /tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_bridge_regressions.cpp:4:
+/opt/ros/lyrical/include/rclcpp/rclcpp/executors.hpp:110:1: note: declared here
+  110 | spin_some(const rclcpp::Node::SharedPtr & node_ptr);
+      | ^~~~~~~~~
+---
+Finished <<< mowgli_mavros_bridge [46.3s]
+
+Summary: 1 package finished [46.4s]
+  1 package had stderr output: mowgli_mavros_bridge

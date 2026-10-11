@@ -6,3 +6,40 @@ docs/investigations/2026-10-07-runtime-bringup/mavlink-passive-rates-20261010.py
 docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit-20261009-original.md whitespace=-blank-at-eof
 docs/investigations/2026-10-07-runtime-bringup/mavlink-runtime-frequency-audit.md whitespace=-blank-at-eof
 docs/investigations/2026-10-07-runtime-bringup/servo3-isolated-actuation-results.md whitespace=-blank-at-eof
+
+# Preserve byte-exact FCU evidence: unified-diff context, compiler caret output
+# and generated JUnit output contain trailing spaces. Exact artifacts only;
+# product source and ordinary docs retain full whitespace checks.
+docs/validation/fcu-main-commit-20261011/initial-build.log whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_blade_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_blade_off_contract.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_esc_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_firmware_detection.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_firmware_provider.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_gnss_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_gnss_launch.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_provider_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/junit/test_safety_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-main-commit-20261011/review.diff whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_blade_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_blade_off_contract.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_esc_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_firmware_detection.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_firmware_provider.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_gnss_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_gnss_launch.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_provider_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/bridge-results/mowgli_mavros_bridge/test_safety_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/review.diff whitespace=-blank-at-eol
+docs/validation/fcu-session-controller-20261011/validation.log whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_blade_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_blade_off_contract.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_esc_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_firmware_detection.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_firmware_provider.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_gnss_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_gnss_launch.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_provider_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/junit/test_safety_graph.xml whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/node-review-fixes.diff whitespace=-blank-at-eol
+docs/validation/fcu-session-review-fixes-20261011/review.diff whitespace=-blank-at-eol

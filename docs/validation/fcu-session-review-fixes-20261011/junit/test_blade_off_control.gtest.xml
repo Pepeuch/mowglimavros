@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="5" failures="0" disabled="0" errors="0" time="0." timestamp="2026-10-11T12:41:48.845" name="AllTests">
+  <testsuite name="BladeOff" tests="5" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T12:41:48.845">
+    <testcase name="NativeNeutralCommandOnly" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp" line="7" status="run" result="completed" time="0." timestamp="2026-10-11T12:41:48.845" classname="mowgli_mavros_bridge.BladeOff" />
+    <testcase name="ConfigurableWithoutDirectionOrArming" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp" line="18" status="run" result="completed" time="0." timestamp="2026-10-11T12:41:48.845" classname="mowgli_mavros_bridge.BladeOff" />
+    <testcase name="NoSpamPendingOrConfirmed" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp" line="29" status="run" result="completed" time="0." timestamp="2026-10-11T12:41:48.845" classname="mowgli_mavros_bridge.BladeOff" />
+    <testcase name="RejectionDoesNotBecomeACommandLoop" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp" line="42" status="run" result="completed" time="0." timestamp="2026-10-11T12:41:48.845" classname="mowgli_mavros_bridge.BladeOff" />
+    <testcase name="ReconnectInvalidatesOldAckAndAllowsFreshNeutral" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_blade_off_control.cpp" line="53" status="run" result="completed" time="0." timestamp="2026-10-11T12:41:48.845" classname="mowgli_mavros_bridge.BladeOff" />
+  </testsuite>
+</testsuites>

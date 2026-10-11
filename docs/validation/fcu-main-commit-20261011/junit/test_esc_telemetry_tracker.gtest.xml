@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="14" failures="0" disabled="0" errors="0" time="0." timestamp="2026-10-11T13:12:28.032" name="AllTests">
+  <testsuite name="EscTelemetryTracker" tests="6" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T13:12:28.032">
+    <testcase name="StoppedMotorIsOnlineWhileCountAdvances" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="62" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.EscTelemetryTracker" />
+    <testcase name="RunningMotorReportsRawUnsignedMagnitude" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="73" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.EscTelemetryTracker" />
+    <testcase name="FrozenCountDoesNotRefresh" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="83" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.EscTelemetryTracker" />
+    <testcase name="CounterWrapRefreshes" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="91" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.EscTelemetryTracker" />
+    <testcase name="ReconnectClearsFreshness" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="99" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.EscTelemetryTracker" />
+    <testcase name="FourthEmptySlotIsIgnored" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="108" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.EscTelemetryTracker" />
+  </testsuite>
+  <testsuite name="VescTelemetryProjection" tests="4" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T13:12:28.032">
+    <testcase name="Esc2StoppedIsFreshBladeTelemetry" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="115" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.VescTelemetryProjection" />
+    <testcase name="Esc2RunningPublishesBladeRpmMagnitude" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="129" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.VescTelemetryProjection" />
+    <testcase name="StaleEsc2DoesNotFabricateBladeTelemetry" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="142" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.VescTelemetryProjection" />
+    <testcase name="WheelEscTelemetryRemainsTrackerOnly" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="153" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.VescTelemetryProjection" />
+  </testsuite>
+  <testsuite name="CanonicalBlade" tests="4" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T13:12:28.032">
+    <testcase name="MissingTemperaturePreservesRpmCurrentAndFreshTimestamp" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="163" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.CanonicalBlade" />
+    <testcase name="MetadataCannotRefreshRpmAndExpiresIndependently" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="182" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.CanonicalBlade" />
+    <testcase name="InvalidCurrentMissingStatusAndFutureStampNeverBecomeAvailable" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="195" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.CanonicalBlade" />
+    <testcase name="Int32MinimumRpmMagnitudeDoesNotOverflow" file="/tmp/fcu-src/ros2/src/mowgli_mavros_bridge/test/test_esc_telemetry_tracker.cpp" line="211" status="run" result="completed" time="0." timestamp="2026-10-11T13:12:28.032" classname="mowgli_mavros_bridge.CanonicalBlade" />
+  </testsuite>
+</testsuites>

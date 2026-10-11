@@ -5,12 +5,14 @@ import unittest
 
 
 class BladeOffContract(unittest.TestCase):
-    def test_mower_service_has_no_arming_or_mode_side_effect(self):
+    def test_blade_requests_delegate_fcu_transport_to_adapter(self):
         source = (Path(__file__).parents[1] / "src/mavros_hardware_bridge_node.cpp").read_text()
         body = source.split("void MavrosHardwareBridgeNode::on_mower_control(", 1)[1]
         body = body.split("bool MavrosHardwareBridgeNode::request_blade_neutral()", 1)[0]
+        self.assertNotIn("cli_arm_", body)
         self.assertNotIn("send_arm_command", body)
         self.assertNotIn("send_mode_command", body)
+        self.assertIn("drive_session_locked", body)
         self.assertIn("BladeControl::Direction::Off", body)
         self.assertIn("BladeControl::Direction::Forward", body)
         self.assertIn("BladeControl::Direction::Reverse", body)

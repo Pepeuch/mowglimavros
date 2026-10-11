@@ -1,0 +1,167 @@
+--- /tmp/fcu-review-before.cpp	2026-10-11 12:31:19.901978175 +0000
++++ ros2/src/mowgli_mavros_bridge/src/mavros_hardware_bridge_node.cpp	2026-10-11 12:37:04.835820608 +0000
+@@ -597,8 +597,6 @@
+     const std::shared_ptr<mowgli_interfaces::srv::MowerControl::Request> request)
+ {
+   std::lock_guard<std::mutex> lock(mutex_);
+-  drive_session_locked();
+-  drive_blade_locked();
+   if (request->mow_enabled > 1 || (request->mow_enabled && request->mow_direction > 1))
+   {
+     reply_blade(header, false);
+@@ -619,7 +617,7 @@
+       session_control_.demand("HOLD", false, safety.active_emergency || safety.latched_emergency);
+       // Apply the permission edge before binding this OFF caller to a blade
+       // revision. This does not dispatch DISARM before neutral cutting.
+-      drive_blade_locked();
++      blade_control_.permission(blade_allowed_locked(blade_steady_ms()), blade_steady_ms());
+     }
+     // Blade OFF is dispatched before ending temporary arming. An active
+     // MowgliNext movement session continues to own its requested ARM state.
+@@ -633,6 +631,10 @@
+     drive_session_locked();
+     return;
+   }
++  if (!pending_blade_starts_.empty() && pending_blade_starts_.front().direction != direction)
++    cancel_pending_blade_starts();
++  drive_session_locked();
++  drive_blade_locked();
+   const auto safety = safety_state_.project(now().nanoseconds());
+   // Reuse the existing blade protections; do not change BladeControl policy.
+   if (!transport_available || !mowing_enabled_ || !mavros_state_.connected ||
+@@ -649,8 +651,9 @@
+     publish_neutral_manual_control();
+   }
+   drive_session_locked();
+-  if (session_control_.failed())
++  if (session_control_.failed() || (!motion_session_active() && !blade_test_active_))
+   {
++    end_failed_blade_test_locked(session_control_.error().c_str());
+     reply_blade(header, false);
+     return;
+   }
+@@ -661,11 +664,10 @@
+       reply_blade(header, false);
+       return;
+     }
+-    if (!pending_blade_starts_.empty() && pending_blade_starts_.front().direction != direction)
+-      cancel_pending_blade_starts();
+     pending_blade_starts_.push_back({header, direction, blade_steady_ms()});
+     return;
+   }
++  blade_control_.permission(blade_allowed_locked(blade_steady_ms()), blade_steady_ms());
+   const auto result = blade_control_.request(direction, blade_steady_ms());
+   if (result == BladeControl::Result::Pending && blade_replies_.size() < 32)
+     blade_replies_.push_back({header, blade_control_.revision(), blade_steady_ms()});
+@@ -705,21 +707,47 @@
+   }
+ }
+ 
++void MavrosHardwareBridgeNode::end_failed_blade_test_locked(const char* reason)
++{
++  if (!blade_test_active_ || motion_session_active())
++    return;
++  RCLCPP_ERROR(get_logger(), "Isolated blade test cancelled: %s", reason);
++  blade_test_active_ = false;
++  cancel_pending_blade_starts();
++  blade_control_.force_off(blade_steady_ms());
++  publish_neutral_manual_control();
++  const auto safety = safety_state_.project(now().nanoseconds());
++  session_control_.demand("HOLD", false, safety.active_emergency || safety.latched_emergency);
++}
++
++bool MavrosHardwareBridgeNode::blade_allowed_locked(int64_t steady) const
++{
++  const auto safety = safety_state_.project(now().nanoseconds());
++  return session_control_.ready() && session_control_.requested_arm() && mowing_enabled_ &&
++         mavros_state_.connected && mavros_state_.armed && last_fcu_receipt_ms_ >= 0 &&
++         steady - last_fcu_receipt_ms_ <= 2500 && last_hardware_safety_ms_ >= 0 &&
++         steady - last_hardware_safety_ms_ <= 3000 &&
++         safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
++         !safety.active_emergency && !safety.latched_emergency && blade_esc_slot_ >= 0;
++}
++
+ void MavrosHardwareBridgeNode::drive_blade_locked()
+ {
+   const auto steady = blade_steady_ms();
+   while (!blade_wire_expectations_.empty() && blade_wire_expectations_.front().until_ms < steady)
+     blade_wire_expectations_.pop_front();
+   const auto safety = safety_state_.project(now().nanoseconds());
+-  const bool allowed = session_control_.ready() && session_control_.requested_arm() &&
+-                       mowing_enabled_ && mavros_state_.connected && mavros_state_.armed &&
+-                       last_fcu_receipt_ms_ >= 0 && steady - last_fcu_receipt_ms_ <= 2500 &&
+-                       last_hardware_safety_ms_ >= 0 && steady - last_hardware_safety_ms_ <= 3000 &&
+-                       safety_state_.hardware_safety_state() == HardwareSafetyState::Released &&
+-                       !safety.active_emergency && !safety.latched_emergency &&
+-                       blade_esc_slot_ >= 0;
+-  blade_control_.permission(allowed, steady);
++  if (session_control_.failed() || !mavros_state_.connected)
++    end_failed_blade_test_locked("FCU activation failed or disconnected");
++  blade_control_.permission(blade_allowed_locked(steady), steady);
+   blade_control_.tick(steady);
++  if (std::any_of(pending_blade_starts_.begin(),
++                  pending_blade_starts_.end(),
++                  [steady](const auto& pending)
++                  {
++                    return steady - pending.started_ms > 20000;
++                  }))
++    end_failed_blade_test_locked("blade request expired");
+   for (auto it = pending_blade_starts_.begin(); it != pending_blade_starts_.end();)
+   {
+     if (session_control_.failed() || !mavros_state_.connected || safety.active_emergency ||
+@@ -774,6 +802,8 @@
+     else
+       ++it;
+   }
++  if (pending_blade_starts_.empty() && blade_control_.requested() == BladeControl::Direction::Off)
++    end_failed_blade_test_locked("blade ON rejected, expired or cancelled");
+   if (std::string(firmware_provider_->name()) != "ardupilot" ||
+       !cli_command_long_->service_is_ready())
+   {
+@@ -988,6 +1018,11 @@
+   add_value(session_status, "confirmed_mode", session.confirmed_mode());
+   add_value(session_status, "requested_arm", session.requested_arm() ? "true" : "false");
+   add_value(session_status, "confirmed_arm", session.confirmed_arm() ? "true" : "false");
++  add_value(session_status, "command_pending", session.command_pending() ? "true" : "false");
++  add_value(session_status,
++            "command_acknowledged",
++            session.command_acknowledged() ? "true" : "false");
++  add_value(session_status, "state_confirmed", session.ready() ? "true" : "false");
+   output.status.push_back(std::move(session_status));
+   const auto format_value = [](double value)
+   {
+@@ -1185,6 +1220,8 @@
+   if (!error.empty() && error != last_session_error_)
+     RCLCPP_ERROR(get_logger(), "FCU command failed: %s", error.c_str());
+   last_session_error_ = error;
++  if (session_control_.failed())
++    end_failed_blade_test_locked("FCU activation refused or timed out");
+   for (auto it = session_rpc_ids_.begin(); it != session_rpc_ids_.end();)
+   {
+     if (!session_control_.current(it->first))
+@@ -1300,7 +1337,9 @@
+   publish_neutral_manual_control();
+   drive_blade_locked();
+   drive_session_locked();
+-  return cli_arm_->service_is_ready() && cli_set_mode_->service_is_ready();
++  // True means DISARM was queued, or is already observed; HOLD may still be
++  // unavailable/unconfirmed. A service ACK alone is not FCU confirmation.
++  return session_control_.disarm_pending() || (mavros_state_.connected && !mavros_state_.armed);
+ }
+ 
+ bool MavrosHardwareBridgeNode::high_level_motion_active(uint8_t state) const
+@@ -1313,6 +1352,8 @@
+ 
+ }  // namespace mowgli_mavros_bridge
+ 
++// The regression executable links the actual node without its standalone main.
++#ifndef MOWGLI_BRIDGE_NO_MAIN
+ int main(int argc, char** argv)
+ {
+   rclcpp::init(argc, argv);
+@@ -1320,3 +1361,5 @@
+   rclcpp::shutdown();
+   return 0;
+ }
++
++#endif

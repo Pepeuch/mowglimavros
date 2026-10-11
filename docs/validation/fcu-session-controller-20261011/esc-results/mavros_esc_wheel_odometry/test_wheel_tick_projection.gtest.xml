@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="6" failures="0" disabled="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.485" name="AllTests">
+  <testsuite name="WheelTickProjection" tests="6" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-11T11:36:08.485">
+    <testcase name="ProjectsSignedMotorRevolutionsWithoutMetricAssumptions" file="/tmp/fcu-src/ros2/src/mavros_esc_wheel_odometry/test/test_wheel_tick_projection.cpp" line="6" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.485" classname="mavros_esc_wheel_odometry.WheelTickProjection" />
+    <testcase name="SegmentAndSourceChangesRebaselineWithoutInventingTravel" file="/tmp/fcu-src/ros2/src/mavros_esc_wheel_odometry/test/test_wheel_tick_projection.cpp" line="26" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.485" classname="mavros_esc_wheel_odometry.WheelTickProjection" />
+    <testcase name="ReversePreservesMagnitudeAndKeepsDirectionAtRest" file="/tmp/fcu-src/ros2/src/mavros_esc_wheel_odometry/test/test_wheel_tick_projection.cpp" line="50" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.485" classname="mavros_esc_wheel_odometry.WheelTickProjection" />
+    <testcase name="ReconnectEpochAndInvalidWheelNeverResetPublishedCounts" file="/tmp/fcu-src/ros2/src/mavros_esc_wheel_odometry/test/test_wheel_tick_projection.cpp" line="77" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.485" classname="mavros_esc_wheel_odometry.WheelTickProjection" />
+    <testcase name="ScaleIsTransportOnlyAndCalibrationCannotChangeAccumulation" file="/tmp/fcu-src/ros2/src/mavros_esc_wheel_odometry/test/test_wheel_tick_projection.cpp" line="110" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.485" classname="mavros_esc_wheel_odometry.WheelTickProjection" />
+    <testcase name="FractionalAccumulationAndHugeDiscontinuityAreBounded" file="/tmp/fcu-src/ros2/src/mavros_esc_wheel_odometry/test/test_wheel_tick_projection.cpp" line="136" status="run" result="completed" time="0." timestamp="2026-10-11T11:36:08.485" classname="mavros_esc_wheel_odometry.WheelTickProjection" />
+  </testsuite>
+</testsuites>

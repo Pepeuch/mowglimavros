@@ -14,6 +14,7 @@
 
 #include "mowgli_mavros_bridge/blade_control.hpp"
 #include "mowgli_mavros_bridge/esc_telemetry_tracker.hpp"
+#include "mowgli_mavros_bridge/fcu_session_controller.hpp"
 #include "mowgli_mavros_bridge/firmware_provider.hpp"
 #include "mowgli_mavros_bridge/readiness_state.hpp"
 #include "mowgli_mavros_bridge/safety_state.hpp"
@@ -45,6 +46,7 @@ public:
   explicit MavrosHardwareBridgeNode(const rclcpp::NodeOptions& options = rclcpp::NodeOptions());
 
 private:
+  friend class BridgeRegressionPeer;
   void create_publishers();
   void create_subscriptions();
   void create_services();
@@ -77,14 +79,18 @@ private:
   void publish_emergency();
   void publish_readiness();
 
-  bool send_arm_command(bool arm);
+  void drive_session_locked();
+  bool motion_session_active() const;
+  void cancel_pending_blade_starts();
+  void end_failed_blade_test_locked(const char* reason);
+  bool blade_allowed_locked(int64_t steady) const;
   bool request_blade_neutral();
   void drive_blade_locked();
   void reply_blade(const std::shared_ptr<rmw_request_id_t>& header, bool success);
-  bool send_mode_command(const std::string& mode);
   bool request_blade_disarm();
   void publish_neutral_manual_control();
   bool request_hold_and_blade_disarm();
+  bool request_safety_disarm(bool hold);
   bool high_level_motion_active(uint8_t state) const;
 
 private:
@@ -113,6 +119,18 @@ private:
 
   bool mow_enabled_{false};
   BladeControl blade_control_;
+  FcuSessionController session_control_;
+  bool blade_test_active_{false};
+  bool traction_was_ready_{false};
+  std::string last_session_error_;
+  std::map<uint64_t, std::pair<bool, int64_t>> session_rpc_ids_;
+  struct PendingBladeStart
+  {
+    std::shared_ptr<rmw_request_id_t> header;
+    BladeControl::Direction direction;
+    int64_t started_ms;
+  };
+  std::vector<PendingBladeStart> pending_blade_starts_;
   struct BladeReply
   {
     std::shared_ptr<rmw_request_id_t> header;
@@ -159,6 +177,7 @@ private:
   rclcpp::Publisher<mowgli_interfaces::msg::Emergency>::SharedPtr pub_emergency_;
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr pub_imu_;
   rclcpp::Publisher<mavros_msgs::msg::ManualControl>::SharedPtr pub_manual_control_;
+  rclcpp::Publisher<mavros_msgs::msg::PositionTarget>::SharedPtr pub_guided_control_;
   rclcpp::Publisher<diagnostic_msgs::msg::DiagnosticArray>::SharedPtr pub_readiness_;
 
   rclcpp::Subscription<geometry_msgs::msg::TwistStamped>::SharedPtr sub_cmd_vel_;
