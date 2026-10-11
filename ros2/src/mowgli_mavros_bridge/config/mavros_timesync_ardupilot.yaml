@@ -1,0 +1,6 @@
+# ArduPilot on lightweight/50 Hz FCUs: tolerate typical 15-22 ms TIMESYNC RTT.
+# Preserve MAVROS's 10 Hz exchange rate and all other rejection/convergence filters.
+# High-RTT outliers remain rejected; this is a validated bench candidate, not a guarantee.
+/**/time:
+  ros__parameters:
+    max_rtt_sample: 30

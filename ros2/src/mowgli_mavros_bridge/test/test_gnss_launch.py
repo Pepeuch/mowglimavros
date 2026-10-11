@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from launch import LaunchContext
 import warnings
+import yaml
 
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "python"))
@@ -54,6 +55,8 @@ class FirmwareLaunchTest(unittest.TestCase):
                         "parameters": [
                             f"/mavros/launch/{profile}_pluginlists.yaml",
                             f"/mavros/launch/{profile}_config.yaml",
+                            *(["/test/config/mavros_timesync_ardupilot.yaml"]
+                              if firmware == "ardupilot" else []),
                             "/test/config/esc_wheel_odometry.yaml",
                             "/ros2_ws/config/esc_wheel_odometry.yaml",
                             "/test/config/battery_observer.yaml",
@@ -63,6 +66,12 @@ class FirmwareLaunchTest(unittest.TestCase):
                         "remappings": [("/rtcm", "/rtcm")],
                     }])
                     probe.assert_not_called()
+
+    def test_ardupilot_timesync_override_changes_only_rtt_threshold(self):
+        profile = Path(__file__).resolve().parents[1] / "config/mavros_timesync_ardupilot.yaml"
+        self.assertEqual(yaml.safe_load(profile.read_text(encoding="utf-8")), {
+            "/**/time": {"ros__parameters": {"max_rtt_sample": 30}}
+        })
 
     def test_unimplemented_firmware_never_launches_a_node(self):
         for firmware in ("betaflight", "inav", "mowgli"):

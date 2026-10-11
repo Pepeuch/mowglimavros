@@ -86,6 +86,18 @@ def _backend_nodes(
     )
     plugin_list, config = provider.parameter_files
 
+    # Overlay only the ArduPilot TIMESYNC RTT threshold. Keep PX4 unchanged.
+    # This is loaded after apm_config.yaml, without touching the other filters.
+    timesync_parameters = []
+    if provider.name == "ardupilot":
+        timesync_config = os.path.join(
+            get_package_share_directory("mowgli_mavros_bridge"),
+            "config", "mavros_timesync_ardupilot.yaml",
+        )
+        if not os.path.isfile(timesync_config):
+            raise RuntimeError("ArduPilot MAVROS timesync configuration is unavailable")
+        timesync_parameters.append(timesync_config)
+
     plugin_xml = os.path.join(
         get_package_share_directory("universal_gnss_mavros"),
         "universal_gnss_mavros_plugins.xml",
@@ -153,6 +165,7 @@ def _backend_nodes(
             parameters=[
                 os.path.join(mavros_share, "launch", plugin_list),
                 os.path.join(mavros_share, "launch", config),
+                *timesync_parameters,
                 *wheel_odom_parameters,
                 battery_observer_config,
                 {
