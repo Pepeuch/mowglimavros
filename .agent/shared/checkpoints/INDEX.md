@@ -84,3 +84,9 @@ Navigation only. Not the project backlog.
 ## Closed
 
 None.
+
+## Retained — documentation ownership
+
+- `retained/MM-DOCS-OWNERSHIP-20261011.md` — documentation ownership inventory and lossless conservation; no acceptance or code change.
+
+- `retained/MM-PROGRESS-RECONCILIATION-20261011.md` — canonical TODO/status reconciliation and generated progress50%; software and physical acceptance remain distinct.

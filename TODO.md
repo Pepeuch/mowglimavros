@@ -173,53 +173,43 @@ Acceptance:
 
 ## MM-201 — Bound RTCM publications to MAVROS limits
 Related finding: `MM-AUD-004`
-Status: TODO
+Status: DONE (software boundary acceptance; focused Kilted amd64 validation, 2026-09-08)
 
-Current problem:
-
-- NTRIP socket reads may return up to 4096 bytes.
-- MAVROS accepts at most 720 bytes in one `mavros_msgs/RTCM`.
+Resolved problem: socket reads may contain 4096 bytes, while MAVROS accepts at
+most 720 bytes in one `mavros_msgs/RTCM`. `NtripClientNode::publish_rtcm()` uses
+`split_rtcm_chunks()` before each publication.
 
 Tasks:
 
-- [ ] Segment input before ROS publication.
-- [ ] Ensure every published RTCM message is `<= 720` bytes.
-- [ ] Preserve byte order exactly.
-- [ ] Ensure no byte is lost.
-- [ ] Ensure no byte is duplicated.
-- [ ] Avoid unnecessary buffering/refactor outside this requirement.
+- [x] Segment input before ROS publication.
+- [x] Ensure every published RTCM message is `<= 720` bytes.
+- [x] Preserve byte order exactly.
+- [x] Ensure no byte is lost.
+- [x] Ensure no byte is duplicated.
+- [x] Avoid unnecessary buffering/refactor outside this requirement.
 
-Acceptance tests:
+Acceptance tests (`RtcmChunking.PreservesRequiredBoundaryInputs`):
 
-- [ ] 1 byte
-- [ ] 179 bytes
-- [ ] 180 bytes
-- [ ] 181 bytes
-- [ ] 719 bytes
-- [ ] 720 bytes
-- [ ] 721 bytes
-- [ ] 4096 bytes
+- [x] 1 byte
+- [x] 179 bytes
+- [x] 180 bytes
+- [x] 181 bytes
+- [x] 719 bytes
+- [x] 720 bytes
+- [x] 721 bytes
+- [x] 4096 bytes
 
-For every case:
+For every case: `concat(output_chunks) == input` and every chunk is <=720 bytes.
 
-`concat(output_chunks) == input`
+The earlier 2026-09-08 Boost configuration blocker was resolved by the focused
+build and passing chunking gtest already recorded in this section. This update
+consolidates the contradictory TODO/DONE metadata; it does not claim a new test
+run. That validation used ros-kilted-mavros-msgs2.15.0, then-production MAVROS
+2.15.1/22ae5b7c. Current pin is MAVROS2.16.0/5c68b905ab30de6ce630822dc46c33467e8f23ea.
+Current source and boundary test were inspected at8eecc57. Physical RTCM delivery
+remains HARDWARE_PENDING under MM-801/HW-MAV-005 and is not part of this completed
+software chunking item. No RTCM was injected for this reconciliation.
 
-Evidence: the 2026-09-08 passive Pixhawk capability audit confirmed MAVROS 2.15.1 accepts at most 720 bytes per ROS RTCM message. No RTCM was injected; this remains a software prerequisite and hardware delivery acceptance remains `HARDWARE_PENDING` under MM-801.
-
-Validation blocker (2026-09-08): the focused `mowgli_ntrip_client` build cannot configure in the current environment because CMake cannot find Boost headers/system (`Boost_INCLUDE_DIR`, `system`). No dependency installation or broader build is authorized; MM-201 remains TODO until the focused gtest runs.
-
-Status: DONE (focused Kilted amd64 validation, 2026-09-08)
-
-Evidence:
-- mowgli_ntrip_client builds successfully.
-- focused RTCM chunking gtest passes.
-- required boundary inputs are covered.
-- every emitted ROS RTCM chunk is <=720 bytes.
-- concatenation preserves the original input byte-for-byte.
-- local test compiled against ros-kilted-mavros-msgs 2.15.0;
-  at that validation point production MAVROS was pinned to 2.15.1 / 22ae5b7c;
-  the current baseline is MAVROS 2.16.0 / 5c68b905ab30de6ce630822dc46c33467e8f23ea.
-- physical RTCM delivery remains HARDWARE_PENDING under HW-MAV-005.
 ---
 
 # Phase 3 — Reproducible MAVROS container
@@ -486,9 +476,10 @@ Document the software contract that MowgliNext may depend on:
 - [ ] shutdown behaviour;
 - [ ] reconnect/degraded behaviour;
 - [ ] backend selection expectations.
-- [ ] exact interface revision and type-fingerprint gate (MM-602).
+- [x] exact interface revision and type-fingerprint gate (MM-602).
 - [ ] canonical GNSS, wheel-odometry, power, and readiness semantics (MM-603 through MM-606).
-- [ ] RTCM publication bound and byte-perfect tests (MM-201).
+- [x] RTCM publication bound and byte-perfect software tests (MM-201); physical
+      delivery remains under MM-801/HW-MAV-005.
 - [ ] supported image architecture/digest requirements (MM-301 through MM-304 and MM-402).
 - [ ] Explicitly classify backend capability parity/absence for:
       `/imu/mag_raw`,
@@ -502,10 +493,11 @@ Document the software contract that MowgliNext may depend on:
       remains `HARDWARE_PENDING`.
 - [x] Accept dedicated MowgliNext runtime odometry and hardware-bridge YAML,
       false-by-default explicit traction opt-in and live wheel-lift protection.
-      Traction requires connected/already armed FCU, released physical safety
-      and no active/latched emergency; it never arms. Blade remains disabled.
-      Pure state/unit and mocked launch checks pass; real sidecar graph and new
-      target acceptance remain `ENVIRONMENT_PENDING` / `HARDWARE_PENDING`.
+      The Oct6 baseline required a connected/already armed FCU and kept blade
+      disabled. That command sequencing is superseded by MM-608 automatic
+      confirmed MODE/ARM from existing Next demands, preserving existing safety
+      conditions. Full bridge mock graphs now pass at8eecc57; physical target
+      acceptance remains pending. No new functional gate is introduced.
       Evidence: `.agent/shared/checkpoints/active/MM-MAVROS-REFRESH-20261006.md`.
 - [x] Wire the software-side Pixhawk safety switch and AP_Button wheel-lift
       observations into canonical Emergency composition and diagnostics. MAVROS
@@ -577,7 +569,7 @@ Evidence: `.agent/shared/checkpoints/active/MM-GNSS-CANONICAL-ADAPTER-20261003.m
 
 ## MM-604 — Establish wheel-only odometry contract
 Related migration finding: `MN-MAV-005`
-Status: TODO
+Status: DONE (software contract and graph tests); HARDWARE_PENDING (metric calibration and target acceptance)
 
 Tasks:
 
@@ -722,26 +714,45 @@ Acceptance: interface, GNSS, wheel-odometry, power, freshness/readiness, and RTC
 ---
 
 ## MM-608 — FCU session controller
-Status: IN PROGRESS (software validated; GUI SOFTWARE_REQUIRED; HARDWARE_REQUIRED)
+Status: IN PROGRESS (software complete at8eecc57; physical acceptance HARDWARE_REQUIRED)
 
-Safety-critical implementation directly on `main`, base e7d516c.
-Minimal FCU transport sequencer: automatic state-confirmed MODE/ARM from existing
-MowgliNext states and mower commands, separate GUIDED velocity transport. Public
-interfaces and telemetry preserved; no added watchdog or
-authorization protocol. MowgliNext remains the sole functional authority.
-Validation and physical gates: [architecture](docs/architecture/fcu-session-controller.md).
-Review corrections: isolated ON failure/expiry lifecycle, OFF ordering, DISARM
-without HOLD; earlier 18 suites /106 XML tests PASS with mocks.
-Final pre-commit audit restores tilt/double-lift DISARM without implicit HOLD;
-hardware switch/explicit service retain HOLD/DISARM. Current validation is
-[recorded on main](docs/validation/fcu-main-commit-20261011/README.md):
-18/18 suites, 112 XML tests PASS. Local main commit authorized; no push/deploy. Actual idle GUI ON remains
-[SOFTWARE_REQUIRED in MowgliNext](docs/architecture/mowglinext-idle-blade-test-follow-up.md).
-Independent companion-loss failsafe and exclusive FCU authority remain unresolved.
-No production readiness claim.
+Minimal FCU transport sequencer implemented on `main` at
+`8eecc57d4866052be102acad91bb357fe07bb938` (base e7d516c); the published commit
+is checked out here and local origin/main matches. No deployment acceptance follows.
+MowgliNext remains the sole functional authority. Public interfaces and telemetry
+are preserved; no added watchdog or authorization protocol.
 
-Acceptance: isolated unit/ROS mocks pass; exact-baseline physical HOLD/servo,
-mode/actuator/priority-DISARM and independent failsafe acceptance is acquired.
+- [x] Translate existing IDLE/base, RECORDING, MANUAL_MOWING and AUTONOMOUS
+      demands to HOLD/MANUAL/GUIDED with automatic confirmed ARM/DISARM.
+- [x] Serialize mode/arming transactions, diagnose refusal/timeouts without
+      tick-based retry storms, and wait for FCU confirmation before actuation.
+- [x] Use GUIDED velocity transport separately from MANUAL_CONTROL.
+- [x] Preserve BladeControl OFF/FWD/REV and inversion handling; isolated backend
+      ON temporarily arms in HOLD with neutral traction, OFF retains movement ARM.
+- [x] Cancel refused/expired isolated ON and pending ON before OFF dispatch;
+      late ARM cannot replay cancelled blade commands.
+- [x] Preserve tilt/double-lift DISARM without implicit HOLD, and hardware-switch /
+      explicit-service HOLD/DISARM. HOLD failure cannot block priority DISARM.
+- [x] Validate software with unit/ROS mocks: 18/18 suites,112 XML tests PASS,
+      zero failures/errors/skips; final source hashes and safety regressions retained.
+- [ ] Acquire exact-baseline physical HOLD/servo, zero-wheel, GUIDED signs/units,
+      mode/actuator and priority-DISARM race acceptance.
+- [ ] Establish independent stopping after total companion/ROS/MAVROS loss and
+      exclusive physical command authority. No production readiness claim.
+
+Evidence: [architecture and physical procedure](docs/architecture/fcu-session-controller.md),
+[final main validation](docs/validation/fcu-main-commit-20261011/README.md).
+These are retained software results, not new executions during this reconciliation.
+
+The old GUI SOFTWARE_REQUIRED statement is superseded by the user's2026-10-11
+withdrawal of the idle-ON proposal. Historical MowgliNext blade policy is retained;
+no BT/GUI evolution is required by this adapter. Backend MowerControl(ON) mock
+coverage is not proof that the historical idle GUI emits ON. See the
+[owner-policy reference](docs/architecture/mowglinext-idle-blade-test-follow-up.md).
+
+Acceptance: isolated unit/ROS mocks pass AND exact-baseline physical actuator,
+mode/priority-DISARM and independent failsafe acceptance is acquired. Software
+checkboxes are complete; the item remains IN PROGRESS until physical acceptance.
 
 ---
 
@@ -757,7 +768,11 @@ Tasks:
 
 - [x] Complete the MowgliNext migration audit: consumers, bringup, selection, topology, status/power/failure, and ownership gaps are retained in the imported audit.
 - [x] Record the eventual integration plan: suppress native `mowgli_hardware` only when `backend=mavros`; use one external sidecar; remove separate historical NTRIP; select validated Pixhawk USB `if00`; and prove exclusive backend ownership.
-- [ ] Pass MM-602 interface fingerprint, MM-603 canonical GNSS, MM-604 wheel-only odometry, MM-605 power-instance mapping, MM-606 freshness/readiness, MM-201 RTCM, and MM-607 focused tests.
+- [x] Pass software MM-602 interface fingerprint, MM-603 canonical GNSS, MM-604
+      wheel-only odometry, MM-605 power mapping, MM-606 freshness/readiness,
+      MM-201 RTCM chunking and MM-607 focused external contracts.
+- [ ] Complete their target/runtime/physical acceptance where still pending;
+      software completion does not establish operational enablement.
 - [ ] Provide a suitable validated multiarch image/digest under MM-301 through MM-304 and MM-402.
 - [x] Authorized bounded no-motion MowgliNext Lyrical graph/GUI validation with temporary NEO-M9N GPS1, exclusive canonical topic ownership and neutral-only wire capture (2026-09-29).
 - [ ] Replace temporary `GNSS_STACK=disabled` cutover with nominal `GNSS_STACK=universal` plus a Universal GNSS `mavros` backend, preserving exclusive `/gps/fix` and `/gps/status` ownership.
@@ -766,7 +781,7 @@ Tasks:
 Preferred model:
 high-capability audit/reasoning model.
 
-Current evidence: `.agent/shared/checkpoints/active/MM-MOWGLINEXT-INTEGRATION-20260929.md`. Full Kilted amd64 and Lyrical ARM64 images, hashes/QoS, NEO-M9N fix, POWER/VESC/IMU, GUI diagnostics and zero MANUAL_CONTROL passed live. No ARM or movement. This does not close MM-201, calibrated wheel odometry, production publication, HERE4 or MM-801.
+Current evidence: `.agent/shared/checkpoints/active/MM-MOWGLINEXT-INTEGRATION-20260929.md`. Full Kilted amd64 and Lyrical ARM64 images, hashes/QoS, NEO-M9N fix, POWER/VESC/IMU, GUI diagnostics and zero MANUAL_CONTROL passed live. No ARM or movement. This does not close physical RTCM delivery, calibrated wheel odometry, production publication, HERE4 or MM-801. MM-201 software chunking is complete.
 
 Blocked for operational enablement by: nominal Universal GNSS MAVROS transport/RTCM, wheel calibration, power-current/SoC validation, hardware E-stop and MM-801 guarded physical tests.
 
@@ -1031,22 +1046,23 @@ Deferred explicitly during the live ESC bench validation; do not implement now.
 
 # Current execution order
 
-1. Finish source-compatibility and build-tooling implementation
-   required to support subsequent work...: `MM-102`, `MM-103`, `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
-2. Synchronize exact Mowgli interfaces and pass the fingerprint gate: `MM-602`.
-3. Provide canonical GNSS observation identity and receiver semantics: `MM-603`.
-4. Establish the wheel-only odometry contract: `MM-604`.
-5. Implement POWER1/POWER2 instance mapping: `MM-605`.
-6. Define freshness and readiness semantics: `MM-606`.
-7. Implement and test bounded RTCM chunking: `MM-201`.
-8. Run focused external contract tests: `MM-607`.
-9. Re-run the completed build pipeline against the finalized
-   external contract and close multiarch publication acceptance: `MM-301` through `MM-304`, `MM-401`, and `MM-402`.
-10. Run external runtime smoke/contract validation: `MM-501` and `MM-502`.
-11. Freeze the external backend contract: `MM-601`.
-12. Return to MowgliNext integration and no-motion DDS/graph validation: `MM-701`.
-13. Execute physical hardware gates and retain the known-good Pixhawk/ArduPilot parameter baseline: `MM-801` / `HW-MAV-001` through `HW-MAV-005`.
-14. Build the firmware-aware ArduPilot/MAVROS configuration validator from the physically validated reference profile: `MM-702`.
-15. Deferred cleanup only when separately prioritized: `MM-901`.
+Software items MM-101 through MM-103, MM-201, MM-301 through MM-304,
+MM-401 through MM-403 and MM-501/MM-502 have their recorded DONE scope.
+MM-602 through MM-607 also have software evidence; hardware qualifiers remain.
+MM-608 software is implemented and mock-validated. Do not restart these completed
+implementations merely because historical checkpoints list them as next work.
 
-Only advance to the next expensive validation layer when the previous one passes.
+1. Finish and freeze the remaining external contract/capability decisions under
+   MM-601, without fabricating Status.firmware_compatible or unsupported parity.
+2. Close remaining MM-701 integration/release prerequisites: nominal GNSS/RTCM
+   ownership, exact production image/digest, and target/runtime acceptance.
+3. Acquire MM-604 metric calibration and outstanding GNSS/power/readiness/IMU
+   target evidence using the exact recorded baseline and authorized procedures.
+4. Acquire MM-608 physical mode/arming/actuator and independent companion-loss
+   stopping acceptance, together with MM-801/HW-MAV-001 through HW-MAV-005.
+5. Develop the separately scoped MM-702 configuration validator from the
+   physically validated reference profile, once prioritized.
+6. Deferred MM-901/MM-902 work only when separately prioritized.
+
+No hardware execution is authorized by this queue. Only advance to an expensive
+validation layer when its software prerequisites and authorization are satisfied.
