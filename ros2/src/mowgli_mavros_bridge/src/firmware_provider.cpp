@@ -8,8 +8,8 @@ namespace mowgli_mavros_bridge
 {
 namespace
 {
-// Preserve the existing conversion for both profiles. This is implemented
-// software behavior, not proof of PX4/ArduPilot actuator compatibility.
+// Retain the legacy fallback conversion used by PX4. ArduRover adapts steering
+// in its concrete provider; neither path claims physical actuator validation.
 class CurrentRuntimeProvider : public FirmwareProvider
 {
 public:
@@ -42,6 +42,19 @@ public:
 class ArduPilotProvider final : public CurrentRuntimeProvider
 {
 public:
+  mavros_msgs::msg::ManualControl manual_control_from_twist(
+      const geometry_msgs::msg::TwistStamped& twist,
+      double linear_scale,
+      double yaw_scale) const override
+  {
+    auto command =
+        CurrentRuntimeProvider::manual_control_from_twist(twist, linear_scale, yaw_scale);
+    // ROS FLU yaw is positive counterclockwise; Rover steering is positive clockwise.
+    // Reverse steering also depends on Rover PILOT_STEER_TYPE; do not compensate here.
+    command.y = -command.y;
+    return command;
+  }
+
   bool guided_velocity_implemented() const noexcept override
   {
     return true;

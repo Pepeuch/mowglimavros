@@ -170,7 +170,8 @@ def main():
                     if target == 2 and args.provider == 'ardupilot':
                         assert abs(guided[-1].velocity.x - .2) < 1e-6
                     else:
-                        assert manual[-1].y == -350 and manual[-1].z == 200
+                        expected_y = 350 if args.provider == 'ardupilot' else -350
+                        assert manual[-1].y == expected_y and manual[-1].z == 200
                     before = requests.count(('arm', False))
                     off = call(mower, MowerControl.Request(mow_enabled=0))
                     assert off.success == (args.provider == 'ardupilot')

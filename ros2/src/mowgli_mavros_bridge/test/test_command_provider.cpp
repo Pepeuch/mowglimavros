@@ -33,7 +33,7 @@ TEST(CommandProvider, RejectsUnresolvedLegacyUnknownAndUnimplementedFirmware)
   }
 }
 
-TEST(CommandProvider, BothProvidersPreserveExactExistingConversion)
+TEST(CommandProvider, ArduRoverChangesOnlySteeringWhilePX4PreservesExactConversion)
 {
   const std::array<double, 9> values{-100.0, -1.5, -0.35, -0.0019, 0.0, 0.0019, 0.2, 1.5, 100.0};
   for (const auto* firmware : {"ardupilot", "px4"})
@@ -49,8 +49,10 @@ TEST(CommandProvider, BothProvidersPreserveExactExistingConversion)
           twist.header.frame_id = "must_not_be_copied";
           twist.twist.linear.x = linear;
           twist.twist.angular.z = yaw;
-          const auto expected =
+          auto expected =
               mowgli_mavros_bridge::rover_manual_control_from_twist(twist, scale, 1000.0);
+          if (std::string(firmware) == "ardupilot")
+            expected.y = -expected.y;
           EXPECT_EQ(provider->manual_control_from_twist(twist, scale, 1000.0), expected);
         }
       }
@@ -67,7 +69,7 @@ TEST(CommandProvider, SteeringThrottleAndUnusedFieldsMatchCurrentRuntime)
     twist.twist.linear.x = 0.2;
     twist.twist.angular.z = -0.35;
     auto command = provider->manual_control_from_twist(twist, 1000.0, 1000.0);
-    EXPECT_EQ(command.y, -350);
+    EXPECT_EQ(command.y, std::string(firmware) == "ardupilot" ? 350 : -350);
     EXPECT_EQ(command.z, 200);
     EXPECT_EQ(command.x, 0);
     EXPECT_EQ(command.r, 0);
@@ -75,7 +77,7 @@ TEST(CommandProvider, SteeringThrottleAndUnusedFieldsMatchCurrentRuntime)
     twist.twist.linear.x = 100;
     twist.twist.angular.z = -100;
     command = provider->manual_control_from_twist(twist, 1000.0, 1000.0);
-    EXPECT_EQ(command.y, -1000);
+    EXPECT_EQ(command.y, std::string(firmware) == "ardupilot" ? 1000 : -1000);
     EXPECT_EQ(command.z, 1000);
   }
 }
@@ -117,4 +119,52 @@ TEST(FirmwareProvider, GuidedTransportIsSeparateAndBodyRelative)
   EXPECT_FLOAT_EQ(target.yaw_rate, -0.4F);
   EXPECT_FALSE(px4->guided_velocity_implemented());
   EXPECT_THROW(px4->guided_velocity_from_twist(twist), std::logic_error);
+}
+
+TEST(CommandProvider, ArduRoverYawConventionForForwardReverseAndPivot)
+{
+  const auto ap = make_firmware_provider("ardupilot");
+  for (double speed : {-0.2, 0.0, 0.2})
+  {
+    for (double yaw : {-0.35, 0.0, 0.35, -100.0, 100.0})
+    {
+      geometry_msgs::msg::TwistStamped twist{};
+      twist.twist.linear.x = speed;
+      twist.twist.angular.z = yaw;
+      const auto command = ap->manual_control_from_twist(twist, 1000.0, 1000.0);
+      EXPECT_EQ(command.y, static_cast<int16_t>(std::clamp(-yaw * 1000.0, -1000.0, 1000.0)));
+      EXPECT_EQ(command.z, static_cast<int16_t>(speed * 1000.0));
+      if (speed >= 0.0)
+      {
+        // Normal RC polarity / one-stick steering: negative steering means ROS left.
+        EXPECT_EQ(command.y < 0, yaw > 0);
+        EXPECT_EQ(command.y > 0, yaw < 0);
+      }
+      // For negative throttle, Rover pilot type 0/2 reverses this steering;
+      // type 3 preserves it. This adapter does not infer installed pilot settings.
+    }
+  }
+}
+
+TEST(CommandProvider, GuidedFieldsRemainUnchangedForBothYawSignsAndReverse)
+{
+  const auto ap = make_firmware_provider("ardupilot");
+  for (double speed : {-0.35, 0.0, 0.35})
+  {
+    for (double yaw : {-0.4, 0.0, 0.4})
+    {
+      geometry_msgs::msg::TwistStamped twist{};
+      twist.header.frame_id = "base_link";
+      twist.twist.linear.x = speed;
+      twist.twist.angular.z = yaw;
+      const auto target = ap->guided_velocity_from_twist(twist);
+      EXPECT_EQ(target.header, twist.header);
+      EXPECT_EQ(target.coordinate_frame, mavros_msgs::msg::PositionTarget::FRAME_BODY_NED);
+      EXPECT_EQ(target.type_mask, 0x05E7);
+      EXPECT_DOUBLE_EQ(target.velocity.x, speed);
+      EXPECT_DOUBLE_EQ(target.velocity.y, 0.0);
+      EXPECT_DOUBLE_EQ(target.velocity.z, 0.0);
+      EXPECT_FLOAT_EQ(target.yaw_rate, static_cast<float>(yaw));
+    }
+  }
 }
