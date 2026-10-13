@@ -2,7 +2,7 @@ name: Build MAVROS sidecar
 
 on:
   push:
-    branches: [ main, dev, perf/native-arm64-ci ]
+    branches: [ main, dev ]
   workflow_dispatch:
 
 permissions:
