@@ -2,7 +2,7 @@ name: Build MAVROS sidecar
 
 on:
   push:
-    branches: [ main, dev ]
+    branches: [ main, dev, perf/native-arm64-ci ]
   workflow_dispatch:
 
 permissions:
@@ -39,7 +39,7 @@ jobs:
   build:
     needs: pins
     name: ${{ matrix.ros_distro }} / ${{ matrix.architecture }}
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.architecture == 'arm64' && 'ubuntu-24.04-arm' || 'ubuntu-24.04' }}
     strategy:
       fail-fast: false
       matrix:
@@ -54,9 +54,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -98,7 +95,7 @@ jobs:
           platforms: ${{ matrix.platform }}
           pull: true
           push: true
-          tags: ${{ env.IMAGE_NAME }}:build-${{ matrix.ros_distro }}-${{ matrix.architecture }}
+          tags: ${{ env.IMAGE_NAME }}:build-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ros_distro }}-${{ matrix.architecture }}
           build-args: |
             ROS_DISTRO=${{ matrix.ros_distro }}
             MAVROS_VERSION=${{ needs.pins.outputs.mavros_version }}
@@ -111,6 +108,7 @@ jobs:
           cache-to: type=gha,mode=max,scope=mowgli-mavros-${{ matrix.ros_distro }}-${{ needs.pins.outputs.mavros_version }}-${{ needs.pins.outputs.mavros_commit }}-${{ needs.pins.outputs.universal_gnss_commit }}-${{ needs.pins.outputs.mavlink_version }}-${{ matrix.architecture }}
 
   publish-manifest:
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/dev'
     needs: [pins, build]
     runs-on: ubuntu-latest
     strategy:
@@ -151,6 +149,6 @@ jobs:
             [ -n "$tag" ] || continue
             docker buildx imagetools create \
               --tag "$tag" \
-              "${IMAGE_NAME}:build-${{ matrix.ros_distro }}-amd64" \
-              "${IMAGE_NAME}:build-${{ matrix.ros_distro }}-arm64"
+              "${IMAGE_NAME}:build-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ros_distro }}-amd64" \
+              "${IMAGE_NAME}:build-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ros_distro }}-arm64"
           done <<< "$TAGS"
