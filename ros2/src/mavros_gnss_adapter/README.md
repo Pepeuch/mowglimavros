@@ -55,7 +55,8 @@ This plugin does not start an NTRIP client or become a second diagnostics owner.
 
 ## Ellipsoidal altitude, never a silent MSL remap
 
-At the pinned Universal GNSS commit `383caba3de94e16167764393d5a4ef046078b015`,
+At the pinned Universal GNSS `v0.7.4-rc6` commit
+`d02e23f17d34e58f75f4c7a7f72f8d34ea766bfa`,
 `ConvertRawCommon()` forwards `GPS_RAW_INT.alt` / `GPS2_RAW.alt` (MSL) to the
 private NavSatFix. The canonical Mowgli contract instead uses WGS84 ellipsoidal
 height, previously supplied by the bridge's GPS1 `alt_ellipsoid` projection.

@@ -47,6 +47,17 @@ The repository contains the sidecar-specific ROS packages:
 Runtime/container tooling includes `ros2/Dockerfile`, `ros2_entrypoint.sh`,
 `build.sh`, and `build-arm64-remote.sh`.
 
+The runtime container pins its source dependencies in `ros2/Dockerfile`, with
+parity enforced by `tools/external_backend_contract.lock.json`:
+
+- Universal GNSS **`v0.7.4-rc6`**, commit
+  `d02e23f17d34e58f75f4c7a7f72f8d34ea766bfa`.
+- MAVROS **`2.16.0`**, commit
+  `5c68b905ab30de6ce630822dc46c33467e8f23ea` (unchanged).
+
+These are the current build pins; historical validation reports retain the
+dependency revisions actually used for those runs.
+
 It does not carry MowgliNext bringup, GUI, Nav2, simulation, FusionCore, or the
 main-stack installer. The sidecar is intended to run alongside MowgliNext over
 ROS 2/DDS, with backend and GNSS ownership selected by the MowgliNext deployment
