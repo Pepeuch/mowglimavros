@@ -51,7 +51,7 @@ class ConsumerAndInstalledContractTest(unittest.TestCase):
   self.assertIn('python3 tools/test_mowgli_interface_contract.py',workflow)
   self.assertIn('io.mowgli.interfaces.gnss-type-hash=',workflow)
   docker=(ROOT/'ros2/Dockerfile').read_text().split('FROM universal-gnss-build AS workspace-build',1)[1].split('FROM ros:',1)[0]
-  self.assertIn('check --installed-root install/mowgli_interfaces',docker)
+  self.assertIn('check --interface-root src/mowgli_interfaces --installed-root install/mowgli_interfaces',docker)
   self.assertIn('--packages-select mavros_gnss_adapter',docker)
   self.assertIn("--no-tests=error -R '^test_gnss_adapter$'",docker)
   self.assertIn('install(FILES interface-contract.lock.json', (INTERFACES/'CMakeLists.txt').read_text())

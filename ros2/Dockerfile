@@ -202,7 +202,7 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_TESTING=OFF \
       --parallel-workers \$(nproc) && \
-    python3 tools/mowgli_interface_contract.py check --installed-root install/mowgli_interfaces && \
+    python3 tools/mowgli_interface_contract.py check --interface-root src/mowgli_interfaces --installed-root install/mowgli_interfaces && \
     source install/local_setup.bash && \
     colcon build --packages-select mavros_gnss_adapter \
       --cmake-args -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_TESTING=ON && \
