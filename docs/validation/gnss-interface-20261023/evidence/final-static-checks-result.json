@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "-c",
+    "set -e\npython3 tools/mowgli_interface_contract.py check --source-root /ros2_ws/src/mowglinext/ros2/src/mowgli_interfaces --peer-root /ros2_ws/src/mowglinext/ros2/src/mowgli_interfaces --installed-root /tmp/mowglinext-mavros-gnss-20261023/install/mowgli_interfaces\npython3 tools/test_mowgli_interface_contract.py\npython3 tools/test_external_backend_contract.py\ngit diff --check\ngit clang-format-18 --binary clang-format-18 --style=file:/ros2_ws/src/mowglinext/ros2/.clang-format --diff HEAD -- ros2/src/mavros_gnss_adapter/include/mavros_gnss_adapter/status_mapping.hpp ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:41:50.044709+00:00",
+  "duration_s": 0.2937714859999687,
+  "exit_code": 0
+}

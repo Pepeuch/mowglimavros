@@ -1,0 +1,16 @@
+{
+  ".agent/shared/checkpoints/INDEX.md": "17e132e5d507f9fe08d813ad771d90b5417836dbc9e19d407066399620b885fd",
+  ".github/workflows/docker.yml": "2219b3b23857130a881aa74e6acd517f8f3f1c162075b28132fcd8faa2706a1b",
+  "TODO.md": "c5a7c4872c405f2694c2acdf68529d2884e140b55948e823d5d887577a36f08f",
+  "ros2/Dockerfile": "595f338c2d3c136e346b40ccdcf46a3a753bfc5d5c4787a0b74480d9d1460997",
+  "ros2/src/mavros_gnss_adapter/README.md": "9f2fa01dcc61de844476b5a2d6a9c220c785c62d9f3d3137a8752c086f5a09a7",
+  "ros2/src/mavros_gnss_adapter/include/mavros_gnss_adapter/status_mapping.hpp": "2a9a9be0c0833df75887cce08f6699960823e82c7ac13cd2f88083edca275372",
+  "ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp": "42d2b54872ea9395c34f19e15c911bb382e3b3f98ab4ef9429424467f0d63c18",
+  "ros2/src/mavros_gnss_adapter/test/test_gnss_graph.py": "30e9d81a513de369dee702d6e48c7b78465fd6ee69f87dd0c537363142aff2e6",
+  "ros2/src/mowgli_interfaces/CMakeLists.txt": "0f8a82bee97c43abf491a84a67d5a506e2abfceed772adceb498a58d94025d74",
+  "ros2/src/mowgli_interfaces/interface-contract.lock.json": "5c53ea66e95a0f1300ee52fdc8fc1f3b78227325350f5e7776ad481e52d3d475",
+  "ros2/src/mowgli_interfaces/msg/GnssStatus.msg": "e2f44263300b57c8b92586dfe3532bd78861320bb02213b986b67dbc5c1c2bb5",
+  "tools/mowgli_interface_contract.py": "35d7c6c575e760df552f9d9c4b05e4ab41312f60f180175a8bf311077e591856",
+  "tools/test_mowgli_interface_contract.py": "9b0ebe0e74c982968246d3320610b3fa31e6a82590e2b919d99171e293a4fde2",
+  ".agent/shared/checkpoints/active/MM-GNSS-INTERFACE-20261023.md": "277abcad8523846b64839b157113cf11e0a20af038171b0bb9ff574076d49def"
+}

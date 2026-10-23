@@ -1,0 +1,46 @@
+{
+  "amd64": {
+    "manifest_digest": "sha256:989144b48a3f6e9984297368fe1c3043d6a369170bb3104986667eb744b90a64",
+    "config_digest": "sha256:045d331a5d44a9bf6fc9f011ffa798989feb14faaaa1c4e8cb931e726d58007a",
+    "created": "2026-10-20T07:04:14.558939014Z",
+    "builder": "https://github.com/Pepeuch/mowglimavros/actions/runs/39382305156/attempts/1",
+    "started": "2026-10-20T06:46:29.404800516Z",
+    "finished": "2026-10-20T07:04:22.144799075Z",
+    "source_args": {
+      "build-arg:GEOGRAPHICLIB_DATASET_VERSION": "geographiclib-datasets-v1",
+      "build-arg:MAVLINK_VERSION": "2026.9.9",
+      "build-arg:MAVROS_COMMIT": "5c68b905ab30de6ce630822dc46c33467e8f23ea",
+      "build-arg:MAVROS_VERSION": "2.16.0",
+      "build-arg:ROS_DISTRO": "lyrical",
+      "build-arg:UNIVERSAL_GNSS_COMMIT": "d02e23f17d34e58f75f4c7a7f72f8d34ea766bfa",
+      "build-arg:UNIVERSAL_GNSS_REPOSITORY": "https://github.com/Pepeuch/universal-gnss.git",
+      "vcs:localdir:context": ".",
+      "vcs:localdir:dockerfile": "ros2",
+      "vcs:revision": "4673f43cb6b2b6b9df0685d36f8f8bb43e6e1456",
+      "vcs:source": "https://github.com/Pepeuch/mowglimavros"
+    },
+    "installed_gnss_type_hash": "RIHS01_6765a75d0f9bc5858eea44f685f485335e8c877b770f35d1474ca08e1ad5285a"
+  },
+  "arm64": {
+    "manifest_digest": "sha256:b1c2fed6bd9ebebe8433dd3941ac0c12fa0bc40693c3b5ea09cf993dbc73645c",
+    "config_digest": "sha256:f3a863fb70d0ebc797c42d5b3ae11b505c6899f00fe3fad278d41fe398318f54",
+    "created": "2026-10-20T06:58:15.004879609Z",
+    "builder": "https://github.com/Pepeuch/mowglimavros/actions/runs/39382305156/attempts/1",
+    "started": "2026-10-20T06:46:27.447695004Z",
+    "finished": "2026-10-20T06:58:20.337064128Z",
+    "source_args": {
+      "build-arg:GEOGRAPHICLIB_DATASET_VERSION": "geographiclib-datasets-v1",
+      "build-arg:MAVLINK_VERSION": "2026.9.9",
+      "build-arg:MAVROS_COMMIT": "5c68b905ab30de6ce630822dc46c33467e8f23ea",
+      "build-arg:MAVROS_VERSION": "2.16.0",
+      "build-arg:ROS_DISTRO": "lyrical",
+      "build-arg:UNIVERSAL_GNSS_COMMIT": "d02e23f17d34e58f75f4c7a7f72f8d34ea766bfa",
+      "build-arg:UNIVERSAL_GNSS_REPOSITORY": "https://github.com/Pepeuch/universal-gnss.git",
+      "vcs:localdir:context": ".",
+      "vcs:localdir:dockerfile": "ros2",
+      "vcs:revision": "4673f43cb6b2b6b9df0685d36f8f8bb43e6e1456",
+      "vcs:source": "https://github.com/Pepeuch/mowglimavros"
+    },
+    "installed_gnss_type_hash": "RIHS01_6765a75d0f9bc5858eea44f685f485335e8c877b770f35d1474ca08e1ad5285a"
+  }
+}

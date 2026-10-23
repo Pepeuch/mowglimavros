@@ -1,0 +1,6 @@
+{
+  "commit": "61d3e37b4bc2f7081b317e955877bafcf2f0b5db",
+  "parent": "7a2a1a0963886dd19f151681ccc4eae445600fc8",
+  "reason": "Docker post-build contract check needs explicit workspace interface-root",
+  "push": false
+}

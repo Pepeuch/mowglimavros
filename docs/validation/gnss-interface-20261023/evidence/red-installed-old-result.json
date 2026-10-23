@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "tools/mowgli_interface_contract.py",
+    "check",
+    "--installed-root",
+    "/tmp/mowglinext-mavros-gnss-20261023/baseline-install/mowgli_interfaces"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:34:20.855991+00:00",
+  "duration_s": 0.0427454470000157,
+  "exit_code": 1
+}

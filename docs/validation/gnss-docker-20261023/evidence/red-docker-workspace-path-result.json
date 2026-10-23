@@ -1,0 +1,12 @@
+{
+  "command": [
+    "env",
+    "PYTHONDONTWRITEBYTECODE=1",
+    "python3",
+    "tools/test_mowgli_interface_contract.py"
+  ],
+  "cwd": "/home/ubuntu/mowglimavros-gnss-contract-20261023",
+  "started_utc": "2026-10-23T14:07:26.978160+00:00",
+  "duration_s": 0.06520165000074485,
+  "exit_code": 1
+}

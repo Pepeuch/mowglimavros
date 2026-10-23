@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites tests="17" failures="0" disabled="0" errors="0" time="0." timestamp="2026-10-23T14:09:54.022" name="AllTests">
+  <testsuite name="Selection" tests="1" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-23T14:09:54.022">
+    <testcase name="BothReceiversAndDirectMode" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="38" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Selection" />
+  </testsuite>
+  <testsuite name="Mapping" tests="4" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-23T14:09:54.022">
+    <testcase name="FixRtkAndBaselineEnums" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="49" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Mapping" />
+    <testcase name="ExplicitSolutionTypesRemainValidThroughCanonicalStatus" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="72" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Mapping" />
+    <testcase name="IndependentCapabilityBitsAndValues" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="89" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Mapping" />
+    <testcase name="RichFieldsAndUnknownCorrectionDiagnostics" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="132" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Mapping" />
+  </testsuite>
+  <testsuite name="Freshness" tests="2" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-23T14:09:54.022">
+    <testcase name="CachedRtkDoesNotRenewPositionAndStaleDoesNotAdvanceSequence" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="174" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Freshness" />
+    <testcase name="NoFixZeroSequenceRestartAndRegression" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="197" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Freshness" />
+  </testsuite>
+  <testsuite name="Altitude" tests="5" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-23T14:09:54.022">
+    <testcase name="EllipsoidPreservedForBothSourcesAndBothCallbackOrders" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="213" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="MissingAmbiguousOldOrWrongPositionNeverFallsBackToMsl" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="234" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="NoFixStaleAndIncarnationChangeDiscardPendingFix" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="253" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="SeveralPositionsWithinDeliveryWindowAreNotDropped" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="275" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Altitude" />
+    <testcase name="ZeroAndNegativeEllipsoidAreValidWhenAvailable" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="289" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Altitude" />
+  </testsuite>
+  <testsuite name="AltitudeWire" tests="2" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-23T14:09:54.022">
+    <testcase name="RequiresAllFourFieldBytesForBothReceivers" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="304" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.AltitudeWire" />
+    <testcase name="ZeroFieldRemainsUnknownEvenWithCompleteOrLongerPayload" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="335" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.AltitudeWire" />
+  </testsuite>
+  <testsuite name="Provenance" tests="3" failures="0" disabled="0" skipped="0" errors="0" time="0." timestamp="2026-10-23T14:09:54.022">
+    <testcase name="CopiesOpaqueSourceIdentityWithoutInventingIt" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="356" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Provenance" />
+    <testcase name="CachedEnrichmentAndExpiryKeepTheOriginalObservationIdentity" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="376" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Provenance" />
+    <testcase name="ARealProducerRestartAndReplacementKeepTheirOwnTuple" file="/ros2_ws/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp" line="405" status="run" result="completed" time="0." timestamp="2026-10-23T14:09:54.022" classname="mavros_gnss_adapter.Provenance" />
+  </testsuite>
+</testsuites>

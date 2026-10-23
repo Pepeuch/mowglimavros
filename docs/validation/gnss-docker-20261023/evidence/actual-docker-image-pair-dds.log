@@ -1,0 +1,5 @@
+consumer: Traceback (most recent call last):
+  File "/tmp/mavros-gnss-docker-20261023/test_actual_image_pair.py", line 21, in <module>
+    if not line:raise RuntimeError('Reference image consumer failed before readiness')
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: Reference image consumer failed before readiness

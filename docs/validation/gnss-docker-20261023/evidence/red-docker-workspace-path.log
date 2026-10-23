@@ -1,0 +1,14 @@
+....F...
+======================================================================
+FAIL: test_publication_build_checks_source_generated_types_and_mapping (__main__.ConsumerAndInstalledContractTest.test_publication_build_checks_source_generated_types_and_mapping)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/ubuntu/mowglimavros-gnss-contract-20261023/tools/test_mowgli_interface_contract.py", line 54, in test_publication_build_checks_source_generated_types_and_mapping
+    self.assertIn('check --interface-root src/mowgli_interfaces --installed-root install/mowgli_interfaces',docker)
+    ~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'check --interface-root src/mowgli_interfaces --installed-root install/mowgli_interfaces' not found in '\n\nARG ROS_DISTRO\nARG MAVROS_VERSION\nARG BUILD_TYPE=Release\nARG TARGETARCH\n\nRUN apt-get update && apt-get install -y --no-install-recommends \\\n    "ros-${ROS_DISTRO}-ament-cmake-gtest" \\\n && rm -rf /var/lib/apt/lists/*\n\nCOPY ros2/src/ /ros2_ws/src/\nCOPY tools/ /ros2_ws/tools/\nCOPY ros2_entrypoint.sh /ros2_ws/ros2_entrypoint.sh\nCOPY ros2/Dockerfile /ros2_ws/Dockerfile\n\nWORKDIR /ros2_ws\n\nRUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},target=/ccache \\\n    /bin/bash -lc "\\\n    source /opt/ros/${ROS_DISTRO}/setup.bash && \\\n    source /opt/mowgli/mavros/setup.bash && \\\n    source /opt/mowgli/universal_gnss/setup.bash && \\\n    python3 tools/mowgli_interface_contract.py check --interface-root src/mowgli_interfaces && \\\n    python3 tools/test_external_backend_contract.py && \\\n    export CCACHE_DIR=/ccache && \\\n    export CCACHE_MAXSIZE=512M && \\\n    export CC=\'ccache gcc\' && \\\n    export CXX=\'ccache g++\' && \\\n    echo \'ccache workspace before:\' && ccache --show-stats && du -sh \\"\\${CCACHE_DIR}\\" && \\\n    colcon build \\\n      --cmake-args -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_TESTING=OFF \\\n      --parallel-workers \\$(nproc) && \\\n    python3 tools/mowgli_interface_contract.py check --installed-root install/mowgli_interfaces && \\\n    source install/local_setup.bash && \\\n    colcon build --packages-select mavros_gnss_adapter \\\n      --cmake-args -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_TESTING=ON && \\\n    ctest --test-dir build/mavros_gnss_adapter --output-on-failure --no-tests=error -R \'^test_gnss_adapter$\' && \\\n    echo \'ccache workspace after:\' && ccache --show-stats && du -sh \\"\\${CCACHE_DIR}\\" \\\n    "\n\n\n'
+
+----------------------------------------------------------------------
+Ran 8 tests in 0.005s
+
+FAILED (failures=1)

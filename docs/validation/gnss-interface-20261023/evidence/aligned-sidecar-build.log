@@ -1,0 +1,15 @@
+not found: "/tmp/mowglinext-mavros-gnss-20261023/install/mavros_gnss_adapter/share/mavros_gnss_adapter/local_setup.bash"
+Starting >>> mowgli_interfaces
+Finished <<< mowgli_interfaces [1.43s]
+Starting >>> mowgli_ntrip_client
+Finished <<< mowgli_ntrip_client [8.17s]
+Starting >>> mavros_battery_observer
+Finished <<< mavros_battery_observer [7.39s]
+Starting >>> mavros_esc_wheel_odometry
+Finished <<< mavros_esc_wheel_odometry [11.0s]
+Starting >>> mavros_gnss_adapter
+Finished <<< mavros_gnss_adapter [8.80s]
+Starting >>> mowgli_mavros_bridge
+Finished <<< mowgli_mavros_bridge [31.0s]
+
+Summary: 6 packages finished [1min 8s]

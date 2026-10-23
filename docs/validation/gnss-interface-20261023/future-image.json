@@ -1,0 +1,22 @@
+{
+  "state": "PROPOSED_UNCOMMITTED_NOT_BUILT_NOT_DEPLOYED",
+  "repository": "https://github.com/Pepeuch/mowglimavros",
+  "base_commit": "4673f43cb6b2b6b9df0685d36f8f8bb43e6e1456",
+  "candidate_commit": null,
+  "proposed_tag_template": "ghcr.io/pepeuch/mowglimavros/mowgli-mavros-sidecar:sha-<full-reviewed-MAVROS-commit>-lyrical",
+  "oci_index_digest": null,
+  "arm64_manifest_digest": null,
+  "amd64_manifest_digest": null,
+  "ros_distro": "lyrical",
+  "interface_source_revision": "9686b37556f1d2ba7f7a295eb006f870c86e8095",
+  "interface_fingerprint": "0200598058958a59232d8f096e6764fd9ca601b315f9b51c94cbdb1452389e63",
+  "gnss_type_hash": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+  "mavros_version": "2.16.0",
+  "mavros_commit": "5c68b905ab30de6ce630822dc46c33467e8f23ea",
+  "universal_gnss_commit": "d02e23f17d34e58f75f4c7a7f72f8d34ea766bfa",
+  "mavlink_version": "2026.9.9",
+  "consumer_image_observed": "ghcr.io/mowglinext/mowglinext/mowgli-ros2@sha256:7489a4a68b1544a8b545d6bbc1673b7d8393340fb2ec8f65f42e13361613a706",
+  "consumer_image_revision": "59051b41b5f288d737e482791155a47ebc0f4d61",
+  "hardware_acceptance": "HARDWARE_REQUIRED",
+  "source_manifest_sha256": "6d61074db55f3e0ea2278413b1b43499bb3998fd2568160a0f0fabcae0d3f176"
+}

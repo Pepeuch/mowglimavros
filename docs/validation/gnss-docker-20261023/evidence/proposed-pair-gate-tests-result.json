@@ -1,0 +1,13 @@
+{
+  "command": [
+    "python3",
+    "-m",
+    "unittest",
+    "test_image_pair",
+    "-v"
+  ],
+  "cwd": "/tmp/mavros-gnss-docker-20261023/mowglinext-proposal/sensors/mavros",
+  "started_utc": "2026-10-23T14:04:10.064395+00:00",
+  "duration_s": 0.0977646139999706,
+  "exit_code": 0
+}

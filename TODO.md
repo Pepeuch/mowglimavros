@@ -525,9 +525,15 @@ Acceptance:
 
 ## MM-602 — Synchronize exact Mowgli interface contract
 Related migration finding: `MN-MAV-003`
-Status: software update proposed 2026-10-23; previous DONE scope retained below; image/paired-release acceptance pending
+Status: REVIEW_PUBLICATION_AUTHORIZED (2026-10-23), code61d3e37; Docker AMD64/ARM64 software validation PASS; paired release and HARDWARE_REQUIRED remain BLOCKING
 
-Current update: `docs/validation/gnss-interface-20261023/review.md` records the
+Current Docker delivery: `docs/validation/gnss-docker-20261023/review.md` records
+the two local commits, both images, 224 ROS/C++ cases per architecture and the
+release-pair blocker for MowgliNext PR #1017. Source review publication is now
+authorized; see docs/validation/gnss-publication-20261023/checkpoint.md.
+No image publication/deployment or release acceptance is claimed.
+
+Initial update: `docs/validation/gnss-interface-20261023/review.md` records the
 GNSS provenance drift, canonical revision `9686b37556f1d2ba7f7a295eb006f870c86e8095`,
 source/peer/generated-hash gates and local software evidence. The legacy
 self-lock gate could not detect an independently upgraded MowgliNext consumer.

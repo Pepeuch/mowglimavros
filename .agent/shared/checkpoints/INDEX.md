@@ -4,6 +4,8 @@ Navigation only. Not the project backlog.
 
 ## Active
 
+- `active/MM-GNSS-DOCKER-20261023.md` — local commits7a2/61d3, AMD64/ARM64 images and full software validation PASS; PR1017/v1.6 BLOCKED on compatible release-pair publication/integration and HARDWARE_REQUIRED.
+
 - `MM-DOCKER-EXPERIMENTAL-20261010` — workflow correction prepared: manual
   test-SHA publication before physical acceptance, production gates retained,
   automated builds unchanged; no commit/push/publication/deploy in this follow-up.

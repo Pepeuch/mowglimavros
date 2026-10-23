@@ -1,0 +1,8 @@
+{
+  "commit": "61d3e37b4bc2f7081b317e955877bafcf2f0b5db",
+  "archive_sha256": "7fe9d5bddd8fdce05e4da1d702afef1aae1b59d1d67ccb486dda32b11a1786c4",
+  "committed_dockerfile_sha256": "3c9fb786b2ffed0e57ea8736b5ce1fad896960d8f36465bc78904fe8e4347bf8",
+  "validation_dockerfile_sha256": "dd3f54be782ff779f6d054f0181efa90cd56a6ea1405613bbaaf0054daaa5e37",
+  "compiler_uid": 1000,
+  "context": "/tmp/mavros-gnss-docker-20261023/context-61d3e37"
+}

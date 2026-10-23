@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "-c",
+    "source /tmp/mowglinext-mavros-gnss-20261023/environment.bash\n/tmp/mowglinext-mavros-gnss-20261023/build/mavros_gnss_adapter/test_gnss_adapter --gtest_filter=Provenance.*"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:32:46.702398+00:00",
+  "duration_s": 0.24844471699998394,
+  "exit_code": 1
+}

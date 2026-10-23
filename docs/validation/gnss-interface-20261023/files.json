@@ -1,0 +1,16 @@
+[
+  ".agent/shared/checkpoints/INDEX.md",
+  ".github/workflows/docker.yml",
+  "TODO.md",
+  "ros2/Dockerfile",
+  "ros2/src/mavros_gnss_adapter/README.md",
+  "ros2/src/mavros_gnss_adapter/include/mavros_gnss_adapter/status_mapping.hpp",
+  "ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp",
+  "ros2/src/mavros_gnss_adapter/test/test_gnss_graph.py",
+  "ros2/src/mowgli_interfaces/CMakeLists.txt",
+  "ros2/src/mowgli_interfaces/interface-contract.lock.json",
+  "ros2/src/mowgli_interfaces/msg/GnssStatus.msg",
+  "tools/mowgli_interface_contract.py",
+  "tools/test_mowgli_interface_contract.py",
+  ".agent/shared/checkpoints/active/MM-GNSS-INTERFACE-20261023.md"
+]

@@ -1,0 +1,76 @@
+{
+  "amd64": {
+    "mavros_battery_observer": {
+      "result_files": 1,
+      "tests": 8,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mavros_esc_wheel_odometry": {
+      "result_files": 5,
+      "tests": 84,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mavros_gnss_adapter": {
+      "result_files": 1,
+      "tests": 17,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mowgli_mavros_bridge": {
+      "result_files": 18,
+      "tests": 114,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mowgli_ntrip_client": {
+      "result_files": 1,
+      "tests": 1,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    }
+  },
+  "arm64": {
+    "mavros_battery_observer": {
+      "result_files": 1,
+      "tests": 8,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mavros_esc_wheel_odometry": {
+      "result_files": 5,
+      "tests": 84,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mavros_gnss_adapter": {
+      "result_files": 1,
+      "tests": 17,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mowgli_mavros_bridge": {
+      "result_files": 18,
+      "tests": 114,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    },
+    "mowgli_ntrip_client": {
+      "result_files": 1,
+      "tests": 1,
+      "errors": 0,
+      "failures": 0,
+      "skipped": 0
+    }
+  }
+}

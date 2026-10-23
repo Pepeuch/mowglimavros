@@ -1,0 +1,24 @@
+{
+  "commit": "7a2a1a0963886dd19f151681ccc4eae445600fc8",
+  "parent": "4673f43cb6b2b6b9df0685d36f8f8bb43e6e1456",
+  "branch": "review/gnss-interface-20261023",
+  "files": [
+    ".agent/shared/checkpoints/INDEX.md",
+    ".github/workflows/docker.yml",
+    "TODO.md",
+    "ros2/Dockerfile",
+    "ros2/src/mavros_gnss_adapter/README.md",
+    "ros2/src/mavros_gnss_adapter/include/mavros_gnss_adapter/status_mapping.hpp",
+    "ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp",
+    "ros2/src/mavros_gnss_adapter/test/test_gnss_graph.py",
+    "ros2/src/mowgli_interfaces/CMakeLists.txt",
+    "ros2/src/mowgli_interfaces/interface-contract.lock.json",
+    "ros2/src/mowgli_interfaces/msg/GnssStatus.msg",
+    "tools/mowgli_interface_contract.py",
+    "tools/test_mowgli_interface_contract.py",
+    ".agent/shared/checkpoints/active/MM-GNSS-INTERFACE-20261023.md"
+  ],
+  "push": false,
+  "approved_patch_identical_per_file": true,
+  "initial_raw_comparison": "only new-file section order differs"
+}

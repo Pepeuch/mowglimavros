@@ -1,0 +1,26 @@
+{
+  "command": [
+    "docker",
+    "buildx",
+    "build",
+    "--builder",
+    "mavros-gnss-20261023",
+    "--platform",
+    "linux/amd64",
+    "--progress",
+    "plain",
+    "--file",
+    "Dockerfile.software-validation",
+    "--target",
+    "validation-results",
+    "--metadata-file",
+    "/tmp/mavros-gnss-docker-20261023/amd64-final-validation-metadata.json",
+    "--output",
+    "type=local,dest=/tmp/mavros-gnss-docker-20261023/amd64-final-validation",
+    "."
+  ],
+  "cwd": "/tmp/mavros-gnss-docker-20261023/context-61d3e37",
+  "started_utc": "2026-10-23T14:08:56.196450+00:00",
+  "duration_s": 242.32197825999992,
+  "exit_code": 0
+}

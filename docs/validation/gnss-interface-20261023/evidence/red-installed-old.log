@@ -1,0 +1,2 @@
+MM-602 interface contract check failed:
+- installed type hash mismatch for msg/GnssStatus.msg: expected RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf, got ['RIHS01_6765a75d0f9bc5858eea44f685f485335e8c877b770f35d1474ca08e1ad5285a']
