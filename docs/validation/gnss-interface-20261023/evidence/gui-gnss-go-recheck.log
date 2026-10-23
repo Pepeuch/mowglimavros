@@ -1,0 +1,30 @@
+=== RUN   TestAdaptGnssStatusPassesThroughLegacyPayload
+--- PASS: TestAdaptGnssStatusPassesThroughLegacyPayload (0.00s)
+=== RUN   TestAdaptGnssStatusMapsUniversalPayloadToMowgliShape
+--- PASS: TestAdaptGnssStatusMapsUniversalPayloadToMowgliShape (0.00s)
+=== RUN   TestAdaptGnssStatusPreservesExplicitSolutionTypes
+=== RUN   TestAdaptGnssStatusPreservesExplicitSolutionTypes/2D
+=== RUN   TestAdaptGnssStatusPreservesExplicitSolutionTypes/3D
+=== RUN   TestAdaptGnssStatusPreservesExplicitSolutionTypes/DGPS
+=== RUN   TestAdaptGnssStatusPreservesExplicitSolutionTypes/RTK_float
+=== RUN   TestAdaptGnssStatusPreservesExplicitSolutionTypes/RTK_fixed
+--- PASS: TestAdaptGnssStatusPreservesExplicitSolutionTypes (0.00s)
+    --- PASS: TestAdaptGnssStatusPreservesExplicitSolutionTypes/2D (0.00s)
+    --- PASS: TestAdaptGnssStatusPreservesExplicitSolutionTypes/3D (0.00s)
+    --- PASS: TestAdaptGnssStatusPreservesExplicitSolutionTypes/DGPS (0.00s)
+    --- PASS: TestAdaptGnssStatusPreservesExplicitSolutionTypes/RTK_float (0.00s)
+    --- PASS: TestAdaptGnssStatusPreservesExplicitSolutionTypes/RTK_fixed (0.00s)
+=== RUN   TestAdaptGnssStatusKeepsUnsupportedUniversalFieldsUnset
+--- PASS: TestAdaptGnssStatusKeepsUnsupportedUniversalFieldsUnset (0.00s)
+=== RUN   TestAdaptGnssStatusPreservesUniversalObservationIdentity
+--- PASS: TestAdaptGnssStatusPreservesUniversalObservationIdentity (0.00s)
+=== RUN   TestAdaptGnssStatusPreservesSourceSession
+--- PASS: TestAdaptGnssStatusPreservesSourceSession (0.00s)
+PASS
+ok  	github.com/mowglinext/mowglinext/pkg/providers	0.008s
+=== RUN   TestGnssUnavailableMeasurementsMatchFrontendWireFixture
+--- PASS: TestGnssUnavailableMeasurementsMatchFrontendWireFixture (0.00s)
+=== RUN   TestGnssSessionTupleWireIntegrity
+--- PASS: TestGnssSessionTupleWireIntegrity (0.00s)
+PASS
+ok  	github.com/mowglinext/mowglinext/pkg/foxglove	0.003s

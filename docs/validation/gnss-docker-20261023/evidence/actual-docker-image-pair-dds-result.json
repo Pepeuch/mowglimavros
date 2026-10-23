@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "test_actual_image_pair.py"
+  ],
+  "cwd": "/tmp/mavros-gnss-docker-20261023",
+  "started_utc": "2026-10-23T14:37:33.964653+00:00",
+  "duration_s": 46.50597945299978,
+  "exit_code": 1
+}

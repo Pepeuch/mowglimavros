@@ -1,0 +1,12 @@
+{
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "src/utils/gnssTelemetry.test.ts"
+  ],
+  "cwd": "/ros2_ws/src/mowglinext/gui/web",
+  "started_utc": "2026-10-23T13:34:59.604059+00:00",
+  "duration_s": 1.344748946999971,
+  "exit_code": 0
+}

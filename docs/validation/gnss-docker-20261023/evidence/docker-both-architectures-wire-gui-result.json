@@ -1,0 +1,15 @@
+{
+  "command": [
+    "env",
+    "GNSS_WIRE_ARCHES=amd64,arm64",
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "/tmp/mavros-gnss-docker-20261023/gui-wire.config.mjs"
+  ],
+  "cwd": "/ros2_ws/src/mowglinext/gui/web",
+  "started_utc": "2026-10-23T15:11:31.533655+00:00",
+  "duration_s": 0.5361585820010077,
+  "exit_code": 0
+}

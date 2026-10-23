@@ -1,0 +1,31 @@
+{
+  "command": [
+    "docker",
+    "buildx",
+    "build",
+    "--builder",
+    "mavros-gnss-20261023",
+    "--platform",
+    "linux/amd64",
+    "--progress",
+    "plain",
+    "--file",
+    "Dockerfile.validation",
+    "--tag",
+    "mowgli-mavros-sidecar:gnss-7a2a1a0-amd64",
+    "--label",
+    "org.opencontainers.image.revision=7a2a1a0963886dd19f151681ccc4eae445600fc8",
+    "--label",
+    "org.opencontainers.image.source=https://github.com/Pepeuch/mowglimavros",
+    "--label",
+    "io.mowgli.interfaces.gnss-type-hash=RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+    "--metadata-file",
+    "/tmp/mavros-gnss-docker-20261023/amd64-build-metadata.json",
+    "--load",
+    "."
+  ],
+  "cwd": "/tmp/mavros-gnss-docker-20261023/context",
+  "started_utc": "2026-10-23T14:00:10.316933+00:00",
+  "duration_s": 349.5142041270001,
+  "exit_code": 1
+}

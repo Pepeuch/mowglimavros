@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "-c",
+    "source /tmp/mowglinext-mavros-gnss-20261023/environment.bash\ncolcon --log-base /tmp/mowglinext-mavros-gnss-20261023/sidecar-log build --base-paths ros2/src --build-base /tmp/mowglinext-mavros-gnss-20261023/build --install-base /tmp/mowglinext-mavros-gnss-20261023/install --executor sequential --cmake-args -DBUILD_TESTING=ON -Wno-dev"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:33:55.432669+00:00",
+  "duration_s": 68.2055137530001,
+  "exit_code": 0
+}

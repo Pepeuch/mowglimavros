@@ -1,0 +1,8 @@
+{
+  "command_label": "docker-arm64-build",
+  "source_commit": "7a2a1a0963886dd19f151681ccc4eae445600fc8",
+  "exit_code": 130,
+  "finished_utc": "2026-10-23T15:07:42.249414+00:00",
+  "disposition": "CANCELLED_OBSOLETE_ATTEMPT",
+  "reason": "Original Docker path defect already reproduced on AMD64; stop only obsolete ARM64 workspace compilation to avoid duplicating the corrected61d3e37 build. Shared pinned upstream stages are cached and final build remains active. No tests skipped in corrected candidate validation."
+}

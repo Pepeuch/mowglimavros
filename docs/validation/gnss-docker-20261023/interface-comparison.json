@@ -1,0 +1,192 @@
+{
+  "amd64": {
+    "interfaces": {
+      "msg/Emergency.msg": {
+        "expected": "RIHS01_a9f717cea3855f92a7666cbeae778c059d4f7dbc8d5dc4b8d71d449f54560307",
+        "mavros": {
+          "type_hash": "RIHS01_a9f717cea3855f92a7666cbeae778c059d4f7dbc8d5dc4b8d71d449f54560307",
+          "description_sha256": "66ad1eb7fa7c78cd273da799424f1598bcd619bbde21f142a8287d0f7ed1f924"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_a9f717cea3855f92a7666cbeae778c059d4f7dbc8d5dc4b8d71d449f54560307",
+          "description_sha256": "66ad1eb7fa7c78cd273da799424f1598bcd619bbde21f142a8287d0f7ed1f924"
+        }
+      },
+      "msg/GnssStatus.msg": {
+        "expected": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+        "mavros": {
+          "type_hash": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+          "description_sha256": "594fcff2d9d58766c8bab5b38a939e716c5e7d7ae49455648935f0571a183c2b"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+          "description_sha256": "594fcff2d9d58766c8bab5b38a939e716c5e7d7ae49455648935f0571a183c2b"
+        }
+      },
+      "msg/HighLevelStatus.msg": {
+        "expected": "RIHS01_4c22623995ef23359ec365dd98b93a3f83e82c42cb8f5e938a6b17dce266652b",
+        "mavros": {
+          "type_hash": "RIHS01_4c22623995ef23359ec365dd98b93a3f83e82c42cb8f5e938a6b17dce266652b",
+          "description_sha256": "bf82a100a6c40f47ae0c2adadb68b65be3d57695b86f26ebb9e73a8e98bea995"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_4c22623995ef23359ec365dd98b93a3f83e82c42cb8f5e938a6b17dce266652b",
+          "description_sha256": "bf82a100a6c40f47ae0c2adadb68b65be3d57695b86f26ebb9e73a8e98bea995"
+        }
+      },
+      "msg/Power.msg": {
+        "expected": "RIHS01_912a9cb0e93d5b86dd7a45561c70e114902fec459c59ac41c257b7f3cb5f87fe",
+        "mavros": {
+          "type_hash": "RIHS01_912a9cb0e93d5b86dd7a45561c70e114902fec459c59ac41c257b7f3cb5f87fe",
+          "description_sha256": "83ad0a8be4f01e970988ba28e6ea7ad3e4437d827bc24df5d89a22a7088ef0f1"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_912a9cb0e93d5b86dd7a45561c70e114902fec459c59ac41c257b7f3cb5f87fe",
+          "description_sha256": "83ad0a8be4f01e970988ba28e6ea7ad3e4437d827bc24df5d89a22a7088ef0f1"
+        }
+      },
+      "msg/Status.msg": {
+        "expected": "RIHS01_9450476cd7696c7180f30030792287ebceee344a1bfd4304ed81abd7c3062086",
+        "mavros": {
+          "type_hash": "RIHS01_9450476cd7696c7180f30030792287ebceee344a1bfd4304ed81abd7c3062086",
+          "description_sha256": "9aeb277bb01b385093d8ea49bd316403dcc42b116321d7191114ec416a810ddd"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_9450476cd7696c7180f30030792287ebceee344a1bfd4304ed81abd7c3062086",
+          "description_sha256": "9aeb277bb01b385093d8ea49bd316403dcc42b116321d7191114ec416a810ddd"
+        }
+      },
+      "msg/WheelTick.msg": {
+        "expected": "RIHS01_a553ee260f2ad9b8d768f73924167b0cea46962bd2da76ff7c37dcb2aaaa5ec8",
+        "mavros": {
+          "type_hash": "RIHS01_a553ee260f2ad9b8d768f73924167b0cea46962bd2da76ff7c37dcb2aaaa5ec8",
+          "description_sha256": "1fc18a60e9e8491d959bc659d775a66eaa73f2c04877bdad0b556cdea1ef3787"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_a553ee260f2ad9b8d768f73924167b0cea46962bd2da76ff7c37dcb2aaaa5ec8",
+          "description_sha256": "1fc18a60e9e8491d959bc659d775a66eaa73f2c04877bdad0b556cdea1ef3787"
+        }
+      },
+      "srv/EmergencyStop.srv": {
+        "expected": "RIHS01_5a3f4f7da4f0e357b2602c0cc164948f457c6f50318fed886c6e54df11697d82",
+        "mavros": {
+          "type_hash": "RIHS01_5a3f4f7da4f0e357b2602c0cc164948f457c6f50318fed886c6e54df11697d82",
+          "description_sha256": "b401ca6b95e1dcf5242070e97f7413f9d9170440d1a4b5df25af0f452db85481"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_5a3f4f7da4f0e357b2602c0cc164948f457c6f50318fed886c6e54df11697d82",
+          "description_sha256": "b401ca6b95e1dcf5242070e97f7413f9d9170440d1a4b5df25af0f452db85481"
+        }
+      },
+      "srv/MowerControl.srv": {
+        "expected": "RIHS01_d38a990e3b41755a69a5877f414803d9f9f24c04532c6035b98cf31ff6e0ff7a",
+        "mavros": {
+          "type_hash": "RIHS01_d38a990e3b41755a69a5877f414803d9f9f24c04532c6035b98cf31ff6e0ff7a",
+          "description_sha256": "2251b299aaf9a170ddeac78bf904367e9a7cbd5b647bf76b08799152c8b7ccc3"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_d38a990e3b41755a69a5877f414803d9f9f24c04532c6035b98cf31ff6e0ff7a",
+          "description_sha256": "2251b299aaf9a170ddeac78bf904367e9a7cbd5b647bf76b08799152c8b7ccc3"
+        }
+      }
+    },
+    "software_interface_pair_compatible": true,
+    "published_release_pair": false,
+    "hardware_acceptance": "HARDWARE_REQUIRED"
+  },
+  "arm64": {
+    "interfaces": {
+      "msg/Emergency.msg": {
+        "expected": "RIHS01_a9f717cea3855f92a7666cbeae778c059d4f7dbc8d5dc4b8d71d449f54560307",
+        "mavros": {
+          "type_hash": "RIHS01_a9f717cea3855f92a7666cbeae778c059d4f7dbc8d5dc4b8d71d449f54560307",
+          "description_sha256": "66ad1eb7fa7c78cd273da799424f1598bcd619bbde21f142a8287d0f7ed1f924"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_a9f717cea3855f92a7666cbeae778c059d4f7dbc8d5dc4b8d71d449f54560307",
+          "description_sha256": "66ad1eb7fa7c78cd273da799424f1598bcd619bbde21f142a8287d0f7ed1f924"
+        }
+      },
+      "msg/GnssStatus.msg": {
+        "expected": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+        "mavros": {
+          "type_hash": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+          "description_sha256": "594fcff2d9d58766c8bab5b38a939e716c5e7d7ae49455648935f0571a183c2b"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+          "description_sha256": "594fcff2d9d58766c8bab5b38a939e716c5e7d7ae49455648935f0571a183c2b"
+        }
+      },
+      "msg/HighLevelStatus.msg": {
+        "expected": "RIHS01_4c22623995ef23359ec365dd98b93a3f83e82c42cb8f5e938a6b17dce266652b",
+        "mavros": {
+          "type_hash": "RIHS01_4c22623995ef23359ec365dd98b93a3f83e82c42cb8f5e938a6b17dce266652b",
+          "description_sha256": "bf82a100a6c40f47ae0c2adadb68b65be3d57695b86f26ebb9e73a8e98bea995"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_4c22623995ef23359ec365dd98b93a3f83e82c42cb8f5e938a6b17dce266652b",
+          "description_sha256": "bf82a100a6c40f47ae0c2adadb68b65be3d57695b86f26ebb9e73a8e98bea995"
+        }
+      },
+      "msg/Power.msg": {
+        "expected": "RIHS01_912a9cb0e93d5b86dd7a45561c70e114902fec459c59ac41c257b7f3cb5f87fe",
+        "mavros": {
+          "type_hash": "RIHS01_912a9cb0e93d5b86dd7a45561c70e114902fec459c59ac41c257b7f3cb5f87fe",
+          "description_sha256": "83ad0a8be4f01e970988ba28e6ea7ad3e4437d827bc24df5d89a22a7088ef0f1"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_912a9cb0e93d5b86dd7a45561c70e114902fec459c59ac41c257b7f3cb5f87fe",
+          "description_sha256": "83ad0a8be4f01e970988ba28e6ea7ad3e4437d827bc24df5d89a22a7088ef0f1"
+        }
+      },
+      "msg/Status.msg": {
+        "expected": "RIHS01_9450476cd7696c7180f30030792287ebceee344a1bfd4304ed81abd7c3062086",
+        "mavros": {
+          "type_hash": "RIHS01_9450476cd7696c7180f30030792287ebceee344a1bfd4304ed81abd7c3062086",
+          "description_sha256": "9aeb277bb01b385093d8ea49bd316403dcc42b116321d7191114ec416a810ddd"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_9450476cd7696c7180f30030792287ebceee344a1bfd4304ed81abd7c3062086",
+          "description_sha256": "9aeb277bb01b385093d8ea49bd316403dcc42b116321d7191114ec416a810ddd"
+        }
+      },
+      "msg/WheelTick.msg": {
+        "expected": "RIHS01_a553ee260f2ad9b8d768f73924167b0cea46962bd2da76ff7c37dcb2aaaa5ec8",
+        "mavros": {
+          "type_hash": "RIHS01_a553ee260f2ad9b8d768f73924167b0cea46962bd2da76ff7c37dcb2aaaa5ec8",
+          "description_sha256": "1fc18a60e9e8491d959bc659d775a66eaa73f2c04877bdad0b556cdea1ef3787"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_a553ee260f2ad9b8d768f73924167b0cea46962bd2da76ff7c37dcb2aaaa5ec8",
+          "description_sha256": "1fc18a60e9e8491d959bc659d775a66eaa73f2c04877bdad0b556cdea1ef3787"
+        }
+      },
+      "srv/EmergencyStop.srv": {
+        "expected": "RIHS01_5a3f4f7da4f0e357b2602c0cc164948f457c6f50318fed886c6e54df11697d82",
+        "mavros": {
+          "type_hash": "RIHS01_5a3f4f7da4f0e357b2602c0cc164948f457c6f50318fed886c6e54df11697d82",
+          "description_sha256": "b401ca6b95e1dcf5242070e97f7413f9d9170440d1a4b5df25af0f452db85481"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_5a3f4f7da4f0e357b2602c0cc164948f457c6f50318fed886c6e54df11697d82",
+          "description_sha256": "b401ca6b95e1dcf5242070e97f7413f9d9170440d1a4b5df25af0f452db85481"
+        }
+      },
+      "srv/MowerControl.srv": {
+        "expected": "RIHS01_d38a990e3b41755a69a5877f414803d9f9f24c04532c6035b98cf31ff6e0ff7a",
+        "mavros": {
+          "type_hash": "RIHS01_d38a990e3b41755a69a5877f414803d9f9f24c04532c6035b98cf31ff6e0ff7a",
+          "description_sha256": "2251b299aaf9a170ddeac78bf904367e9a7cbd5b647bf76b08799152c8b7ccc3"
+        },
+        "mowgli": {
+          "type_hash": "RIHS01_d38a990e3b41755a69a5877f414803d9f9f24c04532c6035b98cf31ff6e0ff7a",
+          "description_sha256": "2251b299aaf9a170ddeac78bf904367e9a7cbd5b647bf76b08799152c8b7ccc3"
+        }
+      }
+    },
+    "software_interface_pair_compatible": true,
+    "published_release_pair": false,
+    "hardware_acceptance": "HARDWARE_REQUIRED"
+  }
+}

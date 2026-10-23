@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "-c",
+    "source /tmp/mowglinext-mavros-gnss-20261023/environment.bash\nfor package in mavros_battery_observer mavros_esc_wheel_odometry mavros_gnss_adapter mowgli_mavros_bridge mowgli_ntrip_client; do\ncolcon test-result --test-result-base \"/tmp/mowglinext-mavros-gnss-20261023/build/$package/test_results\" --verbose\ndone"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:41:49.167851+00:00",
+  "duration_s": 0.8421824440001728,
+  "exit_code": 0
+}

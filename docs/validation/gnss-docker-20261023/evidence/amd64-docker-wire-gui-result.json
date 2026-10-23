@@ -1,0 +1,13 @@
+{
+  "command": [
+    "node",
+    "node_modules/vitest/vitest.mjs",
+    "run",
+    "--config",
+    "/tmp/mavros-gnss-docker-20261023/gui-wire.config.mjs"
+  ],
+  "cwd": "/ros2_ws/src/mowglinext/gui/web",
+  "started_utc": "2026-10-23T14:13:02.841683+00:00",
+  "duration_s": 0.6284639220002646,
+  "exit_code": 0
+}

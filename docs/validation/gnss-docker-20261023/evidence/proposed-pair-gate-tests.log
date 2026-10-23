@@ -1,0 +1,10 @@
+test_aligned_real_generated_types (test_image_pair.ImagePairTest.test_aligned_real_generated_types) ... ok
+test_canonical_change_without_sidecar_update_is_rejected (test_image_pair.ImagePairTest.test_canonical_change_without_sidecar_update_is_rejected) ... ok
+test_missing_type_description_fails (test_image_pair.ImagePairTest.test_missing_type_description_fails) ... ok
+test_mutable_or_pending_pair_never_qualifies_release (test_image_pair.ImagePairTest.test_mutable_or_pending_pair_never_qualifies_release) ... ok
+test_old_generated_consumer_is_rejected (test_image_pair.ImagePairTest.test_old_generated_consumer_is_rejected) ... ok
+
+----------------------------------------------------------------------
+Ran 5 tests in 0.026s
+
+OK

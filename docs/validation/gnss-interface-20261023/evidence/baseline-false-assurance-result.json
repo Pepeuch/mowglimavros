@@ -1,0 +1,15 @@
+{
+  "command": [
+    "python3",
+    "/tmp/mowglinext-mavros-gnss-20261023/baseline-contract.py",
+    "check",
+    "--interface-root",
+    "/tmp/mowglinext-mavros-gnss-20261023/baseline-source/mowgli_interfaces",
+    "--source-root",
+    "/ros2_ws/src/mowglinext/ros2/src/mowgli_interfaces"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:34:20.768277+00:00",
+  "duration_s": 0.04344435499979227,
+  "exit_code": 0
+}

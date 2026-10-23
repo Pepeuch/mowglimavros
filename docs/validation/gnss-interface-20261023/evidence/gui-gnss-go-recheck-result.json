@@ -1,0 +1,16 @@
+{
+  "command": [
+    "go",
+    "test",
+    "./pkg/providers",
+    "./pkg/foxglove",
+    "-run",
+    "TestAdaptGnssStatus|TestGnssSessionTupleWireIntegrity|TestGnssUnavailableMeasurements",
+    "-count=1",
+    "-v"
+  ],
+  "cwd": "/ros2_ws/src/mowglinext/gui",
+  "started_utc": "2026-10-23T13:35:49.294922+00:00",
+  "duration_s": 1.504362661000414,
+  "exit_code": 0
+}

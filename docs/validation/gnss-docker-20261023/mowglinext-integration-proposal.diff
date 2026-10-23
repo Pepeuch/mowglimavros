@@ -1,0 +1,158 @@
+--- a/.github/workflows/sensors-mavros.yml
++++ b/.github/workflows/sensors-mavros.yml
+@@ -5,6 +5,9 @@
+     branches: [main, dev, 'feat/**', 'fix/**', 'refactor/**', 'chore/**', 'perf/**']
+     paths:
+       - 'sensors/mavros/**'
++      - 'ros2/src/mowgli_interfaces/**'
++      - 'ros2/src/external/mowglimavros'
++      - '.github/submodule-pins.txt'
+       - 'install/compose/docker-compose.mavros.yml'
+       - 'install/lib/config.sh'
+       - 'install/lib/env.sh'
+@@ -14,6 +17,9 @@
+     branches: [main, dev]
+     paths:
+       - 'sensors/mavros/**'
++      - 'ros2/src/mowgli_interfaces/**'
++      - 'ros2/src/external/mowglimavros'
++      - '.github/submodule-pins.txt'
+       - 'install/compose/docker-compose.mavros.yml'
+       - 'install/lib/config.sh'
+       - 'install/lib/env.sh'
+@@ -30,4 +36,11 @@
+     runs-on: ubuntu-24.04
+     steps:
+       - uses: actions/checkout@v6
++        with:
++          submodules: recursive
++      - name: Compare actual canonical source with the pinned MAVROS contract
++        run: |
++          python3 ros2/src/external/mowglimavros/tools/mowgli_interface_contract.py check \
++            --interface-root ros2/src/external/mowglimavros/ros2/src/mowgli_interfaces \
++            --peer-root ros2/src/mowgli_interfaces
+       - run: python3 sensors/mavros/test_integration.py
+diff --git a/sensors/mavros/check_image_pair.py b/sensors/mavros/check_image_pair.py
+new file mode 100644
+--- /dev/null
++++ b/sensors/mavros/check_image_pair.py
+@@ -0,0 +1,60 @@
++#!/usr/bin/env python3
++"""Offline gate for artifacts extracted from an immutable GNSS image pair.
++
++The CI wrapper must extract by digest without executing either entrypoint.
++This checks generated types and their canonical source, not OCI labels alone.
++"""
++import argparse
++import hashlib
++import json
++from pathlib import Path
++import re
++
++REQUIRED = {
++    'msg/Emergency.msg', 'msg/GnssStatus.msg', 'msg/HighLevelStatus.msg',
++    'msg/Power.msg', 'msg/Status.msg', 'msg/WheelTick.msg',
++    'srv/EmergencyStop.srv', 'srv/MowerControl.srv',
++}
++IMAGE = re.compile(r'^ghcr\.io/[a-z0-9_./-]+@sha256:[0-9a-f]{64}$')
++
++
++def check(source, mavros, mowgli, pair):
++    for role in ('mavros', 'mowgli'):
++        if not IMAGE.fullmatch(pair.get(role + '_image') or ''):
++            raise ValueError(role + ' image must have an immutable registry digest')
++    lock = json.loads((mavros / 'share/mowgli_interfaces/interface-contract.lock.json').read_text())
++    if set(lock.get('interfaces', {})) != REQUIRED or set(lock.get('type_hashes', {})) != REQUIRED:
++        raise ValueError('sidecar must qualify all eight public interfaces')
++    for relative in sorted(REQUIRED):
++        if hashlib.sha256((source / relative).read_bytes()).hexdigest() != lock['interfaces'][relative]:
++            raise ValueError('canonical source mismatch: ' + relative)
++        stem = str(Path(relative).with_suffix(''))
++        expected = lock['type_hashes'][relative]
++        if not re.fullmatch(r'RIHS01_[0-9a-f]{64}', expected):
++            raise ValueError('invalid locked type hash')
++        for role, prefix in (('mavros', mavros), ('mowgli', mowgli)):
++            doc = json.loads((prefix / 'share/mowgli_interfaces' / (stem + '.json')).read_text())
++            actual = [h['hash_string'] for h in doc['type_hashes'] if h['type_name'] == 'mowgli_interfaces/' + stem]
++            if actual != [expected]:
++                raise ValueError(role + ' generated type mismatch: ' + relative)
++    return lock['type_hashes']
++
++
++def main():
++    parser = argparse.ArgumentParser()
++    for name in ('canonical-source', 'mavros-prefix', 'mowgli-prefix', 'pair'):
++        parser.add_argument('--' + name, type=Path, required=True)
++    args = parser.parse_args()
++    try:
++        result = check(args.canonical_source, args.mavros_prefix, args.mowgli_prefix,
++                       json.loads(args.pair.read_text()))
++    except (OSError, ValueError, KeyError, TypeError) as error:
++        print('GNSS RELEASE PAIR BLOCKED:', error)
++        return 1
++    print(json.dumps({'interfaces': result, 'software_contract': 'PASS',
++                      'physical_acceptance': 'HARDWARE_REQUIRED'}, indent=2))
++    return 0
++
++
++if __name__ == '__main__':
++    raise SystemExit(main())
+diff --git a/sensors/mavros/verify_image_pair.sh b/sensors/mavros/verify_image_pair.sh
+new file mode 100755
+--- /dev/null
++++ b/sensors/mavros/verify_image_pair.sh
+@@ -0,0 +1,54 @@
++#!/usr/bin/env bash
++# Proposal only: no caller executes this automatically in this delivery.
++# Extract by digest; never run an image's hardware entrypoint.
++set -euo pipefail
++pair=$1
++canonical_source=$2
++expected_mowgli_revision=$3
++arch=$4
++output=$5
++[[ "$arch" == amd64 || "$arch" == arm64 ]]
++[[ "$expected_mowgli_revision" =~ ^[0-9a-f]{40}$ ]]
++mkdir -p "$output"
++refs=$(python3 - "$pair" <<'PY'
++import json,re,sys
++p=json.load(open(sys.argv[1]))
++for role in ('mavros','mowgli'):
++    ref=p.get(role+'_image') or ''
++    if not re.fullmatch(r'ghcr\.io/[a-z0-9_./-]+@sha256:[0-9a-f]{64}',ref):
++        raise SystemExit('GNSS RELEASE PAIR BLOCKED: missing immutable '+role+' image')
++    print(ref)
++if not re.fullmatch(r'[0-9a-f]{40}',p.get('mavros_commit') or ''):
++    raise SystemExit('GNSS RELEASE PAIR BLOCKED: missing sidecar source commit')
++PY
++)
++mapfile -t images <<< "$refs"
++containers=()
++cleanup() {
++  for container in "${containers[@]}"; do docker rm "$container" >/dev/null || true; done
++}
++trap cleanup EXIT
++for i in 0 1; do
++  if [[ $i == 0 ]]; then role=mavros; else role=mowgli; fi
++  image=${images[$i]}
++  docker pull --platform "linux/$arch" "$image"
++  docker image inspect "$image" > "$output/$role-image-inspect.json"
++  container=$(docker create --platform "linux/$arch" --network none --read-only --entrypoint /bin/false "$image")
++  containers+=("$container")
++  mkdir -p "$output/$role"
++  docker cp "$container:/ros2_ws/install/mowgli_interfaces" "$output/$role/"
++done
++python3 - "$pair" "$expected_mowgli_revision" "$output" "$arch" <<'PY'
++import json,sys
++from pathlib import Path
++pair=json.load(open(sys.argv[1])); out=Path(sys.argv[3])
++for role,revision in [('mavros',pair['mavros_commit']),('mowgli',sys.argv[2])]:
++    doc=json.loads((out/(role+'-image-inspect.json')).read_text())[0]
++    assert doc['Architecture']==sys.argv[4], 'Image architecture mismatch'
++    assert doc['Config']['Labels']['org.opencontainers.image.revision']==revision, 'Source revision mismatch'
++PY
++python3 "$(dirname "$0")/check_image_pair.py" \
++  --canonical-source "$canonical_source" \
++  --mavros-prefix "$output/mavros/mowgli_interfaces" \
++  --mowgli-prefix "$output/mowgli/mowgli_interfaces" --pair "$pair" \
++  | tee "$output/gnss-pair-contract.json"

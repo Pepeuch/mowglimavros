@@ -1,0 +1,10 @@
+{
+  "command": [
+    "python3",
+    "/tmp/mowglinext-mavros-gnss-20261023/cross-consumer.py"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:39:55.388895+00:00",
+  "duration_s": 11.689057755000249,
+  "exit_code": 0
+}

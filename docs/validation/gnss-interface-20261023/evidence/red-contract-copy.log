@@ -1,0 +1,2 @@
+MM-602 interface contract check failed:
+- interface digest mismatch for msg/GnssStatus.msg

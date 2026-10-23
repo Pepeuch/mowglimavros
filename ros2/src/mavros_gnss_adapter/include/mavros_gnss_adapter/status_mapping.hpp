@@ -101,6 +101,8 @@ inline Status map_status(const UniversalStatus & input, const std::string & sour
   output.quality_percent = std::numeric_limits<float>::quiet_NaN();
   output.msm_summary_age_s = std::numeric_limits<float>::quiet_NaN();
   output.position_observation_sequence = input.position_observation_sequence;
+  output.source_id = input.source_id;
+  output.source_incarnation = input.source_incarnation;
   output.horizontal_accuracy_m = input.horizontal_accuracy_m;
   output.vertical_accuracy_m = input.vertical_accuracy_m;
   output.hdop = input.hdop;

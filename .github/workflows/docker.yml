@@ -22,8 +22,38 @@ jobs:
       universal_gnss_commit: ${{ steps.pins.outputs.universal_gnss_commit }}
       mavlink_version: ${{ steps.pins.outputs.mavlink_version }}
       geographiclib_dataset_version: ${{ steps.pins.outputs.geographiclib_dataset_version }}
+      interface_source_revision: ${{ steps.interface.outputs.source_revision }}
+      interface_fingerprint: ${{ steps.interface.outputs.fingerprint }}
+      gnss_type_hash: ${{ steps.interface.outputs.gnss_type_hash }}
     steps:
       - uses: actions/checkout@v7
+
+      - name: Resolve canonical interface lock
+        id: interface
+        run: |
+          python3 - <<'PY'
+          import json, os
+          with open('ros2/src/mowgli_interfaces/interface-contract.lock.json') as source:
+              lock = json.load(source)
+          with open(os.environ['GITHUB_OUTPUT'], 'a') as output:
+              print('source_revision=' + lock['source_revision'], file=output)
+              print('fingerprint=' + lock['fingerprint'], file=output)
+              print('gnss_type_hash=' + lock['type_hashes']['msg/GnssStatus.msg'], file=output)
+          PY
+
+      - name: Checkout exact canonical interfaces
+        uses: actions/checkout@v7
+        with:
+          repository: mowglinext/mowglinext
+          ref: ${{ steps.interface.outputs.source_revision }}
+          path: .interface-source
+          sparse-checkout: ros2/src/mowgli_interfaces
+          persist-credentials: false
+
+      - name: Verify canonical source and contract regressions
+        run: |
+          python3 tools/mowgli_interface_contract.py check --source-root .interface-source/ros2/src/mowgli_interfaces
+          python3 tools/test_mowgli_interface_contract.py
 
       - id: pins
         shell: bash
@@ -96,6 +126,12 @@ jobs:
           pull: true
           push: true
           tags: ${{ env.IMAGE_NAME }}:build-${{ github.run_id }}-${{ github.run_attempt }}-${{ matrix.ros_distro }}-${{ matrix.architecture }}
+          labels: |
+            org.opencontainers.image.source=https://github.com/Pepeuch/mowglimavros
+            org.opencontainers.image.revision=${{ github.sha }}
+            io.mowgli.interfaces.source-revision=${{ needs.pins.outputs.interface_source_revision }}
+            io.mowgli.interfaces.fingerprint=${{ needs.pins.outputs.interface_fingerprint }}
+            io.mowgli.interfaces.gnss-type-hash=${{ needs.pins.outputs.gnss_type_hash }}
           build-args: |
             ROS_DISTRO=${{ matrix.ros_distro }}
             MAVROS_VERSION=${{ needs.pins.outputs.mavros_version }}
@@ -139,6 +175,7 @@ jobs:
             type=raw,value=latest,enable=${{ matrix.primary && github.ref == 'refs/heads/main' }}
             type=ref,event=branch,suffix=-${{ matrix.ros_distro }}
             type=sha,prefix=sha-,suffix=-${{ matrix.ros_distro }}
+            type=raw,value=sha-${{ github.sha }}-${{ matrix.ros_distro }}
 
       - name: Publish multi-architecture manifest
         env:

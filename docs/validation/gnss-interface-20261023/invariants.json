@@ -1,0 +1,7 @@
+{
+  "historical_cpp_assertions_identical": true,
+  "adapter_state_plugin_altitude_unchanged": true,
+  "workflow_yaml_shell_syntax": true,
+  "python_syntax": true,
+  "root_and_embedded_submodule_preserved": true
+}

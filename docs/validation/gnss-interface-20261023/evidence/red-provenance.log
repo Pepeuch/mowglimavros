@@ -1,0 +1,92 @@
+not found: "/tmp/mowglinext-mavros-gnss-20261023/install/mavros_gnss_adapter/share/mavros_gnss_adapter/local_setup.bash"
+Running main() from ./googletest/src/gtest_main.cc
+Note: Google Test filter = Provenance.*
+[==========] Running 3 tests from 1 test suite.
+[----------] Global test environment set-up.
+[----------] 3 tests from Provenance
+[ RUN      ] Provenance.CopiesOpaqueSourceIdentityWithoutInventingIt
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:364: Failure
+Expected equality of these values:
+  output.source_id
+    Which is: ""
+  input.source_id
+    Which is: "mavlink:fcu/receiver:GPS-2"
+
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:365: Failure
+Expected equality of these values:
+  output.source_incarnation
+    Which is: ""
+  input.source_incarnation
+    Which is: "producer-session-opaque-123"
+
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:364: Failure
+Expected equality of these values:
+  output.source_id
+    Which is: ""
+  input.source_id
+    Which is: "mavlink:fcu/receiver:GPS-2"
+
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:365: Failure
+Expected equality of these values:
+  output.source_incarnation
+    Which is: ""
+  input.source_incarnation
+    Which is: "producer-session-opaque-123"
+
+[  FAILED  ] Provenance.CopiesOpaqueSourceIdentityWithoutInventingIt (0 ms)
+[ RUN      ] Provenance.CachedEnrichmentAndExpiryKeepTheOriginalObservationIdentity
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:381: Failure
+Expected equality of these values:
+  first.source_id
+    Which is: ""
+  input.source_id
+    Which is: "mavlink:fcu:gps1"
+
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:382: Failure
+Expected equality of these values:
+  first.source_incarnation
+    Which is: ""
+  input.source_incarnation
+    Which is: "session1"
+
+[  FAILED  ] Provenance.CachedEnrichmentAndExpiryKeepTheOriginalObservationIdentity (0 ms)
+[ RUN      ] Provenance.ARealProducerRestartAndReplacementKeepTheirOwnTuple
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:415: Failure
+Expected equality of these values:
+  restarted.source_id
+    Which is: ""
+  input.source_id
+    Which is: "mavlink:fcu:gps1"
+
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:416: Failure
+Expected equality of these values:
+  restarted.source_incarnation
+    Which is: ""
+  "session2"
+
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:422: Failure
+Expected equality of these values:
+  replaced.source_id
+    Which is: ""
+  input.source_id
+    Which is: "mavlink:another-fcu:gps1"
+
+/tmp/mowglinext-mavros-gnss-20261023/repository/ros2/src/mavros_gnss_adapter/test/test_gnss_adapter.cpp:423: Failure
+Expected equality of these values:
+  replaced.source_incarnation
+    Which is: ""
+  input.source_incarnation
+    Which is: "session3"
+
+[  FAILED  ] Provenance.ARealProducerRestartAndReplacementKeepTheirOwnTuple (0 ms)
+[----------] 3 tests from Provenance (0 ms total)
+
+[----------] Global test environment tear-down
+[==========] 3 tests from 1 test suite ran. (0 ms total)
+[  PASSED  ] 0 tests.
+[  FAILED  ] 3 tests, listed below:
+[  FAILED  ] Provenance.CopiesOpaqueSourceIdentityWithoutInventingIt
+[  FAILED  ] Provenance.CachedEnrichmentAndExpiryKeepTheOriginalObservationIdentity
+[  FAILED  ] Provenance.ARealProducerRestartAndReplacementKeepTheirOwnTuple
+
+ 3 FAILED TESTS

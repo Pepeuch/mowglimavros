@@ -1,0 +1,11 @@
+{
+  "command": [
+    "bash",
+    "-c",
+    "source /tmp/mowglinext-mavros-gnss-20261023/environment.bash\nexport ROS_LOG_DIR=/tmp/mowglinext-mavros-gnss-20261023/ros-log ROS_DOMAIN_ID=207 ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST RMW_IMPLEMENTATION=rmw_fastrtps_cpp FASTDDS_BUILTIN_TRANSPORTS=UDPv4 GEOGRAPHICLIB_GEOID_PATH=/tmp/manual-provider-fix/geographiclib/geoids\ncmake --build /tmp/mowglinext-mavros-gnss-20261023/build/mavros_gnss_adapter --parallel 2\nctest --test-dir /tmp/mowglinext-mavros-gnss-20261023/build/mavros_gnss_adapter --output-on-failure --no-tests=error -R \"^test_gnss_adapter$\"\nctest --test-dir /tmp/mowglinext-mavros-gnss-20261023/build/mowgli_mavros_bridge --output-on-failure --no-tests=error -R \"^test_(gnss|esc|safety)_graph$\"\ncolcon test-result --test-result-base /tmp/mowglinext-mavros-gnss-20261023/build --verbose"
+  ],
+  "cwd": "/tmp/mowglinext-mavros-gnss-20261023/repository",
+  "started_utc": "2026-10-23T13:39:04.090687+00:00",
+  "duration_s": 77.69660942100018,
+  "exit_code": 1
+}

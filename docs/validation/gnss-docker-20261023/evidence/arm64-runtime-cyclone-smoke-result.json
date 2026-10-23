@@ -1,0 +1,24 @@
+{
+  "command": [
+    "docker",
+    "buildx",
+    "build",
+    "--builder",
+    "mavros-gnss-20261023",
+    "--platform",
+    "linux/arm64",
+    "--progress",
+    "plain",
+    "--file",
+    "Dockerfile.runtime-smoke",
+    "--target",
+    "runtime-smoke-results",
+    "--output",
+    "type=local,dest=/tmp/mavros-gnss-docker-20261023/arm64-runtime-wires",
+    "."
+  ],
+  "cwd": "/tmp/mavros-gnss-docker-20261023/context-61d3e37",
+  "started_utc": "2026-10-23T14:15:09.315156+00:00",
+  "duration_s": 3314.46960139,
+  "exit_code": 0
+}

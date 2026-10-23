@@ -525,9 +525,21 @@ Acceptance:
 
 ## MM-602 — Synchronize exact Mowgli interface contract
 Related migration finding: `MN-MAV-003`
-Status: DONE
+Status: REVIEW_PUBLICATION_AUTHORIZED (2026-10-23), code61d3e37; Docker AMD64/ARM64 software validation PASS; paired release and HARDWARE_REQUIRED remain BLOCKING
 
-Tasks:
+Current Docker delivery: `docs/validation/gnss-docker-20261023/review.md` records
+the two local commits, both images, 224 ROS/C++ cases per architecture and the
+release-pair blocker for MowgliNext PR #1017. Source review publication is now
+authorized; see docs/validation/gnss-publication-20261023/checkpoint.md.
+No image publication/deployment or release acceptance is claimed.
+
+Initial update: `docs/validation/gnss-interface-20261023/review.md` records the
+GNSS provenance drift, canonical revision `9686b37556f1d2ba7f7a295eb006f870c86e8095`,
+source/peer/generated-hash gates and local software evidence. The legacy
+self-lock gate could not detect an independently upgraded MowgliNext consumer.
+No replacement image or deployment is accepted yet.
+
+Historical tasks/evidence:
 
 - [x] Consume the required interface subset from pinned MowgliNext revision `e789ccc2ecc249377c385e79b34fb48ff5a90927` using `tools/mowgli_interface_contract.py sync`.
 - [x] Replace the uncontrolled local definitions with the pinned generated subset and lock its source/content in `ros2/src/mowgli_interfaces/interface-contract.lock.json`.
@@ -548,7 +560,7 @@ Tasks:
 
 - [x] Dedicated MowgliMAVROS `mowgli_gnss` plugin adapts private Universal GNSS status/fix to canonical `/gps/status` and `/gps/fix`; no GNSS publisher or raw projection remains in the hardware bridge, which only consumes status for readiness.
 - [x] `GNSS_SOURCE=mavros` enables canonical ownership; `GNSS_MAVROS_SOURCE=gps1|gps2` selects the private receiver. `direct` creates no canonical endpoints. `MAVROS_GPS1_CANONICAL` is only a deprecated consistency guard.
-- [x] Map fix/RTK/baseline enums and capability/value flags symbolically; preserve rich available fields and `position_observation_sequence`. Source identity/incarnation invalidate adapter queues internally; the public Mowgli IDL has no corresponding fields.
+- [x] Map fix/RTK/baseline enums and capability/value flags symbolically; preserve rich available fields and `position_observation_sequence`. Source identity/incarnation invalidate adapter queues internally. The 2026-10-23 software update also copies both strings verbatim to the aligned public IDL; cached/stale output retains the original tuple. Image/ARM64 acceptance remains open.
 - [x] Preserve ellipsoidal canonical altitude with a selected-receiver raw altitude side channel inside the plugin. Never remap private MSL altitude silently; unavailable/ambiguous height is NaN. Document correlation limits in `ros2/src/mavros_gnss_adapter/README.md`.
 - [x] Invalidate stale positions without advancing their sequence; RTK enrichment cannot refresh position lifetime. Leave unavailable NTRIP/MSM fields for downstream diagnostics enrichment.
 

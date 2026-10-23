@@ -1,0 +1,18 @@
+{
+  "command": [
+    "python3",
+    "check_image_pair.py",
+    "--canonical-source",
+    "/ros2_ws/src/mowglinext/ros2/src/mowgli_interfaces",
+    "--mavros-prefix",
+    "/tmp/mavros-gnss-docker-20261023/amd64-runtime-artifacts/mowgli_interfaces",
+    "--mowgli-prefix",
+    "/tmp/mowglinext-dev-sync-2026-10-22/install/mowgli_interfaces",
+    "--pair",
+    "/tmp/mavros-gnss-docker-20261023/mowglinext-proposal/release-pair.pending.json"
+  ],
+  "cwd": "/tmp/mavros-gnss-docker-20261023/mowglinext-proposal/sensors/mavros",
+  "started_utc": "2026-10-23T14:14:16.347522+00:00",
+  "duration_s": 0.07756096400044044,
+  "exit_code": 1
+}
