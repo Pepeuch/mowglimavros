@@ -176,6 +176,10 @@ ARG MAVROS_VERSION
 ARG BUILD_TYPE=Release
 ARG TARGETARCH
 
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    "ros-${ROS_DISTRO}-ament-cmake-gtest" \
+ && rm -rf /var/lib/apt/lists/*
+
 COPY ros2/src/ /ros2_ws/src/
 COPY tools/ /ros2_ws/tools/
 COPY ros2_entrypoint.sh /ros2_ws/ros2_entrypoint.sh
@@ -198,6 +202,11 @@ RUN --mount=type=cache,id=ccache-${ROS_DISTRO}-${TARGETARCH}-${MAVROS_VERSION},t
     colcon build \
       --cmake-args -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_TESTING=OFF \
       --parallel-workers \$(nproc) && \
+    python3 tools/mowgli_interface_contract.py check --installed-root install/mowgli_interfaces && \
+    source install/local_setup.bash && \
+    colcon build --packages-select mavros_gnss_adapter \
+      --cmake-args -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DBUILD_TESTING=ON && \
+    ctest --test-dir build/mavros_gnss_adapter --output-on-failure --no-tests=error -R '^test_gnss_adapter$' && \
     echo 'ccache workspace after:' && ccache --show-stats && du -sh \"\${CCACHE_DIR}\" \
     "
 

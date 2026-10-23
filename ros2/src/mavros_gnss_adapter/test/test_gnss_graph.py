@@ -162,6 +162,9 @@ def main():
                     return
                 assert fixes and statuses, (len(fixes), len(statuses), logfile.read_text())
                 latest = statuses[-1]
+                assert latest.source_id and latest.source_incarnation, latest
+                assert latest.source_id == private_statuses[-1].source_id, latest
+                assert latest.source_incarnation == private_statuses[-1].source_incarnation, latest
                 assert latest.fix_valid and latest.fix_type == Status.FIX_TYPE_RTK_FIXED, latest
                 assert latest.rtk_mode == Status.RTK_MODE_FIXED, latest
                 assert latest.differential_corrections and latest.corrections_active, latest
@@ -190,16 +193,21 @@ def main():
                 spin(0.25)
                 assert len(fixes) == before, "unselected receiver published a canonical fix"
                 seq = statuses[-1].position_observation_sequence
+                identity = (statuses[-1].source_id, statuses[-1].source_incarnation)
                 rtk()
                 spin(0.15)
                 assert statuses[-1].satellites_used == 19, statuses[-1]
                 assert statuses[-1].position_observation_sequence == seq
+                assert (statuses[-1].source_id, statuses[-1].source_incarnation) == identity
                 # RTK updates and heartbeats cannot refresh an old position.
                 for _ in range(13):
                     heartbeat()
                     rtk()
                     spin(0.25)
                 assert not statuses[-1].fix_valid, statuses[-1]
+                assert (statuses[-1].source_id, statuses[-1].source_incarnation) == identity
+                assert statuses[-1].value_flags == 0
+                assert statuses[-1].rtk_mode == Status.RTK_MODE_UNKNOWN
                 assert statuses[-1].position_observation_sequence == seq
                 assert len(fixes) == before
                 gps(args.source, fix_type=1)

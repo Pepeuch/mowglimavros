@@ -1,12 +1,12 @@
 {
   "format": 1,
   "source_repository": "https://github.com/mowglinext/mowglinext.git",
-  "source_revision": "e789ccc2ecc249377c385e79b34fb48ff5a90927",
+  "source_revision": "9686b37556f1d2ba7f7a295eb006f870c86e8095",
   "source_path": "ros2/src/mowgli_interfaces",
   "fingerprint_algorithm": "sha256(relative UTF-8 path, NUL, raw file bytes, NUL; paths sorted lexically)",
   "interfaces": {
     "msg/Emergency.msg": "cc057927352df4cae8b850eb7264bbb7b487a1198760106f9d09d8e674493b50",
-    "msg/GnssStatus.msg": "24d0b02ce6d9fad3a8d290a2273d2f28860897016290057e744fd96db3990c8d",
+    "msg/GnssStatus.msg": "e2f44263300b57c8b92586dfe3532bd78861320bb02213b986b67dbc5c1c2bb5",
     "msg/HighLevelStatus.msg": "0edb16633afe5bdaba17be430ea7383475015cbbbc86c519930565be4e77c413",
     "msg/Power.msg": "dd24ecf5ae095f290c48e5fee1129606463e5f07233bf47033fad4eeb84ed423",
     "msg/Status.msg": "a1aaee33fdb8b99581bf732b030d55e64e6472b66884f748344a3d596692e660",
@@ -14,5 +14,16 @@
     "srv/EmergencyStop.srv": "42a65c6856c2e0d1e90303cd32f5b622948762cedc98884a45ba680f218866b7",
     "srv/MowerControl.srv": "1ec1a54cc0ac253cab1206bd823c88dc9b4c825a8a643fb9006e3ded283c773b"
   },
-  "fingerprint": "f3dd10cbbfbe64e1ae5e2e7412b58fefe3903d1593c61965f823e5cdb4117f20"
+  "fingerprint": "0200598058958a59232d8f096e6764fd9ca601b315f9b51c94cbdb1452389e63",
+  "ros_distro": "lyrical",
+  "type_hashes": {
+    "msg/Emergency.msg": "RIHS01_a9f717cea3855f92a7666cbeae778c059d4f7dbc8d5dc4b8d71d449f54560307",
+    "msg/GnssStatus.msg": "RIHS01_ca48e4f1007c03b476e559280a5d9a5b1b03dd4061b2f8956aea93ad22a17fdf",
+    "msg/HighLevelStatus.msg": "RIHS01_4c22623995ef23359ec365dd98b93a3f83e82c42cb8f5e938a6b17dce266652b",
+    "msg/Power.msg": "RIHS01_912a9cb0e93d5b86dd7a45561c70e114902fec459c59ac41c257b7f3cb5f87fe",
+    "msg/Status.msg": "RIHS01_9450476cd7696c7180f30030792287ebceee344a1bfd4304ed81abd7c3062086",
+    "msg/WheelTick.msg": "RIHS01_a553ee260f2ad9b8d768f73924167b0cea46962bd2da76ff7c37dcb2aaaa5ec8",
+    "srv/EmergencyStop.srv": "RIHS01_5a3f4f7da4f0e357b2602c0cc164948f457c6f50318fed886c6e54df11697d82",
+    "srv/MowerControl.srv": "RIHS01_d38a990e3b41755a69a5877f414803d9f9f24c04532c6035b98cf31ff6e0ff7a"
+  }
 }

@@ -81,6 +81,8 @@ Navigation only. Not the project backlog.
 - `MM-MAVROS-AUDIT-20260907` — canonical pre-implementation compatibility audit.
 - `MM-PIXHAWK-CAPABILITY-AUDIT-20260908` — passive amd64 Pixhawk/GPS/RTCM capability evidence; ARM64 and receiver follow-up pending.
 
+- `active/MM-GNSS-INTERFACE-20261023.md` — installed OCI GNSS contract drift proven; aligned source/identity proposal and local RED/GREEN, paired images/ARM64/HARDWARE_REQUIRED pending.
+
 ## Closed
 
 None.

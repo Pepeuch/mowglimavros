@@ -35,9 +35,10 @@ symbolically. Rich fields are retained, including differential corrections,
 corrections-active, dilution, accuracy, satellites, heading, baseline and CN0.
 Unknown enum values fail to no-fix/unknown; unknown capability bits are dropped.
 `position_observation_sequence` is copied unchanged, including on stale output.
-The public Mowgli IDL has no `source_id` or `source_incarnation`: these are used
-internally to invalidate queued data on source replacement, without changing
-that IDL. `backend` identifies `mavros_gps1` or `mavros_gps2`.
+`source_id` and `source_incarnation` are copied verbatim from Universal GNSS
+into the canonical status, including cached/stale status. Empty identities remain
+empty: the adapter never invents an identity. Both fields also invalidate queued
+data on source replacement. `backend` identifies `mavros_gps1` or `mavros_gps2`.
 
 Upstream status stamps may advance on RTK-only updates. The canonical header
 retains the last position stamp, and a steady-clock three-second deadline
@@ -48,7 +49,7 @@ no-fix/disconnect clears pending fixes. A new source incarnation resets local
 pairing/freshness bookkeeping, not the upstream sequence.
 
 No NTRIP/MSM/correction transport/flow/semantic truth or UI quality score is
-invented. These capabilities remain unset, correction enums unknown, provenance
+invented. These capabilities remain unset, correction enums unknown, correction-provenance
 strings empty, and the absent quality score NaN. Existing downstream diagnostics
 consumers can continue enriching those fields from their NTRIP/MSM diagnostics.
 This plugin does not start an NTRIP client or become a second diagnostics owner.
@@ -95,3 +96,20 @@ bridge executable); the adapter unit tests belong to its own package. Run
 `colcon test --packages-select mavros_gnss_adapter mowgli_mavros_bridge` after
 building and sourcing the workspace. Tests use the repository-pinned MAVROS
 and Universal GNSS dependencies.
+
+## Interface synchronization (2026-10-23)
+
+The copied public contract is pinned to MowgliNext
+`9686b37556f1d2ba7f7a295eb006f870c86e8095`, not to a mutable branch name.
+`ros2/src/mowgli_interfaces/interface-contract.lock.json` records all eight source
+SHA256 values and generated ROS type hashes. The lock is installed with the
+interface package. CI checks an exact canonical checkout; the Docker workspace
+checks generated hashes and runs `test_gnss_adapter` before publishing an image.
+
+For a candidate pair, also run the checker with `--peer-root` against the actual
+MowgliNext source, and `--installed-root` against each image's extracted
+`mowgli_interfaces` install prefix. A self-consistent pinned sidecar alone cannot
+prove compatibility with an independently upgraded consumer. Deploy reviewed
+image digests as a pair; never infer contract compatibility from `latest`.
+See `docs/validation/gnss-interface-20261023/review.md` for evidence and pending
+image/ARM64 acceptance. No robot image has been changed by this work.

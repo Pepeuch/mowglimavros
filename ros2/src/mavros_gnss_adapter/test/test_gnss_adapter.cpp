@@ -352,3 +352,75 @@ TEST(AltitudeWire, ZeroFieldRemainsUnknownEvenWithCompleteOrLongerPayload)
     }
   }
 }
+
+TEST(Provenance, CopiesOpaqueSourceIdentityWithoutInventingIt)
+{
+  for (const auto source : {"gps1", "gps2"})
+  {
+    auto input = observation();
+    input.source_id = "mavlink:fcu/receiver:GPS-2";
+    input.source_incarnation = "producer-session-opaque-123";
+    const auto output = map_status(input, source);
+    EXPECT_EQ(output.source_id, input.source_id);
+    EXPECT_EQ(output.source_incarnation, input.source_incarnation);
+    EXPECT_EQ(output.position_observation_sequence, input.position_observation_sequence);
+    EXPECT_EQ(stamp_ns(output.header.stamp), stamp_ns(input.stamp));
+    input.source_id.clear();
+    input.source_incarnation.clear();
+    const auto legacy = map_status(input, source);
+    EXPECT_TRUE(legacy.source_id.empty());
+    EXPECT_TRUE(legacy.source_incarnation.empty());
+  }
+}
+
+TEST(Provenance, CachedEnrichmentAndExpiryKeepTheOriginalObservationIdentity)
+{
+  AdapterState state("gps1");
+  auto input = observation(7, second);
+  auto first = state.observe_status(input, second);
+  EXPECT_EQ(first.source_id, input.source_id);
+  EXPECT_EQ(first.source_incarnation, input.source_incarnation);
+  input.stamp.sec = 3;
+  input.fix_type = UniversalStatus::FIX_TYPE_RTK_FLOAT;
+  input.rtk_mode = UniversalStatus::RTK_MODE_FLOAT;
+  input.capability_flags = UniversalStatus::CAP_RTK_MODE;
+  input.value_flags = UniversalStatus::CAP_RTK_MODE;
+  auto cached = state.observe_status(input, 3 * second);
+  EXPECT_EQ(stamp_ns(cached.header.stamp), second);
+  EXPECT_EQ(cached.position_observation_sequence, 7u);
+  EXPECT_EQ(cached.source_id, first.source_id);
+  EXPECT_EQ(cached.source_incarnation, first.source_incarnation);
+  auto expired = state.expire(4 * second + 1);
+  ASSERT_TRUE(expired);
+  EXPECT_FALSE(expired->fix_valid);
+  EXPECT_EQ(expired->fix_type, Status::FIX_TYPE_NO_FIX);
+  EXPECT_EQ(expired->rtk_mode, Status::RTK_MODE_UNKNOWN);
+  EXPECT_EQ(expired->value_flags, 0u);
+  EXPECT_EQ(expired->source_id, first.source_id);
+  EXPECT_EQ(expired->source_incarnation, first.source_incarnation);
+  EXPECT_EQ(expired->position_observation_sequence, 7u);
+  EXPECT_EQ(stamp_ns(expired->header.stamp), second);
+}
+
+TEST(Provenance, ARealProducerRestartAndReplacementKeepTheirOwnTuple)
+{
+  AdapterState state("gps1");
+  auto input = observation(50, second);
+  state.observe_status(input, second);
+  input.position_observation_sequence = 1;
+  input.source_incarnation = "session2";
+  input.stamp.sec = 2;
+  auto restarted = state.observe_status(input, 2 * second);
+  EXPECT_TRUE(restarted.fix_valid);
+  EXPECT_EQ(restarted.source_id, input.source_id);
+  EXPECT_EQ(restarted.source_incarnation, "session2");
+  EXPECT_EQ(restarted.position_observation_sequence, 1u);
+  input.source_id = "mavlink:another-fcu:gps1";
+  input.source_incarnation = "session3";
+  input.stamp.sec = 3;
+  auto replaced = state.observe_status(input, 3 * second);
+  EXPECT_EQ(replaced.source_id, input.source_id);
+  EXPECT_EQ(replaced.source_incarnation, input.source_incarnation);
+  EXPECT_EQ(replaced.position_observation_sequence, 1u);
+  EXPECT_TRUE(replaced.fix_valid);
+}
